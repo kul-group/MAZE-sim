@@ -24,7 +24,3 @@ class Zeotype(Atoms):
         self.types['count'] = count_atomtype
         self.types['list'] = atomtype_list
         self.silent = silent
-
-    # Sam's test
-    def sam_test(self):
-        return()
