@@ -25,5 +25,3 @@ class Zeotype(Atoms):
         self.types['list'] = atomtype_list
         self.silent = silent
 
-    # sams branch test
-    # test
