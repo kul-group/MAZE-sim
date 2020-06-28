@@ -4,9 +4,10 @@ from ase import Atoms
 class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent=False):
+                 calculator=None, info=None, velocities=None, silent=False, zeolite_type = ''):
         super().__init__(self, symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities, silent)
+        self.zeolite_type = zeolite_type
 
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
