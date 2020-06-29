@@ -1,19 +1,17 @@
 from ase import Atoms
-import ase
+from typing import List
+
 
 class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent=False, zeolite_type = '', site_cif_filepath=''):
+                 calculator=None, info=None, velocities=None, silent=False, zeolite_type: str = ''):
         super().__init__(self, symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities, silent)
 
         self.zeolite_type = zeolite_type
+        self.sites: List[str] = []
         # loads site from atoms object
-        if site_cif_filepath != '':
-            self.site = ase.io.read(site_cif_filepath)
-        else:
-            self.site = None
 
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
