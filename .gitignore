@@ -1,4 +1,5 @@
 *.xml
 *.iml
+*.cif
 .idea
 InspectProfiles
