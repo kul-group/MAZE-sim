@@ -1,6 +1,6 @@
 from typing import List
 from ase import Atoms
-
+from ase.neighborlist import natural_cutoffs, NeighborList
 
 class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -35,5 +35,21 @@ class Zeotype(Atoms):
 
     def get_zeolite_type(self) -> List[str]:
         return self.zeolite_type
+
+    def type_atoms(self):
+        type_dict = {}
+
+        # Getting neighbor list
+        nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        nl.update(self)
+
+
+        return(type_dict)
+
+
+if __name__ == '__main__':
+    from ase.io import read
+    b = read('BEA.cif')
+    z = Zeotype(b)
 
 
