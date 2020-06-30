@@ -48,9 +48,9 @@ class Zeotype(Atoms):
             if i.symbol in ['Sn', 'Al', 'Si']:
                 label = 'framework-%s' %i.symbol
                 if label in type_dict.keys():
-                    type_dict['label'].append(i.index)
+                    type_dict[label].append(i.index)
                 else:
-                    type_dict['label'] = [i.index]
+                    type_dict[label] = [i.index]
 
         return(type_dict)
 
@@ -59,6 +59,6 @@ if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.type_atoms()
+    print(z.type_atoms())
 
 
