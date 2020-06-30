@@ -43,6 +43,14 @@ class Zeotype(Atoms):
         nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         nl.update(self)
 
+        for i in self:
+            # labels framework atoms
+            if i.symbol in ['Sn', 'Al', 'Si']:
+                label = 'framework-%s' %i.symbol
+                if label in type_dict.keys():
+                    type_dict['label'].append(i.index)
+                else:
+                    type_dict['label'] = [i.index]
 
         return(type_dict)
 
@@ -51,5 +59,6 @@ if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
     z = Zeotype(b)
+    type_atoms(z)
 
 
