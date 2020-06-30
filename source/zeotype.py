@@ -72,11 +72,9 @@ class Zeotype(Atoms):
             else:
                 type_dict['none'].append(i.index)
 
-
-
         return(type_dict)
 
-
+# testing
 if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
