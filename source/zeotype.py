@@ -7,8 +7,8 @@ class Zeotype(Atoms):
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent=False, zeolite_type: str = ''):
 
-        super().__init__(self, symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
-                         cell, pbc, celldisp, constraint, calculator, info, velocities, silent)
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
+                         cell, pbc, celldisp, constraint, calculator, info, velocities)
 
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
