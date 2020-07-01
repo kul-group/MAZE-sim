@@ -1,6 +1,6 @@
 from typing import List
 from ase import Atoms
-
+from ase.neighborlist import natural_cutoffs, NeighborList
 
 class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -35,5 +35,50 @@ class Zeotype(Atoms):
 
     def get_zeolite_type(self) -> List[str]:
         return self.zeolite_type
+
+    def type_atoms(self):
+        type_dict = {'none':[]}
+
+        # Getting neighbor list
+        nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        nl.update(self)
+
+        for i in self:
+            # labels framework atoms
+            if i.symbol in ['Sn', 'Al', 'Si']:
+                label = 'framework-%s' %i.symbol
+                if label in type_dict.keys():
+                    type_dict[label].append(i.index)
+                else:
+                    type_dict[label] = [i.index]
+
+            # label carbon and nitrogen as adsorbate
+            if i.symbol in ['C', 'N']:
+                label = 'adsorbate-%s' %i.symbol
+                if label in type_dict.keys():
+                    type_dict[label].append(i.index)
+                else:
+                    type_dict[label] = [i.index]
+
+            # label Cu, Ni as extraframework
+            if i.symbol in ['Cu', 'Ni']:
+                label = 'extraframework-%s' % i.symbol
+                if label in type_dict.keys():
+                    type_dict[label].append(i.index)
+                else:
+                    type_dict[label] = [i.index]
+
+            # all others get 'none' type
+            else:
+                type_dict['none'].append(i.index)
+
+        return(type_dict)
+
+# testing
+if __name__ == '__main__':
+    from ase.io import read
+    b = read('BEA.cif')
+    z = Zeotype(b)
+    z.type_atoms()
 
 
