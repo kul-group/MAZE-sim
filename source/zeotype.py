@@ -1,6 +1,7 @@
 from typing import List, Dict
 from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
+from collections import defaultdict
 
 class Zeotype(Atoms):
     """
@@ -59,7 +60,7 @@ class Zeotype(Atoms):
         category.
         """
 
-        type_dict: Dict[str, List[int]] = {}
+        type_dict: Dict[str, List[int]] = defaultdict(list)  # default dict sets the default value of dict to []
 
         # Getting neighbor list
         nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
@@ -67,33 +68,16 @@ class Zeotype(Atoms):
 
         for atom in self:  # iterate through atom objects in zeotype
             # labels framework atoms
-            print(atom.symbol)
             if atom.symbol in ['Sn', 'Al', 'Si']:
                 label = 'framework-%s' % atom.symbol
-                if label in type_dict.keys():
-                    type_dict[label].append(atom.index)
-                else:
-                    type_dict[label] = [atom.index]
-
-            # label carbon and nitrogen as adsorbate
-            if atom.symbol in ['C', 'N']:
-                label = 'adsorbate-%s' %atom.symbol
-                if label in type_dict.keys():
-                    type_dict[label].append(atom.index)
-                else:
-                    type_dict[label] = [atom.index]
-
-            # label Cu, Ni as extraframework
-            if atom.symbol in ['Cu', 'Ni']:
+            elif atom.symbol in ['C', 'N']:
+                label = 'adsorbate-%s' % atom.symbol
+            elif atom.symbol in ['Cu', 'Ni']:
                 label = 'extraframework-%s' % atom.symbol
-                if label in type_dict.keys():
-                    type_dict[label].append(atom.index)
-                else:
-                    type_dict[label] = [atom.index]
-
-            # all others get 'other' type
             else:
-                type_dict['other'].append(atom.index)
+                label = 'other'
+
+            type_dict[label].append(atom.index)
 
         return type_dict
 
@@ -102,7 +86,7 @@ if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.get_atom_types()
+    print(z.get_atom_types())
 
 
 
