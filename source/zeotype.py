@@ -1,8 +1,11 @@
-from typing import List
+from typing import List, Dict
 from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 
 class Zeotype(Atoms):
+    """
+    This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
+    """
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent=False, zeolite_type: str = ''):
@@ -15,11 +18,16 @@ class Zeotype(Atoms):
 
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
+        """
+        :param a: Atoms object that Zeotype object will be used to create the Zeotype object
+        :param silent: currently does nothing, but will set if output is displayed
+        :return: Zeotype object created from Atoms object
+        """
         return Zeotype(a.symbols, a.positions, a.numbers, a.tags, a.momenta, a.masses, a.magmoms,
                        a.charges, a.scaled_positions, a.cell, a.pbc, a.celldisp, a.constraint,
                        a.calculator, a.info, a.velocities, silent)
 
-        super()
+        super() #currently this code does nothing
         self.atoms = atoms
         self.types = {'num': 0, 'unique': [], 'indices': {}, 'count': {}}
         indices, count, indices_atomtype, count_atomtype, atomtype_list = self.analyze_zeolite_atoms()
@@ -31,54 +39,70 @@ class Zeotype(Atoms):
         self.silent = silent
 
     def get_sites(self) -> List[str]:
+        """
+        :return: returns Zeotype sites
+        """
         return self.sites
 
     def get_zeolite_type(self) -> List[str]:
+        """
+        :return: returns zeotype sites as a list
+        """
         return self.zeolite_type
 
-    def type_atoms(self):
-        type_dict = {'none':[]}
+    def get_atom_types(self) -> Dict[str, List[int]]:
+        """
+        :return: Returns a dictionary of atom types where the key consists of the atom category
+        (framework, absorbate, extraframework or other) followed by -atom chemical symbol. For
+        example a Sn atom is a framework atom so the key is "framework-Sn". The value of the
+        returned dictionary is a list of the indices of all of the atoms that belong to the
+        category.
+        """
+
+        type_dict: Dict[str, List[int]] = {}
 
         # Getting neighbor list
         nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         nl.update(self)
 
-        for i in self:
+        for atom in self:  # iterate through atom objects in zeotype
             # labels framework atoms
-            if i.symbol in ['Sn', 'Al', 'Si']:
-                label = 'framework-%s' %i.symbol
+            print(atom.symbol)
+            if atom.symbol in ['Sn', 'Al', 'Si']:
+                label = 'framework-%s' % atom.symbol
                 if label in type_dict.keys():
-                    type_dict[label].append(i.index)
+                    type_dict[label].append(atom.index)
                 else:
-                    type_dict[label] = [i.index]
+                    type_dict[label] = [atom.index]
 
             # label carbon and nitrogen as adsorbate
-            if i.symbol in ['C', 'N']:
-                label = 'adsorbate-%s' %i.symbol
+            if atom.symbol in ['C', 'N']:
+                label = 'adsorbate-%s' %atom.symbol
                 if label in type_dict.keys():
-                    type_dict[label].append(i.index)
+                    type_dict[label].append(atom.index)
                 else:
-                    type_dict[label] = [i.index]
+                    type_dict[label] = [atom.index]
 
             # label Cu, Ni as extraframework
-            if i.symbol in ['Cu', 'Ni']:
-                label = 'extraframework-%s' % i.symbol
+            if atom.symbol in ['Cu', 'Ni']:
+                label = 'extraframework-%s' % atom.symbol
                 if label in type_dict.keys():
-                    type_dict[label].append(i.index)
+                    type_dict[label].append(atom.index)
                 else:
-                    type_dict[label] = [i.index]
+                    type_dict[label] = [atom.index]
 
-            # all others get 'none' type
+            # all others get 'other' type
             else:
-                type_dict['none'].append(i.index)
+                type_dict['other'].append(atom.index)
 
-        return(type_dict)
+        return type_dict
 
 # testing
 if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.type_atoms()
+    z.get_atom_types()
+
 
 
