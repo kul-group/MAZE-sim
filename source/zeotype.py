@@ -103,14 +103,6 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def analyze_zeolite_atoms(self):
-
-
-
-
-
-
-
 # testing
 if __name__ == '__main__':
     from ase.io import read
