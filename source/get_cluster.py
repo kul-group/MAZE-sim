@@ -38,8 +38,9 @@ def get_cluster(atoms, index, size):
                 i.tag = 2  # change tag so atom not expanded in future
                 for j in adj:
                     if atoms[j].tag == 0:
-                        clust_ind.append(j)
-                        atoms[j].tag = 1 # neighbors of newly added atoms will be expanded next
+                        if len(clust_ind) < size:
+                            clust_ind.append(j)
+                            atoms[j].tag = 1 # neighbors of newly added atoms will be expanded next
 
     return(clust_ind)
 
