@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
@@ -72,7 +72,7 @@ class Zeotype(Atoms):
                 label = 'framework-%s' % atom.symbol
             elif atom.symbol in ['C', 'N']:
                 label = 'adsorbate-%s' % atom.symbol
-            elif atom.symbol in ['Cu', 'Ni']:
+            elif atom.symbol in ['Cu', 'Ni', 'Fe', 'Cr']:
                 label = 'extraframework-%s' % atom.symbol
             else:
                 label = 'other'
@@ -80,6 +80,28 @@ class Zeotype(Atoms):
             type_dict[label].append(atom.index)
 
         return type_dict
+
+    def count_elements(self) -> Tuple[Dict['str',List[int]], Dict['str', int]]:
+        """
+        Stores the indices and counts the number of each element in the
+        :return:
+        """
+        indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
+        count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
+        for atom in self:
+            element = atom.symbol
+            indices[element].append(atom.index)
+            count[element] += 1
+        return indices, count
+
+    @staticmethod
+    def count_atomtypes(atomtype_list) -> Tuple[Dict['str',List[int]], Dict['str', int]]:
+        indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
+        count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
+        for i, element in enumerate(atomtype_list):
+            indices[element].append(i)
+            count[element] += 1
+        return indices, count  # TODO: Combine with count_elements method
 
 # testing
 if __name__ == '__main__':
