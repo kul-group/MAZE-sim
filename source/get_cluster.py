@@ -5,7 +5,7 @@ from ase.neighborlist import NeighborList, natural_cutoffs
 def get_cluster(atoms, index, size):
     '''
     :param atoms: atoms object 
-    :param size: number of atoms in cluster (not number of T-sites!), integer
+    :param size: min number of atoms in cluster (not number of T-sites!), integer
     :param index: index at center of cluster, integer
     :return: list of indicies included in the cluster
     '''
@@ -25,14 +25,16 @@ def get_cluster(atoms, index, size):
     atoms[index].tag = 1
     clust_ind = [index]
 
+    # uses tagging to find indicies of cluster
+    # intentionally overshoots the input size to make a symmetric cluster
+
     while len(clust_ind) < size:
-        next_expand = [i.index for i in atoms if i.tag == 1]  # list of next atoms to expand
-        for j in next_expand:
-            atoms[j].tag = 2  # change tag so atom not expanded in future
-            for k in nl.get_neighbors(j)[0]:
-                if atoms[k].tag == 0:
-                    atoms[k].tag = 1  # tag atoms which are adjacent to cluster atoms, but not part of cluster yet
-                    clust_ind.append(k)
+        adj_lists = [nl.get_neighbors(j)[0] for j in clust_ind] # list of lists, lists are neighbors of ea. cluster atom
+        for ind_list in adj_lists:
+            for ind in ind_list:
+                if atoms[ind].tag == 0:
+                    clust_ind.append(ind)
+                    atoms[ind].tag = 1  # prevents repeat addition of an index
 
     return(clust_ind)
 
