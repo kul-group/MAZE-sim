@@ -1,7 +1,4 @@
 from ase.neighborlist import NeighborList, natural_cutoffs
-from ase import Atoms
-import numpy as np
-from ase.io import read, write
 
 # Obtains the indicies of a cluster in a zeolite given center atom and cluster size
 
@@ -24,27 +21,20 @@ def get_cluster(atoms, index, size):
 
     nl = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     nl.update(atoms)
-    atoms_cluster = Atoms()
-    atoms_cluster.append(atoms[index])
     atoms.set_tags(0)
     atoms[index].tag = 1
-    clust_ind = []
+    clust_ind = [index]
 
-    # uses tagging system to find the cluster
     while len(clust_ind) < size:
-        for i in atoms:
-            if i.tag == 1:
-                adj = nl.get_neighbors(i.index)[0]
-                i.tag = 2  # change tag so atom not expanded in future
-                for j in adj:
-                    if atoms[j].tag == 0:
-                        if len(clust_ind) < size:
-                            clust_ind.append(j)
-                            atoms[j].tag = 1 # neighbors of newly added atoms will be expanded next
+        next_expand = [i.index for i in atoms if i.tag == 1]  # list of next atoms to expand
+        for j in next_expand:
+            atoms[j].tag = 2  # change tag so atom not expanded in future
+            for k in nl.get_neighbors(j)[0]:
+                if atoms[k].tag == 0:
+                    atoms[k].tag = 1  # tag atoms which are adjacent to cluster atoms, but not part of cluster yet
+                    clust_ind.append(k)
 
     return(clust_ind)
-
-
 
 # testing
 if __name__ == '__main__':
