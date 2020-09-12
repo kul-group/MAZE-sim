@@ -109,10 +109,14 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
+
     def add_cluster(self, index: int, size: int) -> int:
         new_cluster = Cluster(self, index, size)
         self.clusters.append(new_cluster)
         return len(self.clusters) - 1
+
+    def remove_cluster(self, index: int):
+        self.clusters.pop(index)
 
     def integrate_cluster(self, cluster_index: int):
         cluster = self.clusters[cluster_index]
