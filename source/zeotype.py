@@ -3,7 +3,7 @@ from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
 from ase.neighborlist import NeighborList
-
+import copy
 
 class Zeotype(Atoms):
     """
@@ -128,16 +128,19 @@ class Zeotype(Atoms):
 
 class Cluster(Zeotype):
     def __init__(self, parent_zeotype: Zeotype, index: int, cluster_size: int):
+        super().__init__()
+        cluster_indices = self._get_cluster_indices(parent_zeotype, index, cluster_size)
+        cluster_atoms = parent_zeotype[cluster_indices]
+
+        new_self = copy.deepcopy(cluster_atoms) # hackey stuff
+        new_self.__class__ = Cluster            # this is bad :S but I can't find a better way
+        self.__dict__.update(new_self.__dict__) # really bad :(
+
         self.parent_zeotype = parent_zeotype
-        cluster_indices = self._get_cluster_indices(self.parent_zeotype, index, cluster_size)
-        cluster_atoms = self.parent_zeotype[cluster_indices]
         self.zeotype_to_cluster_index_map = \
             self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
-
-        #pz = cluster_atoms
         self.cluster_atoms = cluster_atoms
 
-        #super().__init__(self, pz.symbols, pz.positions, pz.numbers)
 
     def cap_atoms(self):
         ...
@@ -185,4 +188,6 @@ if __name__ == '__main__':
 
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.add_cluster(35, 30)
+    z.add_cluster(35, 3)
+    print([a for a in z.clusters[0]])
+    z.integrate_cluster(0)
