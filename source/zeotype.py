@@ -9,7 +9,6 @@ class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
-
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
@@ -102,6 +101,13 @@ class Zeotype(Atoms):
 
     @staticmethod
     def count_atomtypes(atomtype_list) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
+        """
+        Counts the number of different atoms of each type in a list of atom symbols
+        :param atomtype_list: A list of atom chemical symbols
+        :return: A tuple of two dictionaries the first containing a mapping between the chemical
+        symbol and the indices in the symbol and the second containing a mapping between the
+        chemical symbol and the number of symbols of that type in the input list
+        """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
         count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
         for i, element in enumerate(atomtype_list):
@@ -111,11 +117,22 @@ class Zeotype(Atoms):
 
 
     def add_cluster(self, index: int, size: int) -> int:
+        """
+        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
+        is given by the size parameter.
+        :param index: index of the central atom in the cluster
+        :param size: number of atoms in the final cluster
+        :return: index of the cluster in the zeotype cluster array
+        """
         new_cluster = Cluster(self, index, size)
         self.clusters.append(new_cluster)
         return len(self.clusters) - 1
 
     def remove_cluster(self, index: int):
+        """
+        :param index: Index of cluster to remove from zeotype list
+        :return: None
+        """
         self.clusters.pop(index)
 
     def integrate_cluster(self, cluster_index: int):
@@ -123,6 +140,7 @@ class Zeotype(Atoms):
         index_map = cluster.zeotype_to_cluster_index_map
 
         for key, value in index_map.items():
+            self[key].symbol = cluster[value].symbol
             self[key].position = cluster[value].position
             self[key].tag = cluster[value].tag
             self[key].momentum = cluster[value].momentum
@@ -130,7 +148,7 @@ class Zeotype(Atoms):
             self[key].magmom = cluster[value].magmom
             self[key].charge = cluster[value].charge
 
-class Cluster(Zeotype):
+class Cluster(Zeotype):  # TODO include dynamic inheritance
     def __init__(self, parent_zeotype: Zeotype, index: int, cluster_size: int):
         super().__init__()
         cluster_indices = self._get_cluster_indices(parent_zeotype, index, cluster_size)
