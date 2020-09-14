@@ -23,7 +23,7 @@ class Zeotype(Atoms):
 
 
     @staticmethod
-    def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
+    def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":  # TODO: Fix method
         """
         :param a: Atoms object that Zeotype object will be used to create the Zeotype object
         :param silent: currently does nothing, but will set if output is displayed
@@ -126,7 +126,7 @@ class Zeotype(Atoms):
         """
         new_cluster = Cluster(self, index, size)
         self.clusters.append(new_cluster)
-        return len(self.clusters) - 1
+        return len(self.clusters) - 1  # returns final index in the clusters list
 
     def remove_cluster(self, index: int):
         """
@@ -140,6 +140,7 @@ class Zeotype(Atoms):
         index_map = cluster.zeotype_to_cluster_index_map
 
         for key, value in index_map.items():
+            # same unit cell same oxygen atom positions
             self[key].symbol = cluster[value].symbol
             self[key].position = cluster[value].position
             self[key].tag = cluster[value].tag
@@ -154,18 +155,39 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         cluster_indices = self._get_cluster_indices(parent_zeotype, index, cluster_size)
         cluster_atoms = parent_zeotype[cluster_indices]
 
-        new_self = copy.deepcopy(cluster_atoms) # hackey stuff
-        new_self.__class__ = Cluster            # this is bad :S but I can't find a better way
-        self.__dict__.update(new_self.__dict__) # really bad :(
+        new_self = copy.deepcopy(cluster_atoms)
+        new_self.__class__ = Cluster
+        self.__dict__.update(new_self.__dict__)
 
         self.parent_zeotype = parent_zeotype
         self.zeotype_to_cluster_index_map = \
             self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
-        self.cluster_atoms = cluster_atoms
+        # self.cluster_atoms = cluster_atoms
 
 
     def cap_atoms(self):
+        """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
+        A lot of these clusters we add a bunch of H to the ends of the O because this a chemically plausable
+        way to cap the oxygens. For example, when a zeolite is growing in solution it starts off as SiOH4
+        1. Go through all Si in cluster and check to see if they have 4 bonds
+             2.  If they don't have four bonds add an oxygen in a plausable direction
+        3. go through all oxygens and find the ones that don't have two bonds
+            4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
+
+        """
         ...
+        # get index of all Si atoms
+        # find cap position for the needed ones
+
+    def _need_cap(self, atom_index, nl, bonds_needed) -> bool:
+        ...
+
+    def _get_cap_O_pos(self, Si_index, nl):
+        ...
+
+    def _get_cap_H_pos(self, O_index, nl):
+        ...
+
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
@@ -207,7 +229,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 # testing
 if __name__ == '__main__':
     from ase.io import read
-
     b = read('BEA.cif')
     z = Zeotype(b)
     z.add_cluster(35, 3)
