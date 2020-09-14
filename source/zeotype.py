@@ -5,10 +5,12 @@ from collections import defaultdict
 from ase.neighborlist import NeighborList
 import copy
 
+
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
+
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
@@ -21,7 +23,6 @@ class Zeotype(Atoms):
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
 
-
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":  # TODO: Fix method
         """
@@ -29,20 +30,12 @@ class Zeotype(Atoms):
         :param silent: currently does nothing, but will set if output is displayed
         :return: Zeotype object created from Atoms object
         """
-        return Zeotype(a.symbols, a.positions, a.numbers, a.tags, a.momenta, a.masses, a.magmoms,
-                       a.charges, a.scaled_positions, a.cell, a.pbc, a.celldisp, a.constraint,
-                       a.calculator, a.info, a.velocities, silent)
+        new_zeolite = Zeotype(silent=silent)
+        atom_zeolite = copy.deepcopy(a)
+        atom_zeolite.__class__ = Zeotype
+        new_zeolite.__dict__.update(atom_zeolite.__dict__)
+        return new_zeolite
 
-        super()  # currently this code does nothing
-        self.atoms = atoms
-        self.types = {'num': 0, 'unique': [], 'indices': {}, 'count': {}}
-        indices, count, indices_atomtype, count_atomtype, atomtype_list = self.analyze_zeolite_atoms()
-        self.types['indices'] = indices_atomtype
-        self.types['unique'] = np.unique(atomtype_list)
-        self.types['num'] = len(np.unique(atomtype_list))
-        self.types['count'] = count_atomtype
-        self.types['list'] = atomtype_list
-        self.silent = silent
 
     def get_sites(self) -> List[str]:
         """
@@ -115,7 +108,6 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-
     def add_cluster(self, index: int, size: int) -> int:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
@@ -149,6 +141,7 @@ class Zeotype(Atoms):
             self[key].magmom = cluster[value].magmom
             self[key].charge = cluster[value].charge
 
+
 class Cluster(Zeotype):  # TODO include dynamic inheritance
     def __init__(self, parent_zeotype: Zeotype, index: int, cluster_size: int):
         super().__init__()
@@ -163,7 +156,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         self.zeotype_to_cluster_index_map = \
             self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
         # self.cluster_atoms = cluster_atoms
-
 
     def cap_atoms(self):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
@@ -187,7 +179,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
     def _get_cap_H_pos(self, O_index, nl):
         ...
-
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
@@ -225,10 +216,10 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         return zeotype_to_cluster_index_map
 
 
-
 # testing
 if __name__ == '__main__':
     from ase.io import read
+
     b = read('BEA.cif')
     z = Zeotype(b)
     z.add_cluster(35, 3)
