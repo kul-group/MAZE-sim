@@ -1,10 +1,9 @@
 from typing import List, Dict, Tuple
-from ase import Atoms
+from ase import Atoms, Atom
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
-from ase.neighborlist import NeighborList
 import copy
-
+import numpy as np
 
 class Zeotype(Atoms):
     """
@@ -15,16 +14,18 @@ class Zeotype(Atoms):
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
 
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
+                         cell, pbc, celldisp, constraint, calculator, info, velocities)
+
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
         self.clusters = []
         self.silent = silent
-
-        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
-                         cell, pbc, celldisp, constraint, calculator, info, velocities)
+        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        self.neighbor_list.update(self)
 
     @staticmethod
-    def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":  # TODO: Fix method
+    def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
         """
         :param a: Atoms object that Zeotype object will be used to create the Zeotype object
         :param silent: currently does nothing, but will set if output is displayed
@@ -35,7 +36,6 @@ class Zeotype(Atoms):
         atom_zeolite.__class__ = Zeotype
         new_zeolite.__dict__.update(atom_zeolite.__dict__)
         return new_zeolite
-
 
     def get_sites(self) -> List[str]:
         """
@@ -59,10 +59,6 @@ class Zeotype(Atoms):
         """
 
         type_dict: Dict[str, List[int]] = defaultdict(list)  # default dict sets the default value of dict to []
-
-        # Getting neighbor list
-        nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        nl.update(self)
 
         for atom in self:  # iterate through atom objects in zeotype
             # labels framework atoms
@@ -155,30 +151,94 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         self.parent_zeotype = parent_zeotype
         self.zeotype_to_cluster_index_map = \
             self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
-        # self.cluster_atoms = cluster_atoms
+
+        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        self.neighbor_list.update(self)
+
+    def append(self, atom):
+        """Append atom to end."""
+        self.extend(atom)
+
+    def extend(self, other):
+        """Extend atoms object by appending atoms from *other*."""
+        if isinstance(other, Atom):
+            other = Atoms([other])
+
+        n1 = len(self)
+        n2 = len(other)
+
+        for name, a1 in self.arrays.items():
+            a = np.zeros((n1 + n2,) + a1.shape[1:], a1.dtype)
+            a[:n1] = a1
+            if name == 'masses':
+                a2 = other.get_masses()
+            else:
+                a2 = other.arrays.get(name)
+            if a2 is not None:
+                a[n1:] = a2
+            self.arrays[name] = a
+
+        for name, a2 in other.arrays.items():
+            if name in self.arrays:
+                continue
+            a = np.empty((n1 + n2,) + a2.shape[1:], a2.dtype)
+            a[n1:] = a2
+            if name == 'masses':
+                a[:n1] = self.get_masses()[:n1]
+            else:
+                a[:n1] = 0
+
+            self.set_array(name, a)
 
     def cap_atoms(self):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
         A lot of these clusters we add a bunch of H to the ends of the O because this a chemically plausable
         way to cap the oxygens. For example, when a zeolite is growing in solution it starts off as SiOH4
         1. Go through all Si in cluster and check to see if they have 4 bonds
-             2.  If they don't have four bonds add an oxygen in a plausable direction
+        2.  If they don't have four bonds add an oxygen in a plausable direction
         3. go through all oxygens and find the ones that don't have two bonds
-            4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
-
+        4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
         """
-        ...
+        self.neighbor_list.update(self)
+        indices, count = self.count_elements()
+
+        for si_index in indices['Si']:
+            if self._need_cap(si_index, 4):
+                cap_pos = self._get_cap_O_pos(si_index)
+                self.append(Atom('O',position=cap_pos))
+
+        for o_index in indices['O']:
+            if self._need_cap(o_index, 2):
+                cap_pos = self._get_cap_O_pos(o_index)
+                self.append(Atom('H',position=cap_pos))
+
         # get index of all Si atoms
         # find cap position for the needed ones
 
-    def _need_cap(self, atom_index, nl, bonds_needed) -> bool:
-        ...
+    def _need_cap(self, atom_index: int, bonds_needed: int) -> bool:
+        return len(self.neighbor_list.get_neighbors(atom_index)[0]) >= bonds_needed
 
-    def _get_cap_O_pos(self, Si_index, nl):
-        ...
+    def _get_cap_O_pos(self, si_index):
+        vector_list = []
+        avg_len = 0
+        for n in self.neighbor_list.get_neighbors(si_index)[0]:
+            vector_list.append(self.get_distance(si_index, n, vector=True))
+            avg_len += np.linalg.norm(vector_list[-1])
+        avg_len = avg_len/len(vector_list)
+        v_net = np.sum(vector_list)/np.linalg.norm(np.sum(vector_list))
+        v_final = v_net*avg_len
+        atom_pos = self[si_index].position + v_final
+        return atom_pos
 
-    def _get_cap_H_pos(self, O_index, nl):
-        ...
+    def _get_cap_H_pos(self, o_index, nl):
+        vector_list = []
+        for n in self.neighbor_list.get_neighbors(o_index)[0]:
+            vector_list.append(self.get_distance(o_index, n, vector=True))
+        v_net = np.sum(vector_list)/np.linalg.norm(np.sum(vector_list))
+        h_len = 1
+        v_final = v_net*h_len
+        atom_pos = self[o_index].position + v_final
+        return atom_pos
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
@@ -219,7 +279,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 # testing
 if __name__ == '__main__':
     from ase.io import read
-
     b = read('BEA.cif')
     z = Zeotype(b)
     z.add_cluster(35, 3)
