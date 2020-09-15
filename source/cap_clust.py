@@ -54,4 +54,5 @@ def cap_clust(clust):
 if __name__ == '__main__':
     from ase.io import read
     b = read('BEA.cif')
+    # need clust to test on here
 
