@@ -199,46 +199,37 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         3. go through all oxygens and find the ones that don't have two bonds
         4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
         """
-        self.neighbor_list.update(self)
+        bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+        self.neighbor_list.update(self)  # check to see if it runs without this
         indices, count = self.count_elements()
 
         for si_index in indices['Si']:
-            if self._need_cap(si_index, 4):
-                cap_pos = self._get_cap_O_pos(si_index)
-                self.append(Atom('O',position=cap_pos))
-
+            if self.needs_cap(si_index, bonds_needed['Si']):
+                self.add_oxygen_cap(si_index, bonds_needed['Si'])
         for o_index in indices['O']:
-            if self._need_cap(o_index, 2):
-                cap_pos = self._get_cap_O_pos(o_index)
-                self.append(Atom('H',position=cap_pos))
+            if self.needs_cap(o_index, bonds_needed['O']):
+                self.add_hydrogen_cap(o_index)
 
-        # get index of all Si atoms
-        # find cap position for the needed ones
+    def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
+        return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def _need_cap(self, atom_index: int, bonds_needed: int) -> bool:
-        return len(self.neighbor_list.get_neighbors(atom_index)[0]) >= bonds_needed
+    def add_oxygen_cap(self, index, bonds_needed):
+        while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
+            neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+            direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
+            oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
+            new_oxygen = Atom('O', position=oxygen_pos)
+            self.append(new_oxygen)
+            self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+            self.neighbor_list.update(self)
 
-    def _get_cap_O_pos(self, si_index):
-        vector_list = []
-        avg_len = 0
-        for n in self.neighbor_list.get_neighbors(si_index)[0]:
-            vector_list.append(self.get_distance(si_index, n, vector=True))
-            avg_len += np.linalg.norm(vector_list[-1])
-        avg_len = avg_len/len(vector_list)
-        v_net = np.sum(vector_list)/np.linalg.norm(np.sum(vector_list))
-        v_final = v_net*avg_len
-        atom_pos = self[si_index].position + v_final
-        return atom_pos
+    def add_hydrogen_cap(self, index):
+        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
+        h_pos = self.get_positions()[index] + (self.get_positions()[index] + direction)/np.linalg.norm(direction)
+        new_h = Atom('H', position=h_pos)
+        self.append(new_h)
 
-    def _get_cap_H_pos(self, o_index, nl):
-        vector_list = []
-        for n in self.neighbor_list.get_neighbors(o_index)[0]:
-            vector_list.append(self.get_distance(o_index, n, vector=True))
-        v_net = np.sum(vector_list)/np.linalg.norm(np.sum(vector_list))
-        h_len = 1
-        v_final = v_net*h_len
-        atom_pos = self[o_index].position + v_final
-        return atom_pos
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
