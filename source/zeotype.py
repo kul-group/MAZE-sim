@@ -1,49 +1,42 @@
 from typing import List, Dict, Tuple
-from ase import Atoms
+from ase import Atoms, Atom
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
-from ase.neighborlist import NeighborList
 import copy
+import numpy as np
+
 
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
-
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
+
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
+                         cell, pbc, celldisp, constraint, calculator, info, velocities)
 
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
         self.clusters = []
         self.silent = silent
-
-        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
-                         cell, pbc, celldisp, constraint, calculator, info, velocities)
-
+        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        self.neighbor_list.update(self)
 
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
         """
+        Builds a zeolite object from an Atoms class
         :param a: Atoms object that Zeotype object will be used to create the Zeotype object
         :param silent: currently does nothing, but will set if output is displayed
         :return: Zeotype object created from Atoms object
         """
-        return Zeotype(a.symbols, a.positions, a.numbers, a.tags, a.momenta, a.masses, a.magmoms,
-                       a.charges, a.scaled_positions, a.cell, a.pbc, a.celldisp, a.constraint,
-                       a.calculator, a.info, a.velocities, silent)
-
-        super()  # currently this code does nothing
-        self.atoms = atoms
-        self.types = {'num': 0, 'unique': [], 'indices': {}, 'count': {}}
-        indices, count, indices_atomtype, count_atomtype, atomtype_list = self.analyze_zeolite_atoms()
-        self.types['indices'] = indices_atomtype
-        self.types['unique'] = np.unique(atomtype_list)
-        self.types['num'] = len(np.unique(atomtype_list))
-        self.types['count'] = count_atomtype
-        self.types['list'] = atomtype_list
-        self.silent = silent
+        new_zeolite = Zeotype(silent=silent)
+        atom_zeolite = copy.deepcopy(a)
+        atom_zeolite.__class__ = Zeotype
+        new_zeolite.__dict__.update(atom_zeolite.__dict__)
+        return new_zeolite
 
     def get_sites(self) -> List[str]:
         """
@@ -51,7 +44,7 @@ class Zeotype(Atoms):
         """
         return self.sites
 
-    def get_zeolite_type(self) -> List[str]:
+    def get_zeolite_type(self) -> str:
         """
         :return: returns zeotype sites as a list
         """
@@ -67,10 +60,6 @@ class Zeotype(Atoms):
         """
 
         type_dict: Dict[str, List[int]] = defaultdict(list)  # default dict sets the default value of dict to []
-
-        # Getting neighbor list
-        nl = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        nl.update(self)
 
         for atom in self:  # iterate through atom objects in zeotype
             # labels framework atoms
@@ -89,7 +78,6 @@ class Zeotype(Atoms):
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
-        Stores the indices and counts the number of each element in the
         :return:
         """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
@@ -102,6 +90,13 @@ class Zeotype(Atoms):
 
     @staticmethod
     def count_atomtypes(atomtype_list) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
+        """
+        Counts the number of different atoms of each type in a list of atom symbols
+        :param atomtype_list: A list of atom chemical symbols
+        :return: A tuple of two dictionaries the first containing a mapping between the chemical
+        symbol and the indices in the symbol and the second containing a mapping between the
+        chemical symbol and the number of symbols of that type in the input list
+        """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
         count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
         for i, element in enumerate(atomtype_list):
@@ -109,13 +104,23 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-
     def add_cluster(self, index: int, size: int) -> int:
-        new_cluster = Cluster(self, index, size)
+        """
+        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
+        is given by the size parameter.
+        :param index: index of the central atom in the cluster
+        :param size: number of atoms in the final cluster
+        :return: index of the cluster in the zeotype cluster array
+        """
+        new_cluster = Cluster.build_from_zeolite(self, index, size)
         self.clusters.append(new_cluster)
-        return len(self.clusters) - 1
+        return len(self.clusters) - 1  # returns final index in the clusters list
 
     def remove_cluster(self, index: int):
+        """
+        :param index: Index of cluster to remove from zeotype list
+        :return: None
+        """
         self.clusters.pop(index)
 
     def integrate_cluster(self, cluster_index: int):
@@ -123,6 +128,8 @@ class Zeotype(Atoms):
         index_map = cluster.zeotype_to_cluster_index_map
 
         for key, value in index_map.items():
+            # same unit cell same oxygen atom positions
+            self[key].symbol = cluster[value].symbol
             self[key].position = cluster[value].position
             self[key].tag = cluster[value].tag
             self[key].momentum = cluster[value].momentum
@@ -130,24 +137,94 @@ class Zeotype(Atoms):
             self[key].magmom = cluster[value].magmom
             self[key].charge = cluster[value].charge
 
-class Cluster(Zeotype):
-    def __init__(self, parent_zeotype: Zeotype, index: int, cluster_size: int):
-        super().__init__()
-        cluster_indices = self._get_cluster_indices(parent_zeotype, index, cluster_size)
-        cluster_atoms = parent_zeotype[cluster_indices]
 
-        new_self = copy.deepcopy(cluster_atoms) # hackey stuff
-        new_self.__class__ = Cluster            # this is bad :S but I can't find a better way
-        self.__dict__.update(new_self.__dict__) # really bad :(
+class Cluster(Zeotype):  # TODO include dynamic inheritance
+
+    def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
+                 charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
+                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
+                 parent_zeotype=None, zeotype_to_cluster_index_map=None, neighbor_list=None):
+
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
+                         charges, scaled_positions, cell, pbc, celldisp, constraint,
+                         calculator, info, velocities, silent, zeolite_type)
 
         self.parent_zeotype = parent_zeotype
-        self.zeotype_to_cluster_index_map = \
-            self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
-        self.cluster_atoms = cluster_atoms
+        self.zeotype_to_cluster_index_map = zeotype_to_cluster_index_map
+        self.neighbor_list = neighbor_list
 
+    @staticmethod
+    def build_from_zeolite(parent_zeotype: Zeotype, index: int, cluster_size: int) -> "Cluster":
+        cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, cluster_size)
+        cluster_atoms = parent_zeotype[cluster_indices]
+        new_cluster = Cluster(cluster_atoms)
+        new_cluster.parent_zeotype = parent_zeotype
+        new_cluster.zeotype_to_cluster_index_map = \
+            new_cluster._get_new_cluster_mapping(new_cluster.parent_zeotype, cluster_atoms, cluster_indices)
 
-    def cap_atoms(self):
-        ...
+        new_cluster.neighbor_list = NeighborList(natural_cutoffs(new_cluster), bothways=True, self_interaction=False)
+        new_cluster.neighbor_list.update(new_cluster)
+
+        return new_cluster
+
+    def cap_atoms(self, cap_atoms_dict=None, bonds_needed=None, verbose=False):
+        """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
+        A lot of these clusters we add a bunch of H to the ends of the O because this a chemically plausable
+        way to cap the oxygens. For example, when a zeolite is growing in solution it starts off as SiOH4
+        1. Go through all Si in cluster and check to see if they have 4 bonds
+        2.  If they don't have four bonds add an oxygen in a plausable direction
+        3. go through all oxygens and find the ones that don't have two bonds
+        4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
+        """
+        if cap_atoms_dict is None:
+            cap_atoms_dict = self.build_cap_atoms_dict(bonds_needed=bonds_needed)
+        if verbose:
+            print('atom caps: {symbol, [position arrays]}', cap_atoms_dict)
+
+        # append cap atoms self
+        for symbol, pos_list in cap_atoms_dict.items():
+            for pos in pos_list:
+                self.append(Atom(symbol, position=pos))
+
+    def build_cap_atoms_dict(self, bonds_needed=None):
+        """
+        Builds a dictionary of the cap atom positions
+        :param bonds_needed: a dict mapping atom symbol to number of bonds needed
+        :return: a dictionary of atom symbols and positions of cap atoms
+        """
+        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        if bonds_needed is None:
+            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+        indices, count = self.count_elements()
+        for si_index in indices['Si']:
+            if self.needs_cap(si_index, bonds_needed['Si']):
+                pos = self.get_oxygen_cap_pos(si_index, bonds_needed['Si'])
+                cap_atoms_dict['O'].append(pos)
+        for o_index in indices['O']:
+            if self.needs_cap(o_index, bonds_needed['O']):
+                pos = self.get_hydrogen_cap_pos(si_index)
+                cap_atoms_dict['H'].append(pos)
+
+        return dict(cap_atoms_dict)
+
+    def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
+        return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
+
+    def get_oxygen_cap_pos(self, index, bonds_needed):
+        # while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
+        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
+        oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
+        return oxygen_pos
+        # self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        # self.neighbor_list.update(self)
+
+    def get_hydrogen_cap_pos(self, index):
+        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
+        hydrogen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(
+            direction)
+        return hydrogen_pos
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
@@ -183,7 +260,6 @@ class Cluster(Zeotype):
                 cluster_position_index_map[zeotype_index_position_map[key]]
 
         return zeotype_to_cluster_index_map
-
 
 
 # testing
