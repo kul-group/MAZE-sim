@@ -14,6 +14,8 @@ if __name__ == '__main__':
     view(z.clusters[index])
     w = copy.deepcopy(z)
     w.clusters[0].cap_atoms()
+    w.clusters[0].set_pbc([True, True, True])
+    w.clusters[0].wrap()
     view(w.clusters[0])
     # nl = NeighborList(natural_cutoffs(z), self_interaction=False, bothways=True)
     # nl.update(z)
