@@ -22,20 +22,32 @@ def get_cap_si(clust, index):
     return(si_to_cap)
 
 def add_cap_ox(clust, index):
+    new_clust = clust
+    cap_inds = get_cap_si(clust, index)
+    for ind in cap_inds:
+        while len(nl.get_neighbors(ind)[0]) < 4:
+            neighb = nl.get_neighbors(ind)[0][0]  # first index in the list of neighbor indicies
+            direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector from neighbor to Si
+            ox_pos = clust.get_positions()[ind] + (clust.get_positions()[ind] + direction) / np.linalg.norm(direction)
+            new_ox = Atom('O', position = ox_pos)
+            new_clust.append(new_ox)
+            nl.update(clust)
+    return (new_clust)
 
 def add_cap_h(clust, index):
     new_clust = clust
     cap_inds = get_cap_ox(clust, index)
-    for i in cap_inds:
-        neighb = nl.get_neighbors(index)[0]
-
+    for ind in cap_inds:
+        neighb = nl.get_neighbors(ind)[0][0]  # first index in the list of neighbor indicies
+        direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector from neighbor to oxygen
+        h_pos = clust.get_positions()[ind] + (clust.get_positions()[ind] + direction)/np.linalg.norm(direction)
+        new_h = Atom('H', position=h_pos)
         new_clust.append(new_h)
-
     return(new_clust)
 
 def cap_clust(clust):
-    si_capped = add_cap_ox(clust)
-    ox_capped = add_cap_h(si_capped)
+    si_capped = add_cap_ox(clust)     # cluster with capped si
+    ox_capped = add_cap_h(si_capped)  # cluster with capped o
     return(ox_capped)
 
 # testing
