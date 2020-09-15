@@ -193,14 +193,14 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
     def add_oxygen_cap(self, index, bonds_needed):
-        while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
-            neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
-            direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-            oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
-            new_oxygen = Atom('O', position=oxygen_pos)
-            self.append(new_oxygen)
-            self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-            self.neighbor_list.update(self)
+        #while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
+        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
+        oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
+        new_oxygen = Atom('O', position=oxygen_pos)
+        self.append(new_oxygen)
+        #self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        #self.neighbor_list.update(self)
 
     def add_hydrogen_cap(self, index):
         neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
