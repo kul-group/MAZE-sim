@@ -5,11 +5,11 @@ from collections import defaultdict
 import copy
 import numpy as np
 
+
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
-
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
@@ -27,6 +27,7 @@ class Zeotype(Atoms):
     @staticmethod
     def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
         """
+        Builds a zeolite object from an Atoms class
         :param a: Atoms object that Zeotype object will be used to create the Zeotype object
         :param silent: currently does nothing, but will set if output is displayed
         :return: Zeotype object created from Atoms object
@@ -43,7 +44,7 @@ class Zeotype(Atoms):
         """
         return self.sites
 
-    def get_zeolite_type(self) -> List[str]:
+    def get_zeolite_type(self) -> str:
         """
         :return: returns zeotype sites as a list
         """
@@ -77,7 +78,6 @@ class Zeotype(Atoms):
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
-        Stores the indices and counts the number of each element in the
         :return:
         """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
@@ -146,13 +146,12 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
                  parent_zeotype=None, zeotype_to_cluster_index_map=None, neighbor_list=None):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
-                 charges, scaled_positions, cell, pbc, celldisp, constraint,
-                 calculator, info, velocities, silent, zeolite_type)
+                         charges, scaled_positions, cell, pbc, celldisp, constraint,
+                         calculator, info, velocities, silent, zeolite_type)
 
         self.parent_zeotype = parent_zeotype
         self.zeotype_to_cluster_index_map = zeotype_to_cluster_index_map
         self.neighbor_list = neighbor_list
-
 
     @staticmethod
     def build_from_zeolite(parent_zeotype: Zeotype, index: int, cluster_size: int) -> "Cluster":
@@ -168,8 +167,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
         return new_cluster
 
-
-    def cap_atoms(self):
+    def cap_atoms(self, cap_atoms_dict=None, bonds_needed=None, verbose=False):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
         A lot of these clusters we add a bunch of H to the ends of the O because this a chemically plausable
         way to cap the oxygens. For example, when a zeolite is growing in solution it starts off as SiOH4
@@ -178,37 +176,55 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         3. go through all oxygens and find the ones that don't have two bonds
         4. If oxygens don't have two bonds add a hydrogen in a reasonable location (1 A distance)
         """
-        bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
-        self.neighbor_list.update(self)  # check to see if it runs without this
-        indices, count = self.count_elements()
+        if cap_atoms_dict is None:
+            cap_atoms_dict = self.build_cap_atoms_dict(bonds_needed=bonds_needed)
+        if verbose:
+            print('atom caps: {symbol, [position arrays]}', cap_atoms_dict)
 
+        # append cap atoms self
+        for symbol, pos_list in cap_atoms_dict.items():
+            for pos in pos_list:
+                self.append(Atom(symbol, position=pos))
+
+    def build_cap_atoms_dict(self, bonds_needed=None):
+        """
+        Builds a dictionary of the cap atom positions
+        :param bonds_needed: a dict mapping atom symbol to number of bonds needed
+        :return: a dictionary of atom symbols and positions of cap atoms
+        """
+        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        if bonds_needed is None:
+            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+        indices, count = self.count_elements()
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
-                self.add_oxygen_cap(si_index, bonds_needed['Si'])
+                pos = self.get_oxygen_cap_pos(si_index, bonds_needed['Si'])
+                cap_atoms_dict['O'].append(pos)
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
-                self.add_hydrogen_cap(o_index)
+                pos = self.get_hydrogen_cap_pos(si_index)
+                cap_atoms_dict['H'].append(pos)
+
+        return dict(cap_atoms_dict)
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def add_oxygen_cap(self, index, bonds_needed):
-        #while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
+    def get_oxygen_cap_pos(self, index, bonds_needed):
+        # while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
         neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
         oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
-        new_oxygen = Atom('O', position=oxygen_pos)
-        self.append(new_oxygen)
-        #self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        #self.neighbor_list.update(self)
+        return oxygen_pos
+        # self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        # self.neighbor_list.update(self)
 
-    def add_hydrogen_cap(self, index):
+    def get_hydrogen_cap_pos(self, index):
         neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
-        h_pos = self.get_positions()[index] + (self.get_positions()[index] + direction)/np.linalg.norm(direction)
-        new_h = Atom('H', position=h_pos)
-        self.append(new_h)
-
+        hydrogen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(
+            direction)
+        return hydrogen_pos
 
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, size: int):
@@ -249,6 +265,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 # testing
 if __name__ == '__main__':
     from ase.io import read
+
     b = read('BEA.cif')
     z = Zeotype(b)
     z.add_cluster(35, 3)
