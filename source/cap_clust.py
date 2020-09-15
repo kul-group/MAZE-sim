@@ -3,7 +3,7 @@
 def needs_neighb(clust, index):
     # checks if an atom in a cluster has missing bonds
     # only checks O, Si, and common metal atoms
-    a = clust[index] # atom object
+    a = clust[index]  # atom object
     if a.symbol == 'O'and len(nl.get_neighbors(index)[0]) < 2:
         return(True)
     elif a.symbol in ['Si', 'Sn', 'Al', 'Ga', 'B'] and len(nl.get_neighbors(index)[0]) < 4:
@@ -35,6 +35,7 @@ def add_cap_ox(clust, index):
     return (new_clust)
 
 def add_cap_h(clust, index):
+    nl.update(clust)
     new_clust = clust
     cap_inds = get_cap_ox(clust, index)
     for ind in cap_inds:
@@ -53,6 +54,11 @@ def cap_clust(clust):
 # testing
 if __name__ == '__main__':
     from ase.io import read
+    from ase.visualize import view
     b = read('BEA.cif')
-    # need clust to test on here
+    from zeotype import Cluster
+    c = Cluster(b, index=100, cluster_size=5)
+
+    view(c)
+
 
