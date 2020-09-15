@@ -112,7 +112,7 @@ class Zeotype(Atoms):
         :param size: number of atoms in the final cluster
         :return: index of the cluster in the zeotype cluster array
         """
-        new_cluster = Cluster(self, index, size)
+        new_cluster = Cluster.build_from_zeolite(self, index, size)
         self.clusters.append(new_cluster)
         return len(self.clusters) - 1  # returns final index in the clusters list
 
@@ -139,56 +139,35 @@ class Zeotype(Atoms):
 
 
 class Cluster(Zeotype):  # TODO include dynamic inheritance
-    def __init__(self, parent_zeotype: Zeotype, index: int, cluster_size: int):
-        super().__init__()
-        cluster_indices = self._get_cluster_indices(parent_zeotype, index, cluster_size)
-        cluster_atoms = parent_zeotype[cluster_indices]
 
-        new_self = copy.deepcopy(cluster_atoms)
-        new_self.__class__ = Cluster
-        self.__dict__.update(new_self.__dict__)
+    def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
+                 charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
+                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
+                 parent_zeotype=None, zeotype_to_cluster_index_map=None, neighbor_list=None):
+
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
+                 charges, scaled_positions, cell, pbc, celldisp, constraint,
+                 calculator, info, velocities, silent, zeolite_type)
 
         self.parent_zeotype = parent_zeotype
-        self.zeotype_to_cluster_index_map = \
-            self._get_new_cluster_mapping(self.parent_zeotype, cluster_atoms, cluster_indices)
+        self.zeotype_to_cluster_index_map = zeotype_to_cluster_index_map
+        self.neighbor_list = neighbor_list
 
-        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        self.neighbor_list.update(self)
 
-    def append(self, atom):
-        """Append atom to end."""
-        self.extend(atom)
+    @staticmethod
+    def build_from_zeolite(parent_zeotype: Zeotype, index: int, cluster_size: int) -> "Cluster":
+        cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, cluster_size)
+        cluster_atoms = parent_zeotype[cluster_indices]
+        new_cluster = Cluster(cluster_atoms)
+        new_cluster.parent_zeotype = parent_zeotype
+        new_cluster.zeotype_to_cluster_index_map = \
+            new_cluster._get_new_cluster_mapping(new_cluster.parent_zeotype, cluster_atoms, cluster_indices)
 
-    def extend(self, other):
-        """Extend atoms object by appending atoms from *other*."""
-        if isinstance(other, Atom):
-            other = Atoms([other])
+        new_cluster.neighbor_list = NeighborList(natural_cutoffs(new_cluster), bothways=True, self_interaction=False)
+        new_cluster.neighbor_list.update(new_cluster)
 
-        n1 = len(self)
-        n2 = len(other)
+        return new_cluster
 
-        for name, a1 in self.arrays.items():
-            a = np.zeros((n1 + n2,) + a1.shape[1:], a1.dtype)
-            a[:n1] = a1
-            if name == 'masses':
-                a2 = other.get_masses()
-            else:
-                a2 = other.arrays.get(name)
-            if a2 is not None:
-                a[n1:] = a2
-            self.arrays[name] = a
-
-        for name, a2 in other.arrays.items():
-            if name in self.arrays:
-                continue
-            a = np.empty((n1 + n2,) + a2.shape[1:], a2.dtype)
-            a[n1:] = a2
-            if name == 'masses':
-                a[:n1] = self.get_masses()[:n1]
-            else:
-                a[:n1] = 0
-
-            self.set_array(name, a)
 
     def cap_atoms(self):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
