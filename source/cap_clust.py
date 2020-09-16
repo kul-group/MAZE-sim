@@ -27,16 +27,17 @@ def get_cap_si(clust):
     return(si_to_cap)
 
 def add_cap_ox(clust):
+    # TODO: fix bug where adds multiple oxygen's to the same place
     nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
     nl.update(clust)
     new_clust = clust
     cap_inds = get_cap_si(clust)
     for ind in cap_inds:
         while len(nl.get_neighbors(ind)[0]) < 4:
-            neighb = nl.get_neighbors(ind)[0][0]  # first index in the list of neighbor indicies
+            neighb = nl.get_neighbors(ind)[0][-1]  # last index in the list of neighbor indicies
             direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector pointing from neighbor to Si
             ox_pos = clust.get_positions()[ind] + 1.6 * direction / np.linalg.norm(direction)
-            new_ox = Atom('O', position = ox_pos)
+            new_ox = Atom('O', position=ox_pos)
             new_clust.append(new_ox)
             nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
             nl.update(clust)
@@ -73,17 +74,4 @@ if __name__ == '__main__':
     view(cluster)
     capped_clust = cap_clust(cluster)
     view(capped_clust)
-    '''    
-    from ase.io import read
-    from ase.visualize import view
-    from zeotype import Zeotype
-    from ase.neighborlist import NeighborList, natural_cutoffs
-    b = read('BEA.cif')
-    bea = Zeotype(b)
-    c = bea.add_cluster(index=100, size=5)
-    nl = NeighborList(natural_cutoffs(b), bothways=True, self_interaction=False)
-    nl.update(b)
-    capped_cluster = cap_clust(c)
-    view(capped_cluster)
-    '''
 
