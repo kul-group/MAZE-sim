@@ -11,11 +11,6 @@ import ase
 if __name__ == '__main__':
     cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
     zeotype = Zeotype.build_zeolite_from_cif(cif_path)
-    #b = read(cif_path, store_tags=True)
-    #c = my_read_cif(cif_path, store_tags=True)
-    #zeotype = Zeotype(c)
-    #zeotype.atom_sites_label = c.info['_atom_site_label']
-    #zeotype = build_zeolite_from_cif(cif_path)
     print(zeotype.atom_sites_label)
     #print(c.info['_atom_site_label'])
     #print(c.get_tags())
