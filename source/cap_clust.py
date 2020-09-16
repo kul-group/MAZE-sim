@@ -59,13 +59,14 @@ def cap_clust(clust):
 if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
-    from zeotype import Cluster
+    from zeotype import Zeotype
     from ase.neighborlist import NeighborList, natural_cutoffs
     b = read('BEA.cif')
-    c = Cluster(b, index=100, cluster_size=5)
-    nl = NeighborList(natural_cutoffs(c), bothways=True, self_interaction=False)
-    nl.update(c)
-    capped_cluster = cap_clust(c)
-    view(capped_cluster)
+    bea = Zeotype(b)
+    c = bea.add_cluster(index=100, size=5)
+    #nl = NeighborList(natural_cutoffs(bea), bothways=True, self_interaction=False)
+    #nl.update(bea)
+    #capped_cluster = cap_clust(c)
+    #view(capped_cluster)
 
 
