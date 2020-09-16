@@ -30,8 +30,8 @@ def add_cap_ox(clust):
     for ind in cap_inds:
         while len(nl.get_neighbors(ind)[0]) < 4:
             neighb = nl.get_neighbors(ind)[0][0]  # first index in the list of neighbor indicies
-            direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector from neighbor to Si
-            ox_pos = clust.get_positions()[ind] + 1.6*(clust.get_positions()[ind] + direction) / np.linalg.norm(direction)
+            direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector pointing from neighbor to Si
+            ox_pos = clust.get_positions()[ind] + 1.6 * direction / np.linalg.norm(direction)
             new_ox = Atom('O', position = ox_pos)
             new_clust.append(new_ox)
             nl.update(clust)
@@ -43,8 +43,8 @@ def add_cap_h(clust):
     cap_inds = get_cap_ox(clust)
     for ind in cap_inds:
         neighb = nl.get_neighbors(ind)[0][0]  # first index in the list of neighbor indicies
-        direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector from neighbor to oxygen
-        h_pos = clust.get_positions()[ind] + (clust.get_positions()[ind] + direction)/np.linalg.norm(direction)
+        direction = clust.get_positions()[ind] - clust.get_positions()[neighb]  # vector pointing from neighbor to oxygen
+        h_pos = clust.get_positions()[ind] + direction/np.linalg.norm(direction)
         new_h = Atom('H', position=h_pos)
         new_clust.append(new_h)
     return(new_clust)
@@ -55,6 +55,7 @@ def cap_clust(clust):
     return(ox_capped)
 
 # testing
+# TODO: fix this test so it actually works
 if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
@@ -66,6 +67,5 @@ if __name__ == '__main__':
     nl.update(c)
     capped_cluster = cap_clust(c)
     view(capped_cluster)
-    # ...
 
 
