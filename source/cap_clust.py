@@ -6,6 +6,8 @@ from ase import Atom
 def needs_neighb(clust, index):
     # checks if an atom in a cluster has missing bonds
     # only checks O, Si, and common metal atoms
+    nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
+    nl.update(clust)
     a = clust[index]  # atom object
     if a.symbol == 'O'and len(nl.get_neighbors(index)[0]) < 2:
         return(True)
@@ -25,6 +27,8 @@ def get_cap_si(clust):
     return(si_to_cap)
 
 def add_cap_ox(clust):
+    nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
+    nl.update(clust)
     new_clust = clust
     cap_inds = get_cap_si(clust)
     for ind in cap_inds:
@@ -34,10 +38,12 @@ def add_cap_ox(clust):
             ox_pos = clust.get_positions()[ind] + 1.6 * direction / np.linalg.norm(direction)
             new_ox = Atom('O', position = ox_pos)
             new_clust.append(new_ox)
+            nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
             nl.update(clust)
     return (new_clust)
 
 def add_cap_h(clust):
+    nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
     nl.update(clust)
     new_clust = clust
     cap_inds = get_cap_ox(clust)
@@ -55,8 +61,19 @@ def cap_clust(clust):
     return(ox_capped)
 
 # testing
-# TODO: fix this test so it actually works
 if __name__ == '__main__':
+    from ase.io import read
+    from zeotype import Zeotype
+    from ase.visualize import view
+    from ase.neighborlist import NeighborList, natural_cutoffs
+    b = read('BEA.cif')
+    z = Zeotype(b)
+    z.add_cluster(35, 3)
+    cluster = z.clusters[0]
+    view(cluster)
+    capped_clust = cap_clust(cluster)
+    view(capped_clust)
+    '''    
     from ase.io import read
     from ase.visualize import view
     from zeotype import Zeotype
@@ -64,9 +81,9 @@ if __name__ == '__main__':
     b = read('BEA.cif')
     bea = Zeotype(b)
     c = bea.add_cluster(index=100, size=5)
-    #nl = NeighborList(natural_cutoffs(bea), bothways=True, self_interaction=False)
-    #nl.update(bea)
-    #capped_cluster = cap_clust(c)
-    #view(capped_cluster)
-
+    nl = NeighborList(natural_cutoffs(b), bothways=True, self_interaction=False)
+    nl.update(b)
+    capped_cluster = cap_clust(c)
+    view(capped_cluster)
+    '''
 
