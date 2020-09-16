@@ -4,6 +4,8 @@ from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
 import copy
 import numpy as np
+from ase.io import cif
+import ase
 
 
 class Zeotype(Atoms):
@@ -12,7 +14,8 @@ class Zeotype(Atoms):
     """
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = ''):
+                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
+                 atom_site_labels=None):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
@@ -23,20 +26,38 @@ class Zeotype(Atoms):
         self.silent = silent
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
+        self.atom_sites_label = atom_site_labels
+
+    @classmethod
+    def build_zeolite_from_cif(cls, fileobj):
+        atoms_gen = cls.read_cif_with_info(fileobj, store_tags=True)
+        atoms = next(atoms_gen)
+        zeotype = Zeotype(atoms)
+        try:
+            zeotype.atom_sites_label = atoms.info['_atom_site_label']
+        except KeyError:
+            print("No atom site labels in CIF")
+            pass
+        return zeotype
 
     @staticmethod
-    def build_from_atoms(a: Atoms, silent=False) -> "Zeotype":
-        """
-        Builds a zeolite object from an Atoms class
-        :param a: Atoms object that Zeotype object will be used to create the Zeotype object
-        :param silent: currently does nothing, but will set if output is displayed
-        :return: Zeotype object created from Atoms object
-        """
-        new_zeolite = Zeotype(silent=silent)
-        atom_zeolite = copy.deepcopy(a)
-        atom_zeolite.__class__ = Zeotype
-        new_zeolite.__dict__.update(atom_zeolite.__dict__)
-        return new_zeolite
+    def read_cif_with_info(fileobj, store_tags=False, primitive_cell=False,
+                      subtrans_included=True, fractional_occupancies=True,
+                      reader='ase') -> Atoms:
+        blocks = ase.io.cif.parse_cif(fileobj, reader)
+        # Find all CIF blocks with valid crystal data
+        images = []
+        for name, tags in blocks:
+            try:
+                atoms = ase.io.cif.tags2atoms(tags, store_tags, primitive_cell,
+                                              subtrans_included,
+                                              fractional_occupancies=fractional_occupancies)
+                images.append(atoms)
+            except KeyError:
+                pass
+        for atoms in images:
+            yield atoms
+
 
     def get_sites(self) -> List[str]:
         """
@@ -61,6 +82,7 @@ class Zeotype(Atoms):
 
         type_dict: Dict[str, List[int]] = defaultdict(list)  # default dict sets the default value of dict to []
 
+        nl = self.neighbor_list
         for atom in self:  # iterate through atom objects in zeotype
             # labels framework atoms
             if atom.symbol in ['Sn', 'Al', 'Si']:
@@ -69,12 +91,29 @@ class Zeotype(Atoms):
                 label = 'adsorbate-%s' % atom.symbol
             elif atom.symbol in ['Cu', 'Ni', 'Fe', 'Cr']:
                 label = 'extraframework-%s' % atom.symbol
+            elif atom.symbol == 'O':
+                neigh_ind = nl.get_neighbors(atom.index)
+                if len(neigh_ind) == 2:
+                    neigh_sym1, neigh_sym2 = self[neigh_ind[0][0]].symbol, self[neigh_ind[0][1]].symbol
+                    # assign framework oxygens
+                    if neigh_sym1 in ['Sn', 'Al', 'Si'] and neigh_sym2 in ['Sn', 'Al', 'Si']:
+                        label = 'framework-%s' % atom.symbol
+                    # assign bound adsorbate oxygen
+                    elif neigh_sym1 in ['H', 'C', 'N'] and neigh_sym2 in ['Sn', 'Al', 'Si']:
+                        label = 'bound-adsorbate-%s' % atom.symbol
+                    elif neigh_sym2 in ['H', 'C', 'N'] and neigh_sym1 in ['Sn', 'Al', 'Si']:
+                        label = 'bound-adsorbate-%s' % atom.symbol
+                    # assign rest as adsorbate oxygen
+                    else:
+                        label = 'adsorbate-%s' % atom.symbol
+                else:  # is this correct
+                    label = 'other'
             else:
                 label = 'other'
 
             type_dict[label].append(atom.index)
 
-        return type_dict
+        return dict(type_dict)
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
