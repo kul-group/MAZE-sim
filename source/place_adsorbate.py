@@ -1,15 +1,28 @@
-from ase.io import read
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase import Atom
 import numpy as np
-'''
-Takes position the adsorbate needs to be placed as a vector,
-the site at which the donor atom must
-face (as the index of that atom in the host lattice),
-the atoms object for the adsorbate and the atoms object for the host lattice
-'''
-# needs to choose donor atom and then 1. point molecule along donor vec 2. move donor atom to zero position
-# 3. try out different orientations and test them by moving donor to pos 4. add donor and ads in orientation
+
+# needs to:
+# 1. choose host/donor atom
+# 2. point molecule along donor vec
+# 3. move donor atom to correct position OR choose a good position
+# 4. try out different orientations and test them by moving donor to pos
+# 5. add donor and ads in orientation
+# 6. provide option to automatically choose placement position
+# 7. provide option to automatically shape the adsorbate: constrain bondlength and angles then minimize contact w/ pore
+
+def pick_donor(ads):
+    # chooses donor atom on an adsorbate
+    ...
+
+def pick_host_atom(host):
+    # chooses host atom to add an adsorbate to
+    ...
+
+def pick_pos(host, host_ind):
+    # chooses best position to add adsorbate
+    ...
+
 def place_ads(pos, host_ind, donor_ind, ads, host):
     '''
     :param pos: vector, the position to place adsorbate's donor atom
