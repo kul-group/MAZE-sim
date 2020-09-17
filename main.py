@@ -10,12 +10,13 @@ import ase
 
 
 if __name__ == '__main__':
-    z = build_zeolite_from_code('JST')
-    print(z)
-    #cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
-    #download_cif('BEA')
-    #zeotype = Zeotype.build_zeolite_from_cif(cif_path)
-    #print(zeotype.atom_sites_label)
+
+    cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
+    zeotype = Zeotype.build_from_cif(cif_path)
+    print(len(zeotype.atom_sites_label))
+    print(len(zeotype.get_chemical_symbols()))
+    # for a in zeotype:
+    #    print(a)
     #print(c.info['_atom_site_label'])
     #print(c.get_tags())
     #d = ase.io.cif.

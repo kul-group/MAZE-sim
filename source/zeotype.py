@@ -29,10 +29,10 @@ class Zeotype(Atoms):
         self.atom_sites_label = atom_site_labels
 
     @classmethod
-    def build_zeolite_from_cif(cls, fileobj):
+    def build_from_cif(cls, fileobj):
         atoms_gen = cls.read_cif_with_info(fileobj, store_tags=True)
         atoms = next(atoms_gen)
-        zeotype = Zeotype(atoms)
+        zeotype = cls(atoms)
         try:
             zeotype.atom_sites_label = atoms.info['_atom_site_label']
         except KeyError:
