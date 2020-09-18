@@ -7,11 +7,11 @@ import numpy as np
 from ase.io import cif
 import ase
 
-
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
+
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
@@ -42,8 +42,8 @@ class Zeotype(Atoms):
 
     @staticmethod
     def read_cif_with_info(fileobj, store_tags=False, primitive_cell=False,
-                      subtrans_included=True, fractional_occupancies=True,
-                      reader='ase') -> Atoms:
+                           subtrans_included=True, fractional_occupancies=True,
+                           reader='ase') -> Atoms:
         blocks = ase.io.cif.parse_cif(fileobj, reader)
         # Find all CIF blocks with valid crystal data
         images = []
@@ -57,7 +57,6 @@ class Zeotype(Atoms):
                 pass
         for atoms in images:
             yield atoms
-
 
     def get_sites(self) -> List[str]:
         """

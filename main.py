@@ -1,3 +1,4 @@
+from source.cif_download import build_zeolite_from_code
 from source.zeotype import Zeotype
 from ase.visualize import view
 import os
@@ -9,9 +10,12 @@ import ase
 
 
 if __name__ == '__main__':
-    cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
-    zeotype = Zeotype.build_zeolite_from_cif(cif_path)
-    print(zeotype.atom_sites_label)
+    z = build_zeolite_from_code('JST')
+    print(z)
+    #cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
+    #download_cif('BEA')
+    #zeotype = Zeotype.build_zeolite_from_cif(cif_path)
+    #print(zeotype.atom_sites_label)
     #print(c.info['_atom_site_label'])
     #print(c.get_tags())
     #d = ase.io.cif.
