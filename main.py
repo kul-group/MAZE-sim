@@ -1,4 +1,5 @@
-from source.zeotype import Zeotype, build_zeolite_from_code
+from source.cif_download import build_zeolite_from_code
+from source.zeotype import Zeotype
 from ase.visualize import view
 import os
 from ase.neighborlist import natural_cutoffs, NeighborList
