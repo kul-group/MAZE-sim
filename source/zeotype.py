@@ -6,6 +6,16 @@ import copy
 import numpy as np
 from ase.io import cif
 import ase
+import ase.data
+
+
+def get_available_symbols(atom_list):
+    available_chem_symbols = copy.deepcopy(ase.data.chemical_symbols)
+    for symbol in set(atom_list):
+        pop_index = available_chem_symbols.index(symbol)
+        available_chem_symbols.pop(pop_index)
+
+    return available_chem_symbols
 
 class Zeotype(Atoms):
     """
@@ -15,7 +25,9 @@ class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 atom_site_labels=None):
+                 t_site_to_atom_indices=None, atom_indices_to_t_site=None):
+
+        # TODO: Add in copy method for zeotype objects (if symbol is a zeotype then you do extra things)
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
@@ -26,13 +38,22 @@ class Zeotype(Atoms):
         self.silent = silent
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
-        self.atom_sites_label = atom_site_labels
+        self.t_site_to_atom_indices = t_site_to_atom_indices
+        self.atom_indices_to_t_site = atom_indices_to_t_site
 
     @classmethod
-    def build_zeolite_from_cif(cls, fileobj):
+    def build_from_cif_with_labels(cls, fileobj):
+        atoms, t_site_to_atom_indices, atom_indices_to_t_site = cls.read_cif_note_T_sites(fileobj)
+        zeotype = cls(atoms)
+        zeotype.t_site_to_atom_indices = t_site_to_atom_indices
+        zeotype.atom_indices_to_t_site = atom_indices_to_t_site
+        return zeotype
+
+    @classmethod
+    def build_from_cif(cls, fileobj):
         atoms_gen = cls.read_cif_with_info(fileobj, store_tags=True)
         atoms = next(atoms_gen)
-        zeotype = Zeotype(atoms)
+        zeotype = cls(atoms)
         try:
             zeotype.atom_sites_label = atoms.info['_atom_site_label']
         except KeyError:
@@ -57,6 +78,57 @@ class Zeotype(Atoms):
                 pass
         for atoms in images:
             yield atoms
+
+    @staticmethod
+    def read_cif_note_T_sites(fileobj, store_tags=False, primitive_cell=False,
+                              subtrans_included=True, fractional_occupancies=True,
+                              reader='ase'):
+        """
+
+        :param fileobj: CIF file location
+        :param store_tags: store the tags in resulting atoms object
+        :param primitive_cell:
+        :param subtrans_included:
+        :param fractional_occupancies:
+        :param reader:
+        :return: atoms, t_site_to_atom_indices, atom_indices_to_t_site
+        """
+        blocks = ase.io.cif.parse_cif(fileobj, reader)  # read CIF file into dictionary
+        b_dict = blocks[0][1]  # get the dictionary from CIF file
+        # find the atoms that are T sites
+        t_indices = [i for i in range(0, len(b_dict["_atom_site_label"])) if 'T' in b_dict["_atom_site_label"][i]]
+
+        # replace elements with replacement symbol
+        element_to_T_site = {}
+        sym_to_original_element = {}
+        possible_syms = get_available_symbols(b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
+        for i in t_indices:
+            sym = possible_syms.pop()
+            sym_to_original_element[sym] = b_dict["_atom_site_type_symbol"][i]
+            b_dict["_atom_site_type_symbol"][i] = sym
+            element_to_T_site[sym] = b_dict["_atom_site_label"][i]
+
+        t_site_to_atom_indices = defaultdict(list)
+        atom_indices_to_t_site = {}
+
+        images = []
+        atoms = None
+        for name, tags in blocks:
+            atoms = ase.io.cif.tags2atoms(tags, store_tags, primitive_cell,
+                                          subtrans_included,
+                                          fractional_occupancies=fractional_occupancies)
+            images.append(atoms)
+
+            for i in range(len(atoms)):  # replace substitute atoms with original Si and get indices of replaced atoms
+                if atoms[i].symbol in element_to_T_site.keys():
+                    sym = atoms[i].symbol
+                    key = element_to_T_site[sym]
+                    t_site_to_atom_indices[key].append(i)
+                    atom_indices_to_t_site[i] = key
+                    atoms[i].tag = ase.data.atomic_numbers[sym]
+                    atoms[i].symbol = sym_to_original_element[sym]
+
+        return atoms, dict(t_site_to_atom_indices), atom_indices_to_t_site
 
     def get_sites(self) -> List[str]:
         """
@@ -196,6 +268,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, cluster_size)
         cluster_atoms = parent_zeotype[cluster_indices]
         new_cluster = Cluster(cluster_atoms)
+        # TODO: Copy over rel absorbates and dictionaries from zeotype class to cluster
         new_cluster.parent_zeotype = parent_zeotype
         new_cluster.zeotype_to_cluster_index_map = \
             new_cluster._get_new_cluster_mapping(new_cluster.parent_zeotype, cluster_atoms, cluster_indices)
