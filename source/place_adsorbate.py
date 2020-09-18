@@ -18,7 +18,7 @@ def pick_donor(ads):
 
 def pick_host_atom(host):
     # returns host atom index to add an adsorbate to
-    # picks element with largest atomic number higher than 14 (Si), else, picks Al
+    # picks element with largest atomic number higher than 14 (Si) or Al
     atom_nums = host.get_atomic_numbers()
     max_num = max(atom_nums)
     symbol = Atom(max_num).symbol
@@ -28,7 +28,7 @@ def pick_host_atom(host):
             al_ind = [j.index for j in host if j.symbol == 'Al'][0]
             return (al_ind)
         else:
-            return(0) #TODO: write good error message here
+            return ValueError("No heavy atoms other than Si in host")
     else:
         return(host_ind)
 
