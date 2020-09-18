@@ -7,14 +7,29 @@ import copy
 #from ase.io import read
 from ase.io import cif
 import ase
+import ase.data
+
 
 
 if __name__ == '__main__':
 
     cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
-    zeotype = Zeotype.build_from_cif(cif_path)
-    print(len(zeotype.atom_sites_label))
-    print(len(zeotype.get_chemical_symbols()))
+    #zeotype = Zeotype.build_from_cif(cif_path)
+    zeo_info = Zeotype.read_cif_note_T_sites(cif_path)
+    print(zeo_info[0].get_tags())
+    # make a list of avalible chem symbols
+    # available_chem_symbols = copy.deepcopy(ase.data.chemical_symbols)
+    # for symbol in set(zeotype.get_chemical_symbols()):
+    #     pop_index = available_chem_symbols.index(symbol)
+    #     item = available_chem_symbols.pop(pop_index)
+    #
+
+
+
+    #available_chem_symbols.pop()
+    # print(len(zeotype.atom_sites_label))
+    # print(len(zeotype.get_c
+    # hemical_symbols()))
     # for a in zeotype:
     #    print(a)
     #print(c.info['_atom_site_label'])

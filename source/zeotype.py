@@ -6,6 +6,16 @@ import copy
 import numpy as np
 from ase.io import cif
 import ase
+import ase.data
+
+
+def get_avalible_symbols(atom_list):
+    available_chem_symbols = copy.deepcopy(ase.data.chemical_symbols)
+    for symbol in set(atom_list):
+        pop_index = available_chem_symbols.index(symbol)
+        available_chem_symbols.pop(pop_index)
+
+    return available_chem_symbols
 
 class Zeotype(Atoms):
     """
@@ -57,6 +67,57 @@ class Zeotype(Atoms):
                 pass
         for atoms in images:
             yield atoms
+
+    @staticmethod
+    def read_cif_note_T_sites(fileobj, store_tags=False, primitive_cell=False,
+                              subtrans_included=True, fractional_occupancies=True,
+                              reader='ase'):
+        """
+
+        :param fileobj: CIF file location
+        :param store_tags: store the tags in resulting atoms object
+        :param primitive_cell:
+        :param subtrans_included:
+        :param fractional_occupancies:
+        :param reader:
+        :return: atoms, t_site_to_atom_indices, atom_indices_to_t_site
+        """
+        blocks = ase.io.cif.parse_cif(fileobj, reader)  # read CIF file into dictionary
+        b_dict = blocks[0][1]  # get the dictionary from CIF file
+        # find the atoms that are T sites
+        t_indices = [i for i in range(0, len(b_dict["_atom_site_label"])) if 'T' in b_dict["_atom_site_label"][i]]
+
+        # replace elements with replacement symbol
+        element_to_T_site = {}
+        sym_to_original_element = {}
+        possible_syms = get_avalible_symbols(b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
+        for i in t_indices:
+            sym = possible_syms.pop()
+            sym_to_original_element[sym] = b_dict["_atom_site_type_symbol"][i]
+            b_dict["_atom_site_type_symbol"][i] = sym
+            element_to_T_site[sym] = b_dict["_atom_site_label"][i]
+
+        t_site_to_atom_indices = defaultdict(list)
+        atom_indices_to_t_site = {}
+
+        images = []
+        atoms = None
+        for name, tags in blocks:
+            atoms = ase.io.cif.tags2atoms(tags, store_tags, primitive_cell,
+                                          subtrans_included,
+                                          fractional_occupancies=fractional_occupancies)
+            images.append(atoms)
+
+            for i in range(len(atoms)):  # replace substitute atoms with original Si and get indices of replaced atoms
+                if atoms[i].symbol in element_to_T_site.keys():
+                    sym = atoms[i].symbol
+                    key = element_to_T_site[sym]
+                    t_site_to_atom_indices[key].append(i)
+                    atom_indices_to_t_site[i] = key
+                    atoms[i].tag = ase.data.atomic_numbers[sym]
+                    atoms[i].symbol = sym_to_original_element[sym]
+
+        return atoms, dict(t_site_to_atom_indices), atom_indices_to_t_site
 
     def get_sites(self) -> List[str]:
         """
