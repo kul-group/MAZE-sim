@@ -16,9 +16,11 @@ if __name__ == '__main__':
     cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
     #zeotype = Zeotype.build_from_cif(cif_path)
     z = Zeotype.build_from_cif_with_labels(cif_path)
-    z.add_cluster(3,10)
-    z.add_cluster(30, 10)
-    print(z.t_site_to_atom_indices)
+    z.add_cluster(88,40)
+    test = copy.deepcopy(z.clusters[0])
+    view(test)
+    z.clusters[0].cap_atoms(verbose=True)
+    view(z.clusters[0])
     # make a list of avalible chem symbols
     # available_chem_symbols = copy.deepcopy(ase.data.chemical_symbols)
     # for symbol in set(zeotype.get_chemical_symbols()):
