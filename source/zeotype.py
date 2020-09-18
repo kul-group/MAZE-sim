@@ -17,6 +17,7 @@ def get_available_symbols(atom_list):
 
     return available_chem_symbols
 
+
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
@@ -277,6 +278,9 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         new_cluster.neighbor_list.update(new_cluster)
 
         return new_cluster
+    def update_nl(self):
+        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        self.neighbor_list.update(self)
 
     def cap_atoms(self, cap_atoms_dict=None, bonds_needed=None, verbose=False):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
@@ -309,12 +313,16 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         indices, count = self.count_elements()
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
-                pos = self.get_oxygen_cap_pos(si_index, bonds_needed['Si'])
-                cap_atoms_dict['O'].append(pos)
+                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
+                    pos = self.get_oxygen_cap_pos(si_index, bonds_needed['Si'])
+                    cap_atoms_dict['O'].append(pos)
+                    self.update_nl()
+
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
                 pos = self.get_hydrogen_cap_pos(si_index)
                 cap_atoms_dict['H'].append(pos)
+                self.update_nl()
 
         return dict(cap_atoms_dict)
 
@@ -323,9 +331,9 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
     def get_oxygen_cap_pos(self, index, bonds_needed):
         # while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
-        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+        neighbor = self.neighbor_list.get_neighbors(index)[0][-1]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-        oxygen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(direction)
+        oxygen_pos = self.get_positions()[index] + 1.6 * direction / np.linalg.norm(direction)
         return oxygen_pos
         # self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         # self.neighbor_list.update(self)
@@ -333,8 +341,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
     def get_hydrogen_cap_pos(self, index):
         neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[index] + (self.get_positions()[index] + direction) / np.linalg.norm(
-            direction)
+        hydrogen_pos = self.get_positions()[index] + direction/np.linalg.norm(direction)
         return hydrogen_pos
 
     @staticmethod
