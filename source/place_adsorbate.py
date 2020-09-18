@@ -12,12 +12,25 @@ import numpy as np
 # 7. provide option to automatically shape the adsorbate: constrain bondlength and angles then minimize contact w/ pore
 
 def pick_donor(ads):
-    # chooses donor atom on an adsorbate
+    # finds atom in adsorbate most likely to bind to metal
+    # N > O > P > S > X > C > H
     ...
 
 def pick_host_atom(host):
-    # chooses host atom to add an adsorbate to
-    ...
+    # returns host atom index to add an adsorbate to
+    # picks element with largest atomic number higher than 14 (Si), else, picks Al
+    atom_nums = host.get_atomic_numbers()
+    max_num = max(atom_nums)
+    symbol = Atom(max_num).symbol
+    host_ind = [i.index for i in host if i.symbol == symbol][0]
+    if max_num == 14:
+        if 13 in atom_nums:
+            al_ind = [j.index for j in host if j.symbol == 'Al'][0]
+            return (al_ind)
+        else:
+            return(0) #TODO: write good error message here
+    else:
+        return(host_ind)
 
 def pick_pos(host, host_ind):
     # chooses best position to add adsorbate
@@ -50,7 +63,6 @@ def place_ads(pos, host_ind, donor_ind, ads, host):
 # rotate the ads into binding direction, move the ads to proper pos and combine
     ads2 = ads.copy() # to avoid making changes to orig adsorbate
     ads2.rotate(donor_vec, vec)
-    ads2.translate([0.0, 0.0, 0.0]) #- ads2.get_positions()[donor_no]) # moves donor to zero position to prepare for orientation
     ads2.translate(pos - ads2.get_positions()[donor_ind])
     host_new = host + ads2
     return (host_new)
@@ -62,6 +74,10 @@ if __name__ == '__main__':
     from ase.build import molecule
     host = read('BEA.cif')
     host[185].symbol = 'Sn'  # for visualization
+    host_ind = pick_host_atom(host)
+    print(host_ind)
+    '''
     ads = molecule('CH3OH')
     new_host = place_ads([5.6,8.3,15.2], 185, 1, ads, host) # example run with nice parameters
     view(new_host)
+    '''
