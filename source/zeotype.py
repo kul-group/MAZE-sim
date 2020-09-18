@@ -6,12 +6,38 @@ import copy
 import numpy as np
 from ase.io import cif
 import ase
+import urllib.request
+import os
+from urllib.error import HTTPError
+from pathlib import Path
 
+
+def download_cif(code: str, data_dir='data'):
+    Path(data_dir).mkdir(parents=True, exist_ok=True)  # create output directory if i
+    output_path = os.path.join(data_dir, code + '.cif')
+    root_url = "https://europe.iza-structure.org/IZA-SC/cif/"
+    url = root_url + code + '.cif'
+    try:
+        urllib.request.urlretrieve(url, output_path)
+    except HTTPError as err:
+        if err.code == 404:
+            print("error code 404: Specified Zeolite Framework not found")
+            raise
+        else:
+            raise
+
+
+def build_zeolite_from_code(code, data_dir='data'):
+    output_path = os.path.join(data_dir, code + '.cif')
+    if not os.path.exists(output_path):
+        download_cif(code, data_dir)  # will throw error if not successful
+    return Zeotype.build_zeolite_from_cif(output_path)
 
 class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
+
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
@@ -42,8 +68,8 @@ class Zeotype(Atoms):
 
     @staticmethod
     def read_cif_with_info(fileobj, store_tags=False, primitive_cell=False,
-                      subtrans_included=True, fractional_occupancies=True,
-                      reader='ase') -> Atoms:
+                           subtrans_included=True, fractional_occupancies=True,
+                           reader='ase') -> Atoms:
         blocks = ase.io.cif.parse_cif(fileobj, reader)
         # Find all CIF blocks with valid crystal data
         images = []
@@ -57,7 +83,6 @@ class Zeotype(Atoms):
                 pass
         for atoms in images:
             yield atoms
-
 
     def get_sites(self) -> List[str]:
         """
