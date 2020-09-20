@@ -25,8 +25,10 @@ def find_void(pos, host):
     ans = minimize(func, guess)
     return(ans.x)
 
-def sphere_sample(radius, num_pts):
+def sphere_sample(radius, num_pts=None):
 # generates random positions on the surface of a sphere of certain radius
+    if num_pts == None:
+        num_pts = 300
     vect_list = []
     for i in range(num_pts):
         x, y, z = [2*random()-1 for i in range(3)]
