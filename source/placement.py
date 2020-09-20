@@ -4,6 +4,8 @@ from ase import Atom
 import numpy as np
 from random import random
 
+# TODO: reduce number of input parameters -> more automatic
+
 def min_dist(pos, host):
 # returns the distance to the closest atom in the host at position
     dummy_atom = Atom('H', position=pos)
@@ -19,7 +21,8 @@ def avg_dist(pos, host):
 def find_void(pos, host):
 # from starting position, finds the nearest void in the host structure
     guess = pos
-    ans = minimize(-1*min_dist, guess, host)
+    func = lambda pos: -1*min_dist(pos, host) # 1 param function for scipy.minimize
+    ans = minimize(func, guess)
     return(ans.x)
 
 def sphere_sample(radius, num_pts):
@@ -53,14 +56,15 @@ def get_place_clusters(host, index, radius, num_pts, cutoff):
 
 def find_best_place(host, index, radius, num_pts, cutoff):
 # picks the best location to place an adsorbate around the host atom
-# TODO: find better way to pick this
+
     viable_pos = get_place_clusters(host, index, radius, num_pts, cutoff)
-    c = []
-    for i in viable_pos:
-            b = min_dist(i, host) # should be average? or closest to void?
-            c.append([b, i])
-    min_c = max([i[0] for i in c])
-    best_pos = [i[1] for i in c if i[0]>=min_c][0]
+    best_avg_dist = 0
+    for pos in viable_pos:
+        void = find_void(pos, host)
+        void_avg_dist = avg_dist(void, host)  # average dist at void nearest to pos
+        if void_avg_dist > best_avg_dist:
+            best_avg_dist = void_avg_dist     # selects pos with largest nearby void
+            best_pos = pos
     return(best_pos)
 
 # testing
@@ -69,13 +73,10 @@ if __name__=='__main__':
     from ase.io import read
     from ase.visualize import view
     host = read('BEA.cif')
-    a= get_place_clusters(host, 185, 2.2, 300, 1.9)
-    viz=host.copy()
+    a = get_place_clusters(host, 185, 2.2, 400, 1.9)
+    viz = host.copy()
     c = []
-    for i in a:
-        b=avg_dist(i, host)
-        c.append([b, i])
-    min_c = max([i[0] for i in c])
-    best_pos = [i[1] for i in c if i[0]>=min_c][0]
+    best_pos = find_best_place(host, 185, 2.2, 400, 1.9)
+    print(best_pos)
     viz = viz + Atom('H', position=best_pos) # visualization
     view(viz)
