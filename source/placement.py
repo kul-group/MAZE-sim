@@ -28,7 +28,7 @@ def find_void(pos, host):
 def sphere_sample(radius, num_pts=None):
 # generates random positions on the surface of a sphere of certain radius
     if num_pts == None:
-        num_pts = 300
+        num_pts = 500
     vect_list = []
     for i in range(num_pts):
         x, y, z = [2*random()-1 for i in range(3)]
@@ -39,27 +39,27 @@ def sphere_sample(radius, num_pts=None):
             vect_list.append(radius*unit_vec)
     return(vect_list)
 
-def get_place_clusters(host, index, radius, num_pts, cutoff):
+def get_place_clusters(host, index, radius, cutoff, num_pts=None):
 # rejects random points around host atom which are too close to another host atom
 # clusters the non-rejected points
 # if num_pts is too small, will get error
     assert (radius > cutoff)
+    if num_pts == None:
+        num_pts = 500
     guess_pos = sphere_sample(radius, num_pts)
-    viable_pos = []
     host_pos = host.get_positions()[index]
-    for i in guess_pos:
-        d = min_dist(i+host_pos, host) # cutoff must be smaller than radius
-        if d > cutoff:
-            viable_pos.append(i+host_pos)
+    min_dists = [min_dist(i+host_pos, host) for i in guess_pos]
+    viable_pos = [j + host_pos for j in min_dists if j > cutoff]
     ms = MeanShift(bin_seeding=True)
     ms.fit(np.array(viable_pos))
     cluster_centers = ms.cluster_centers_
     return(cluster_centers)
 
-def find_best_place(host, index, radius, num_pts, cutoff):
+def find_best_place(host, index, radius, cutoff, num_pts=None):
 # picks the best location to place an adsorbate around the host atom
-
-    viable_pos = get_place_clusters(host, index, radius, num_pts, cutoff)
+    if num_pts == None:
+        num_pts = 500
+    viable_pos = get_place_clusters(host, index, radius, cutoff, num_pts)
     best_avg_dist = 0
     for pos in viable_pos:
         void = find_void(pos, host)
@@ -75,10 +75,6 @@ if __name__=='__main__':
     from ase.io import read
     from ase.visualize import view
     host = read('BEA.cif')
-    a = get_place_clusters(host, 185, 2.2, 400, 1.9)
-    viz = host.copy()
-    c = []
-    best_pos = find_best_place(host, 185, 2.2, 400, 1.9)
-    print(best_pos)
-    viz = viz + Atom('H', position=best_pos) # visualization
+    best_pos = find_best_place(host, 185, 2.2, 1.9)
+    viz = host + Atom('H', position=best_pos)  # visualization
     view(viz)
