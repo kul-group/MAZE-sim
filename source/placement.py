@@ -46,10 +46,15 @@ def get_place_clusters(host, index, radius, cutoff, num_pts=None):
     assert (radius > cutoff)
     if num_pts == None:
         num_pts = 500
+
     guess_pos = sphere_sample(radius, num_pts)
     host_pos = host.get_positions()[index]
-    min_dists = [min_dist(i+host_pos, host) for i in guess_pos]
-    viable_pos = [j + host_pos for j in min_dists if j > cutoff]
+    viable_pos = []
+
+    for pos in guess_pos:
+        dist = min_dist(pos+host_pos, host)
+        if dist > cutoff:
+            viable_pos.append(pos+host_pos)
     ms = MeanShift(bin_seeding=True)
     ms.fit(np.array(viable_pos))
     cluster_centers = ms.cluster_centers_
