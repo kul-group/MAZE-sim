@@ -39,12 +39,6 @@ def pick_host_atom(host):
     else:
         return(host_ind)
 
-
-
-def pick_pos(host, host_ind):
-    # chooses best position to add adsorbate
-
-
 def place_ads(pos, ads, host, host_ind=None, donor_ind=None,):
     '''
     :param pos: vector, the position to place adsorbate's donor atom
