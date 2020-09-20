@@ -39,10 +39,11 @@ def pick_host_atom(host):
     else:
         return(host_ind)
 
-def pick_pos(host, host_ind=None):
+
+
+def pick_pos(host, host_ind):
     # chooses best position to add adsorbate
-    if host_ind == None:
-        host_ind = pick_host_atom(host)
+
 
 def place_ads(pos, ads, host, host_ind=None, donor_ind=None,):
     '''
