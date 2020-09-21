@@ -42,7 +42,19 @@ def pick_host_atom(host):
 
 def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
     from placement import find_best_place
-    ...
+    from ase.data import covalent_radii
+    if radius == None:
+        donor_atom = ads[donor_ind]
+        donor_radius = covalent_radii[donor_atom]  # WRONG!!
+        host_atom = host[host_ind]
+        host_radius = covalent_radii[host_atom]
+        radius = host_radius + donor_radius
+    if cutoff == None:
+        host_atom = host[host_ind] # wrong!!
+        host_radius = covalent_radii[host_atom]
+        radius = host_radius
+    pos = find_best_place(host, host_ind, radius, cutoff)
+    return(pos)
 
 def place_ads(ads, host, pos=None, host_ind=None, donor_ind=None,):
     '''
