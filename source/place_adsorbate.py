@@ -42,21 +42,21 @@ def pick_host_atom(host):
 
 def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
     from placement import find_best_place
-    from ase.data import covalent_radii
+    from ase.data import atomic_numbers, covalent_radii
+
+    donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, host[host_ind].symbol
+    donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
+    donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
+
     if radius == None:
-        donor_atom = ads[donor_ind]
-        donor_radius = covalent_radii[donor_atom]  # WRONG!!
-        host_atom = host[host_ind]
-        host_radius = covalent_radii[host_atom]
         radius = host_radius + donor_radius
     if cutoff == None:
-        host_atom = host[host_ind] # wrong!!
-        host_radius = covalent_radii[host_atom]
-        radius = host_radius
+        cutoff = host_radius
+
     pos = find_best_place(host, host_ind, radius, cutoff)
     return(pos)
 
-def place_ads(ads, host, pos=None, host_ind=None, donor_ind=None,):
+def place_ads(ads, host, donor_ind=None, host_ind=None, pos=None):
     '''
     :param pos: vector, the position to place adsorbate's donor atom
     :param host_ind: integer, index of site in host which adsorbate will be bound
@@ -72,7 +72,7 @@ def place_ads(ads, host, pos=None, host_ind=None, donor_ind=None,):
     if donor_ind == None:
         donor_ind = pick_donor(ads)
     if pos == None:
-        pick_pos(ads, host, donor_ind, host_ind)
+        pos = pick_pos(ads, host, donor_ind, host_ind)
     dummy_atom = Atom('H', position=pos)
     dummy_host = host + dummy_atom
     vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
@@ -101,5 +101,6 @@ if __name__ == '__main__':
     host = read('BEA.cif')
     host[185].symbol = 'Sn'  # for visualization
     ads = molecule('CH3OH')
-    new_host = place_ads([5.6,8.3,15.2], ads, host) # example run with nice parameters
+    #new_host = place_ads(ads, host, 1, 185, [5.6,8.3,15.2]) # example run with nice parameters
+    new_host = place_ads(ads, host)
     view(new_host)
