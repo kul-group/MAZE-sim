@@ -1,16 +1,8 @@
 from ase.neighborlist import NeighborList, natural_cutoffs
-
+from placement import find_best_place
+from ase.data import atomic_numbers, covalent_radii
 from ase import Atom
 import numpy as np
-
-# needs to:
-# 1. choose host/donor atom
-# 2. point molecule along donor vec
-# 3. move donor atom to correct position OR choose a good position
-# 4. try out different orientations and test them by moving donor to pos
-# 5. add donor and ads in orientation
-# 6. provide option to automatically choose placement position
-# 7. provide option to automatically shape the adsorbate: constrain bondlength and angles then minimize contact w/ pore
 
 def pick_donor(ads):
     # finds atom in adsorbate most likely to bind to metal
@@ -41,8 +33,6 @@ def pick_host_atom(host):
         return(host_ind)
 
 def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
-    from placement import find_best_place
-    from ase.data import atomic_numbers, covalent_radii
 
     donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, host[host_ind].symbol
     donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
@@ -67,14 +57,14 @@ def place_ads(ads, host, donor_ind=None, host_ind=None, pos=None):
     :return:
     '''
 
-    if host_ind == None:
-        host_ind = pick_host_atom(host)
     if donor_ind == None:
         donor_ind = pick_donor(ads)
+    if host_ind == None:
+        host_ind = pick_host_atom(host)
     if pos == None:
         pos = pick_pos(ads, host, donor_ind, host_ind)
-    dummy_atom = Atom('H', position=pos)
-    dummy_host = host + dummy_atom
+
+    dummy_host = host + Atom('H', position=pos)
     vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
     nl = NeighborList(natural_cutoffs(ads), self_interaction=False, bothways=True)
     nl.update(ads)
