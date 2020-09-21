@@ -1,4 +1,5 @@
 from ase.neighborlist import NeighborList, natural_cutoffs
+
 from ase import Atom
 import numpy as np
 
@@ -39,7 +40,11 @@ def pick_host_atom(host):
     else:
         return(host_ind)
 
-def place_ads(pos, ads, host, host_ind=None, donor_ind=None,):
+def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
+    from placement import find_best_place
+    ...
+
+def place_ads(ads, host, pos=None, host_ind=None, donor_ind=None,):
     '''
     :param pos: vector, the position to place adsorbate's donor atom
     :param host_ind: integer, index of site in host which adsorbate will be bound
@@ -54,10 +59,11 @@ def place_ads(pos, ads, host, host_ind=None, donor_ind=None,):
         host_ind = pick_host_atom(host)
     if donor_ind == None:
         donor_ind = pick_donor(ads)
+    if pos == None:
+        pick_pos(ads, host, donor_ind, host_ind)
     dummy_atom = Atom('H', position=pos)
     dummy_host = host + dummy_atom
     vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
-    host_indicies, ads_indicies = [k.index for k in host], [j.index for j in ads]
     nl = NeighborList(natural_cutoffs(ads), self_interaction=False, bothways=True)
     nl.update(ads)
 # gets neighbors of donor atom and adds the vectors from neighbor to donor
