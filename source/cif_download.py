@@ -23,4 +23,4 @@ def build_zeolite_from_code(code, data_dir='data'):
     output_path = os.path.join(data_dir, code + '.cif')
     if not os.path.exists(output_path):
         download_cif(code, data_dir)  # will throw error if not successful
-    return Zeotype.build_zeolite_from_cif(output_path)
+    return Zeotype.build_from_cif_with_labels(output_path)

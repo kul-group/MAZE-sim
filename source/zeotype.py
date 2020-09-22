@@ -7,9 +7,14 @@ import numpy as np
 from ase.io import cif
 import ase
 import ase.data
-
+from .absorbate import Absorbate
 
 def get_available_symbols(atom_list):
+    """
+    :param atom_list: A list of atom symbols to be excluded from returned list
+    :return: a list of all possible atom symbols that do not include items from
+    the original list
+    """
     available_chem_symbols = copy.deepcopy(ase.data.chemical_symbols)
     for symbol in set(atom_list):
         pop_index = available_chem_symbols.index(symbol)
@@ -35,7 +40,8 @@ class Zeotype(Atoms):
 
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
-        self.clusters = []
+        self.clusters: List[Cluster] = []
+        self.adsorbates: List[Absorbate] = []
         self.silent = silent
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
@@ -43,8 +49,16 @@ class Zeotype(Atoms):
         self.atom_indices_to_t_site = atom_indices_to_t_site
 
     @classmethod
-    def build_from_cif_with_labels(cls, fileobj):
-        atoms, t_site_to_atom_indices, atom_indices_to_t_site = cls.read_cif_note_T_sites(fileobj)
+    def build_from_cif_with_labels(cls, filepath) -> "Zeotype":
+        """
+        Takes a filepath/fileobject of a cif file and returns a Zeotype or child class with T-sites
+        labeled as specified in the cif file. The dictionaries for T site labels are also filled in
+        these map from the T-site to a list of atom indices. The atom indices to t sites maps atom
+        indices to T-sites.
+        :param filepath:
+        :return:
+        """
+        atoms, t_site_to_atom_indices, atom_indices_to_t_site = cls.read_cif_note_T_sites(filepath)
         zeotype = cls(atoms)
         zeotype.t_site_to_atom_indices = t_site_to_atom_indices
         zeotype.atom_indices_to_t_site = atom_indices_to_t_site
@@ -52,6 +66,12 @@ class Zeotype(Atoms):
 
     @classmethod
     def build_from_cif(cls, fileobj):
+        """
+        Builds an zeotype object a cif file and stores the atom tags in an info dictionary
+        :param fileobj: The filepath to the cif file
+        :return: a zeotype object with an info dictionary that contains T-site labels
+        """
+        # TODO: Remove in future versions
         atoms_gen = cls.read_cif_with_info(fileobj, store_tags=True)
         atoms = next(atoms_gen)
         zeotype = cls(atoms)
@@ -66,6 +86,8 @@ class Zeotype(Atoms):
     def read_cif_with_info(fileobj, store_tags=False, primitive_cell=False,
                            subtrans_included=True, fractional_occupancies=True,
                            reader='ase') -> Atoms:
+
+        # TODO: Remove in future versions
         blocks = ase.io.cif.parse_cif(fileobj, reader)
         # Find all CIF blocks with valid crystal data
         images = []
@@ -85,13 +107,20 @@ class Zeotype(Atoms):
                               subtrans_included=True, fractional_occupancies=True,
                               reader='ase'):
         """
+        The helper function used by build_from_cif_with_labels. This loads a CIF file
+        using ase.io.cif.parse_cif and then finds the T-site information. After finding
+        the T-site information it then replaces each atom in the T-site with another
+        atom type not found in the cif file. The crystal is then generated and then
+        the resulting atoms object atoms are replaced by the original atoms. The mapping
+        between the T-site names and the atom objects in the final atoms object are
+        recored in two dictionaries.
 
         :param fileobj: CIF file location
         :param store_tags: store the tags in resulting atoms object
-        :param primitive_cell:
-        :param subtrans_included:
-        :param fractional_occupancies:
-        :param reader:
+        :param primitive_cell: An option for the reader
+        :param subtrans_included: An option for the reader
+        :param fractional_occupancies: an option for the final crystal
+        :param reader: the reader used (ase works others have not been tested)
         :return: atoms, t_site_to_atom_indices, atom_indices_to_t_site
         """
         blocks = ase.io.cif.parse_cif(fileobj, reader)  # read CIF file into dictionary
@@ -232,6 +261,8 @@ class Zeotype(Atoms):
         :param index: Index of cluster to remove from zeotype list
         :return: None
         """
+        # TODO: Replace with cluster[index] = None (no index distortion)
+
         self.clusters.pop(index)
 
     def integrate_cluster(self, cluster_index: int):
@@ -278,7 +309,9 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         new_cluster.neighbor_list.update(new_cluster)
 
         return new_cluster
+
     def update_nl(self):
+        # TODO: move to zeotype
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
 
@@ -327,25 +360,50 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         return dict(cap_atoms_dict)
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
+        """
+        Finds if an atom needs a cap
+        :param atom_index: index of atom to check for cap
+        :param bonds_needed: number of bonds an atom needs
+        :return: boolean stating if an atom needs a cap
+        """
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
     def get_oxygen_cap_pos(self, index, bonds_needed):
-        # while len(self.neighbor_list.get_neighbors(index)[0]) < bonds_needed:
+
+        """
+        Find a position of an oxygen cap
+        :param index: index of atom needing cap
+        :param bonds_needed: no longer needed
+        :return:
+        """
+        # TODO: Remove bonds_needed from arg list
+
         neighbor = self.neighbor_list.get_neighbors(index)[0][-1]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
         oxygen_pos = self.get_positions()[index] + 1.6 * direction / np.linalg.norm(direction)
         return oxygen_pos
-        # self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        # self.neighbor_list.update(self)
 
     def get_hydrogen_cap_pos(self, index):
+        """
+        Finds the position of a hydrogen cap position
+        :param index: index of hydrogen cap
+        :return: the hydrogen position to add the cap too
+        """
         neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
         hydrogen_pos = self.get_positions()[index] + direction/np.linalg.norm(direction)
         return hydrogen_pos
 
     @staticmethod
-    def _get_cluster_indices(zeolite, index: int, size: int):
+    def _get_cluster_indices(zeolite, index: int, size: int) -> List[int]:
+        """
+        get the indices of a cluster from a zeolite when specifiying the
+        center atom index and size of the cluster
+        :param zeolite: the zeolite from which to build the cluster
+        :param index: the centeral atom index
+        :param size: the number of atoms in the final cluster
+        :return: a list of indices
+        """
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
         nl.update(zeolite)
 
@@ -363,7 +421,15 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
             new_cluster_indices = current_cluster_indices
 
     @staticmethod
-    def _get_new_cluster_mapping(zeolite, cluster, indices: List[int]):
+    def _get_new_cluster_mapping(zeolite: Zeotype, cluster: "Cluster", indices: List[int]):
+        """
+        Get the mapping between an unoptimized cluster and the zeolite from
+        which the cluster was created
+        :param zeolite: parent zeotype from which the cluster was created
+        :param cluster: the child cluster that is being matched to the parrent zeotype
+        :param indices: the indices in the parrent zeotype corresponding to the cluster
+        :return: a zeotype to cluster index dictionary
+        """
         cluster_position_index_map = {}
         for atom in cluster:
             cluster_position_index_map[str(atom.position)] = atom.index
@@ -378,6 +444,13 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
                 cluster_position_index_map[zeotype_index_position_map[key]]
 
         return zeotype_to_cluster_index_map
+
+    def add_adsorbates(self, absorbate_atoms):
+        # get absorbate_atoms
+        # position absorbate_atoms
+        #
+        ...
+
 
 
 # testing
