@@ -5,35 +5,53 @@ from ase import Atom
 import numpy as np
 
 def pick_donor(ads):
-    # finds atom in adsorbate most likely to bind to metal
-    # Heristic: N > O > P > S > X > C > H
+    '''
+    finds atom in adsorbate most likely to bind to metal
+    Heuristic: N > O > P > S > X > C > H
+    :param ads: adsorbate atoms object
+    :return: index of donor atom in adsorbate
+    '''
+
     donors = ['N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'C', 'H']
     ads_symbols = [k.symbol for k in ads]
     for symbol in donors:
         if symbol in ads_symbols:
-            ads_ind = [s.index for s in ads if s.symbol == symbol][0]
+            ads_ind = [s.index for s in ads if s.symbol == symbol][0] # picks first index of atom with specified symbol
             return(ads_ind)
     else:
         return ValueError("Cannot find donor atom in ads")
 
 def pick_host_atom(host):
-    # returns host atom index to add an adsorbate to
-    # picks element with largest atomic number higher than 14 (Si) or Al
+    '''
+    picks element with largest atomic number higher than 14 (Si), else, Al
+    :param host: host atoms object
+    :return: index of host atom
+    '''
+
     atom_nums = host.get_atomic_numbers()
     max_num = max(atom_nums)
-    symbol = Atom(max_num).symbol # symbol of atom with highest atomic number
-    host_ind = [i.index for i in host if i.symbol == symbol][0]
+    symbol = Atom(max_num).symbol  # symbol of atom with highest atomic number
+    host_ind = [i.index for i in host if i.symbol == symbol][0]  # picks first index of atom with specified symbol
     if max_num == 14:
         if 13 in atom_nums:
             al_ind = [j.index for j in host if j.symbol == 'Al'][0]
-            return (al_ind)
+            return (al_ind)  # return index of an Al atom if no heavy atoms in host
         else:
             return ValueError("No heavy atoms other than Si in host")
     else:
         return(host_ind)
 
 def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
-
+    '''
+    Finds a good position to add adsorbate to host
+    :param ads: adsorbate atoms object
+    :param host: host atoms object
+    :param donor_ind: index of donor atom on adsorbate
+    :param host_ind: index of host binding site
+    :param radius: distance between host atom and donor atom
+    :param cutoff: minimum distance donor atom must be from host atoms
+    :return: vector of best position to place adsorbate
+    '''
     donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, host[host_ind].symbol
     donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
     donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
@@ -48,13 +66,14 @@ def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
 
 def place_ads(ads, host, donor_ind=None, host_ind=None, pos=None):
     '''
+    Places adsorbate in host according to specified parameters
     :param pos: vector, the position to place adsorbate's donor atom
     :param host_ind: integer, index of site in host which adsorbate will be bound
     :param donor_ind: integer, index of donor atom on adsorbate
-    :param ads: atoms object
-    :param host: atoms object
+    :param ads: adsorbate atoms object
+    :param host: host atoms object
     :param elements: list
-    :return:
+    :return: atoms object with adsorbate in host
     '''
 
     if donor_ind == None:
@@ -64,19 +83,19 @@ def place_ads(ads, host, donor_ind=None, host_ind=None, pos=None):
     if pos == None:
         pos = pick_pos(ads, host, donor_ind, host_ind)
 
-    dummy_host = host + Atom('H', position=pos)
+    dummy_host = host + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
     vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
     nl = NeighborList(natural_cutoffs(ads), self_interaction=False, bothways=True)
     nl.update(ads)
-# gets neighbors of donor atom and adds the vectors from neighbor to donor
-# for these atoms this is roughly in the proper binding direction
+    # gets neighbors of donor atom and adds the vectors from neighbor to donor
+    # for most donor atoms this is roughly in the proper binding direction
     donor_neighbors = nl.get_neighbors(donor_ind)[0] # neighbor's index
     donor_vec = [0, 0, 0]
     for i in donor_neighbors:
         a = ads.get_distance(i, donor_ind, vector=True)
         donor_vec = donor_vec + a
     donor_vec = donor_vec/np.linalg.norm(donor_vec) # normalizes donor vec
-# rotate the ads into binding direction, move the ads to proper pos and combine
+    # rotate the ads into binding direction, move the ads to proper pos and combine
     ads2 = ads.copy() # to avoid making changes to orig adsorbate
     ads2.rotate(donor_vec, vec)
     ads2.translate(pos - ads2.get_positions()[donor_ind])

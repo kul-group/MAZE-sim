@@ -4,8 +4,6 @@ from ase import Atom
 import numpy as np
 from random import random
 
-# TODO: reduce number of input parameters -> more automatic
-
 def min_dist(pos, host):
 # returns the distance to the closest atom in the host at position
     dummy_atom = Atom('H', position=pos)
