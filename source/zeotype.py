@@ -42,7 +42,7 @@ class Zeotype(Atoms):
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
         self.clusters: List[Cluster] = []
-        self.adsorbates: List[Absorbate] = []
+        self.adsorbates: List[Adsorbate] = []
         self.silent = silent
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
@@ -176,7 +176,7 @@ class Zeotype(Atoms):
     def get_atom_types(self) -> Dict[str, List[int]]:
         """
         :return: Returns a dictionary of atom types where the key consists of the atom category
-        (framework, absorbate, extraframework or other) followed by -atom chemical symbol. For
+        (framework, adsorbate, extraframework or other) followed by -atom chemical symbol. For
         example a Sn atom is a framework atom so the key is "framework-Sn". The value of the
         returned dictionary is a list of the indices of all of the atoms that belong to the
         category.
@@ -301,7 +301,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, cluster_size)
         cluster_atoms = parent_zeotype[cluster_indices]
         new_cluster = Cluster(cluster_atoms)
-        # TODO: Copy over rel absorbates and dictionaries from zeotype class to cluster
+        # TODO: Copy over rel adsorbates and dictionaries from zeotype class to cluster
         new_cluster.parent_zeotype = parent_zeotype
         new_cluster.zeotype_to_cluster_index_map = \
             new_cluster._get_new_cluster_mapping(new_cluster.parent_zeotype, cluster_atoms, cluster_indices)
@@ -446,9 +446,9 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
         return zeotype_to_cluster_index_map
 
-    def add_adsorbates(self, absorbate_atoms):
-        # get absorbate_atoms
-        # position absorbate_atoms
+    def add_adsorbates(self, adsorbate_atoms):
+        # get adsorbate_atoms
+        # position adsorbate_atoms
         #
         ...
 
