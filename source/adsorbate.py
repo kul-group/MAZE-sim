@@ -19,7 +19,7 @@ class Adsorbate(Zeotype):
                          t_site_to_atom_indices, atom_indices_to_t_site)
 
         self.host_zeotype = None
-        host = self.host_zeotype # host zeotype object
+        host = self.host_zeotype  # host zeotype object
         self.indices_of_ads_in_host = None
         self.new_positions = None
 
