@@ -188,7 +188,7 @@ class Adsorbate(Zeotype):
         else:
             return host_ind
 
-    def pick_pos(ads, self, donor_ind, host_ind, radius=None, cutoff=None):
+    def pick_pos(self, ads, donor_ind, host_ind, radius=None, cutoff=None):
         """
         Finds a good position to add adsorbate to host
         :param donor_ind: index of donor atom on adsorbate
@@ -240,7 +240,7 @@ class Adsorbate(Zeotype):
         if host_ind is None:
             host_ind = pick_host_atom(host)
         if pos is None:
-            pos = pick_pos(ads, host, donor_ind, host_ind)
+            pos = pick_pos(self, ads, donor_ind, host_ind)
 
         dummy_host = self + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
         vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
