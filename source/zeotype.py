@@ -7,7 +7,7 @@ import numpy as np
 from ase.io import cif
 import ase
 import ase.data
-from absorbate import Adsorbate
+from .absorbate import Adsorbate
 
 
 def get_available_symbols(atom_list):

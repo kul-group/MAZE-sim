@@ -5,7 +5,7 @@ from sklearn.cluster import MeanShift
 from ase import Atoms, Atom
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-from zeotype import Zeotype
+from .zeotype import Zeotype
 
 
 class Adsorbate(Zeotype):
