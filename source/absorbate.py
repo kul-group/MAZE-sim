@@ -5,7 +5,7 @@ from sklearn.cluster import MeanShift
 from ase import Atoms, Atom
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-from .zeotype import Zeotype
+from zeotype import Zeotype
 
 
 class Adsorbate(Zeotype):
@@ -259,3 +259,14 @@ class Adsorbate(Zeotype):
         :return:
         """
         ...
+
+# testing. NOT FUNCTIONAL!
+if __name__ == '__main__':
+    from ase.io import read
+    from ase.visualize import view
+    from ase.build import molecule
+    host = read('BEA.cif')
+    host[185].symbol = 'Sn'  # for visualization
+    ads = molecule('CH3OH')
+    new_host.place_ads(ads, host)
+    view(new_host)
