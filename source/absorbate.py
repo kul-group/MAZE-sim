@@ -1,8 +1,8 @@
 from ase import Atoms
-from .zeotype import Zeotype
+#from source.zeotype import Zeotype
 
 
-class Absorbate(Zeotype):
+class Absorbate(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
