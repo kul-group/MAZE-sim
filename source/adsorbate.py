@@ -2,83 +2,88 @@ import numpy as np
 from random import random
 from scipy.optimize import minimize
 from sklearn.cluster import MeanShift
-from ase import Atom
+from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-from .zeotype import Zeotype
+import source.zeotype
 
 
-class Adsorbate(Zeotype):
+class Adsorbate(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 t_site_to_atom_indices=None, atom_indices_to_t_site=None):
+                 calculator=None, info=None, velocities=None,  host_zeotype=None, ads_to_zeotype_index_map=None,
+                 new_positions=None):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions, cell,
-                         pbc, celldisp, constraint, calculator, info, velocities, silent, zeolite_type,
-                         t_site_to_atom_indices, atom_indices_to_t_site)
+                         pbc, celldisp, constraint, calculator, info, velocities)
 
-        self.host_zeotype = None
-        host = self.host_zeotype  # host zeotype object
-        self.indices_of_ads_in_host = None
-        self.new_positions = None
+        self.host_zeotype = host_zeotype
+        self.ads_to_zeotype_index_map = ads_to_zeotype_index_map
+        self.new_positions = new_positions
 
-    @staticmethod  # should this be here?
-    def min_dist(pos):
+    def min_distance(self, ads_position) -> float:
         """
-        minimum distance from position to a host atom
-        :param pos: vector x,y,z position
-        :return: float, minimum distance
+        minimum distance from atom in a host to adsorbate
+        :param ads_position: np.array x,y,z of adsorbate position
+        :return: float, minimum distance between an atom in host zeotype and adsorbate position
         """
-        dummy_atom = Atom('H', position=pos)
-        dummy_host = host + dummy_atom
-        return min(dummy_host.get_distances(-1, [i for i in range(len(host))], mic=True))
+        assert self.host_zeotype is not None, "Cannot find min distance when host zeotype is None"
 
-    @staticmethod  # should this be here?
-    def avg_dist(pos):
+        dummy_atom = Atom('H', position=ads_position)
+        dummy_host = self.host_zeotype + dummy_atom
+        min_distance = min(dummy_host.get_distances(-1, [i for i in range(len(self.host_zeotype))], mic=True))
+        return min_distance
+
+    def avg_distance(self, ads_position):
         """
         average distance from position to all host atoms
-        :param pos: vector x,y,z position
-        :return: float, average distance
+        :param ads_position: np.array x,y,z of adsorbate position
+        :return: float, average distance of host zeotype atoms to adsorbate position
         """
-        dummy_atom = Atom('H', position=pos)
-        dummy_host = host + dummy_atom
-        return np.average(dummy_host.get_distances(-1, [i for i in range(len(host))], mic=True))
+        assert self.host_zeotype is not None, "Cannot find average distance when host zeotype is None"
 
-    @staticmethod  # should this be here?
-    def find_void(pos):
+        dummy_atom = Atom('H', position=ads_position)
+        dummy_host = self.host_zeotype + dummy_atom
+        avg_distance = np.average(dummy_host.get_distances(-1, [i for i in range(len(self.host_zeotype))], mic=True))
+        return avg_distance
+
+    def find_void(self, void_position_guess):
         """
-        finds nearest empty region in host
-        :param pos: vector x,y,z position
-        :return: vector position of center of empty void
+        finds nearest empty region in host zeotype
+        :param void_position_guess: An initial guess for the center of the void as a np.array with x,y,z position
+        :return: np.array position of center of empty void
         """
-        guess = pos
-        func = lambda pos: -1 * min_dist(pos)  # 1 param function for scipy.minimize
-        ans = minimize(func, guess)
+
+        # TODO: Find a way to speed this up
+
+        assert self.host_zeotype is not None, "Cannot find void position when host zeotype is None"
+
+        fun_to_min = lambda pos: -1 * self.min_distance(pos)  # 1 param function for scipy.minimize
+        ans = minimize(fun_to_min, void_position_guess)
         return ans.x
 
-    @staticmethod  # should this be here?
-    def sphere_sample(radius, num_pts=None):
+    @staticmethod
+    def sphere_sample(radius, num_pts=500):
         """
         generates random positions on the surface of a sphere of certain radius
         :param radius: radius of sphere surface to sample
         :param num_pts: number of points to try
         :return: list of x,y,z positions on surface of sphere
         """
-        if num_pts is None:
-            num_pts = 500
-        vect_list = []
-        for i in range(num_pts):
-            x, y, z = [2 * random() - 1 for i in range(3)]
-            # select points inside of unit sphere
-            if x ** 2 + y ** 2 + z ** 2 > 1.0:
-                pass
-            else:
-                unit_vec = [x, y, z] / np.linalg.norm([x, y, z])  # normalize vector length to 1
-                vect_list.append(radius * unit_vec)  # lengthen vector to desired radius
-        return vect_list
+        position_list = []
+        for _ in range(int(num_pts)):
+            # see https://stackoverflow.com/questions/33976911/
+            # generate-a-random-sample-of-points-distributed-on-the-surface-of-a-unit-sphere/33977530#33977530
+            # for discussion on this algorithm
 
-    def generate_poss_place(host, index, radius, cutoff, num_pts=None):
+            vec = np.random.normal(0, 1, 3)  # select three random points (if normal dist no skip needed)
+            vec /= np.linalg.norm(vec)  # normalize vector
+            vec *= radius  # lengthen vector to desired radius
+            position_list.append(list(vec))
+
+        return position_list
+
+    def get_viable_positions(self, index, radius, cutoff, num_pts=None):
         """
         finds positions near host atom far enough from other framework atoms.
         :param index: index of host atom at center
@@ -87,19 +92,21 @@ class Adsorbate(Zeotype):
         :param num_pts: number of points to try
         :return: list. positions of points which meet cutoff criteria
         """
-        assert (radius > cutoff)
+        assert (radius > cutoff), "radius larger than cutoff distance"
+        assert self.host_zeotype is not None, "host zeotype cannot be none"
 
-        guess_pos = sphere_sample(radius, num_pts)
-        host_pos = host.get_positions()[index]
-        viable_pos = []
+        guess_positions = self.sphere_sample(radius, num_pts)
+        host_pos = self.host_zeotype.get_positions()[index]
+        viable_positions = []
 
-        for pos in guess_pos:
-            dist = min_dist(pos + host_pos, host)
+        for pos in guess_positions:
+            dist = self.min_distance(pos + host_pos)
             if dist > cutoff:
-                viable_pos.append(pos + host_pos)
-        return viable_pos
+                viable_positions.append(pos + host_pos)
 
-    def get_place_clusters(host, index, radius, cutoff, num_pts=None):
+        return viable_positions
+
+    def get_viable_pos_cluster_centers(self, index, radius, cutoff, num_pts=None):
         """
         finds positions near host atom far enough from other framework atoms,
         clusters these viable positions and returns the centers of these clusters.
@@ -111,13 +118,13 @@ class Adsorbate(Zeotype):
         :return: list. center positions of clusters of points which meet criteria
         """
 
-        viable_pos = generate_poss_place(host, index, radius, cutoff, num_pts)
+        viable_pos = self.get_viable_positions(index, radius, cutoff, num_pts)
         ms = MeanShift(bin_seeding=True)
         ms.fit(np.array(viable_pos))
         cluster_centers = ms.cluster_centers_
         return cluster_centers
 
-    def find_best_place(host, index, radius, cutoff, num_pts=None):
+    def find_best_place(self, index, radius, cutoff, num_pts=500):
         """
         picks the best location to place an adsorbate around the host atom
         :param index: index of host atom at center
@@ -127,13 +134,11 @@ class Adsorbate(Zeotype):
         :return: array. x,y,z position of best location
         """
 
-        if num_pts is None:
-            num_pts = 500
-        viable_pos = get_place_clusters(host, index, radius, cutoff, num_pts)
+        best_positions = self.get_viable_pos_cluster_centers(index, radius, cutoff, num_pts)
         best_avg_dist = 0
-        for pos in viable_pos:
-            void = find_void(pos, host)
-            void_avg_dist = avg_dist(void)  # average dist at void nearest to pos
+        for pos in best_positions:
+            void = self.find_void(pos)
+            void_avg_dist = self.avg_distance(void)  # average dist at void nearest to pos
             if void_avg_dist > best_avg_dist:
                 best_avg_dist = void_avg_dist  # selects pos with largest nearby void
                 best_pos = pos
@@ -147,36 +152,37 @@ class Adsorbate(Zeotype):
         :return: index of donor atom in adsorbate
         """
 
-        donors = ['N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'C', 'H']
-        ads_symbols = [k.symbol for k in self]
-        for symbol in donors:
-            if symbol in ads_symbols:
-                ads_ind = [s.index for s in self if s.symbol == symbol][
-                    0]  # picks first index of atom with specified symbol
-                return ads_ind
-        else:
-            return ValueError("Cannot find donor atom in ads")
+        ads_symbols = {}
+        for atom in self:
+            if atom.symbol not in ads_symbols:
+                ads_symbols[atom.symbol] = atom.index  # add first occurrence of atom symbol to dict
 
-    def pick_host_atom(host):
+        donor_symbols = ['N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'C', 'H']
+        for donor_symbol in donor_symbols:
+            if donor_symbol in ads_symbols:
+                ads_index = ads_symbols[donor_symbol]  # picks first index of atom with specified symbol
+                return ads_index
+        else:
+            raise ValueError("Cannot find viable donor atom in adsorbate")
+
+    def pick_host_atom(self) -> int:
         """
-        picks element with largest atomic number higher than 14 (Si), else, Al
+        picks element with largest atomic number higher than 14 (Si) if one exists. If none exist,
+         pick Al as a donor atom.
         :return: index of host atom
         """
-
-        atom_nums = host.get_atomic_numbers()
-        max_num = max(atom_nums)
-        symbol = Atom(max_num).symbol  # symbol of atom with highest atomic number
-        host_ind = [i.index for i in host if i.symbol == symbol][0]  # picks first index of atom with specified symbol
-        if max_num == 14:
-            if 13 in atom_nums:
-                al_ind = [j.index for j in host if j.symbol == 'Al'][0]
-                return al_ind  # return index of an Al atom if no heavy atoms in host
-            else:
-                return ValueError("No heavy atoms other than Si in host")
+        sym_index_map, count = self.host_zeotype.count_elements()
+        max_atomic_num_sym = max(sym_index_map.keys(), key=lambda x: atomic_numbers[x])
+        if atomic_numbers[max_atomic_num_sym] > atomic_numbers['Si']:
+            return sym_index_map[max_atomic_num_sym][0]
         else:
-            return host_ind
+            try:
+                return sym_index_map['Al'][0]
+            except KeyError:
+                print("No Al in host zeotype")
+                raise
 
-    def pick_pos(self, host, donor_ind, host_ind, radius=None, cutoff=None):
+    def pick_ads_position(self, donor_ind, host_ind, radius=None, cutoff=None):
         """
         Finds a good position to add adsorbate to host
         :param donor_ind: index of donor atom on adsorbate
@@ -185,7 +191,7 @@ class Adsorbate(Zeotype):
         :param cutoff: minimum distance donor atom must be from host atoms
         :return: vector of best position to place adsorbate
         """
-        donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, host[host_ind].symbol
+        donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, self.host_zeotype[host_ind].symbol
         donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
         donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
 
@@ -194,29 +200,31 @@ class Adsorbate(Zeotype):
         if cutoff is None:
             cutoff = host_radius
 
-        pos = find_best_place(host, host_ind, radius, cutoff)
+        pos = self.find_best_place(host_ind, radius, cutoff)
         return pos
 
-    def get_donor_vec(self):
+    def get_donor_vec(self, donor_index):
         """
-        finds direction of lone pair electrons on a donor atom
+        finds direction of lone pair electrons on an adsorbate donor atom
         :return: vector direction of donor atoms
         """
         nl = NeighborList(natural_cutoffs(self), self_interaction=False, bothways=True)
         nl.update(self)
         # gets neighbors of donor atom and adds the vectors from neighbor to donor
         # for most donor atoms this is roughly in the proper binding direction
-        donor_neighbors = nl.get_neighbors(donor_ind)[0]  # neighbor's index
+        donor_neighbors = nl.get_neighbors(donor_index)[0]  # neighbor's index
         donor_vec = [0, 0, 0]
         for i in donor_neighbors:
-            a = self.get_distance(i, donor_ind, vector=True)
+            a = self.get_distance(i, donor_index, vector=True)
             donor_vec = donor_vec + a
+
         donor_vec = donor_vec / np.linalg.norm(donor_vec)  # normalizes donor vec
         return donor_vec
 
-    def place_ads(self, host, donor_ind=None, host_ind=None, pos=None):
+    def position_ads(self, donor_ind=None, host_ind=None, pos=None):
         """
-        Places adsorbate in host according to specified parameters
+        Rotates and positions adsorbate according to specified parameters
+        if no parameters are provided, a reasonable position is found
         :param pos: vector, the position to place adsorbate's donor atom
         :param host_ind: integer, index of site in host which adsorbate will be bound
         :param donor_ind: integer, index of donor atom on adsorbate
@@ -224,39 +232,73 @@ class Adsorbate(Zeotype):
         """
 
         if donor_ind is None:
-            donor_ind = pick_donor(self)
+            donor_ind = self.pick_donor()
         if host_ind is None:
-            host_ind = pick_host_atom(host)
+            host_ind = self.pick_host_atom()
         if pos is None:
-            pos = pick_pos(self, host, donor_ind, host_ind)
+            pos = self.pick_ads_position(donor_ind, host_ind)
 
-        dummy_host = host + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
+        dummy_host = self.host_zeotype + Atom('H',
+                                                             position=pos)  # add dummy hydrogen atom to get distances to host atoms
         vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
-        donor_vec = get_donor_vec(self)  # get the direction of lone pairs on donor atom
+        donor_vec = self.get_donor_vec(donor_ind)  # get the direction of lone pairs on donor atom
 
         # rotate the ads into binding direction, move the ads to proper pos and combine
-        ads2 = self.copy()  # to avoid making changes to orig adsorbate
-        ads2.rotate(donor_vec, vec)
-        ads2.translate(pos - ads2.get_positions()[donor_ind])
-        host_new = host + ads2
-        return host_new
+        self.rotate(donor_vec, vec)
+        self.translate(pos - self.get_positions()[donor_ind])
 
-    def integrate_ads(self):
+    def integrate_ads(self, position_ads=False):
         """
-        tricky one
+        append adsorbate to main atom
+        :return:
+        """
+        if position_ads:
+            self.position_ads()
+
+        self.host_zeotype.extend(self)
+        self.set_ads_zeotype_map()
+        self.host_zeotype.adsorbates.append(self)
+
+
+    def set_ads_zeotype_map(self):
+        """
+        Get the mapping between an adsorbate and the zeolite where it was added
+        :return: a zeotype to adsorbate index dictionary
+        """
+        ads_position_index_map = {}
+        for atom in self:
+            ads_position_index_map[str(atom.position)] = atom.index
+
+        zeotype_position_index_map = {}
+        for atom in self.host_zeotype:
+            zeotype_position_index_map[str(atom.position)] = atom.index
+
+        ads_to_zeotype_index_map = {}
+
+        for pos, index in ads_position_index_map.items():
+            ads_to_zeotype_index_map[index] = zeotype_position_index_map[pos]
+
+        self.ads_to_zeotype_index_map = ads_to_zeotype_index_map
+
+    def remove_ads(self):
+        """
+        also tricky
         :return:
         """
         ...
-
-
-# testing. NOT FUNCTIONAL!
 if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
     from ase.build import molecule
 
-    host = read('BEA.cif')
-    host[185].symbol = 'Sn'  # for visualization
-    ads = molecule('CH3OH')
-    new_host.place_ads(ads, host)
-    view(new_host)
+    zeotype = source.zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
+    print(zeotype[30].symbol)
+    zeotype[20].symbol = 'Sn'  # for visualization
+    mol = molecule('CH3OH')
+    ads = Adsorbate(mol)
+    ads.host_zeotype = zeotype
+    ads.position_ads()
+    view(ads)
+    view(zeotype)
+    ads.integrate_ads()
+    view(zeotype)
