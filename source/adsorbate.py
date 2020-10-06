@@ -252,6 +252,7 @@ class Adsorbate(Atoms):
         append adsorbate to main atom
         :return:
         """
+        assert self not in self.host_zeotype.adsorbates, "cannot integrate single adsorbate object twice"
         if position_ads:
             self.position_ads()
 
@@ -286,6 +287,7 @@ class Adsorbate(Atoms):
         :return:
         """
         ...
+
 if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
