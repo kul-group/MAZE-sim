@@ -6,7 +6,7 @@ def main():
     cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     # make cluster
-    ci = zeolite.add_cluster(95, 6)
+    ci = zeolite.add_cluster(95, 500, 4)
     cluster = zeolite.clusters[ci]
     view(zeolite)
     view(cluster)
