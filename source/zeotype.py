@@ -7,7 +7,6 @@ import numpy as np
 from ase.io import cif
 import ase
 import ase.data
-from .adsorbate import Adsorbate
 
 
 def get_available_symbols(atom_list):
@@ -245,7 +244,7 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def add_cluster(self, index: int, size: int) -> int:
+    def add_cluster(self, index: int, max_size: int, max_neighbors: int) -> int:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -253,7 +252,7 @@ class Zeotype(Atoms):
         :param size: number of atoms in the final cluster
         :return: index of the cluster in the zeotype cluster array
         """
-        new_cluster = Cluster.build_from_zeolite(self, index, size)
+        new_cluster = Cluster.build_from_zeolite(self, index, max_size, max_neighbors)
         self.clusters.append(new_cluster)
         return len(self.clusters) - 1  # returns final index in the clusters list
 
@@ -297,8 +296,8 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         self.neighbor_list = neighbor_list
 
     @staticmethod
-    def build_from_zeolite(parent_zeotype: Zeotype, index: int, cluster_size: int) -> "Cluster":
-        cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, cluster_size)
+    def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int) -> "Cluster":
+        cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster_atoms = parent_zeotype[cluster_indices]
         new_cluster = Cluster(cluster_atoms)
         # TODO: Copy over rel adsorbates and dictionaries from zeotype class to cluster
@@ -395,14 +394,16 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
+
     @staticmethod
-    def _get_cluster_indices(zeolite, index: int, size: int) -> List[int]:
+    def _get_cluster_indices(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
         """
-        get the indices of a cluster from a zeolite when specifiying the
+        get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
         :param zeolite: the zeolite from which to build the cluster
         :param index: the centeral atom index
-        :param size: the number of atoms in the final cluster
+        :param max_size: the max number of atoms in the final cluster
+        :param max_neighbors: the max number of neighbors from the starting cluster
         :return: a list of indices
         """
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
@@ -411,15 +412,17 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         cluster_indices = set()
         new_cluster_indices = set([index])
 
-        while True:
+        for _ in range(max_neighbors):
             current_cluster_indices = set()
             for cluster_index in new_cluster_indices:
                 cluster_indices.add(cluster_index)
-                if len(cluster_indices) >= size:
+                if len(cluster_indices) >= max_size:
                     return list(cluster_indices)
                 for new_index in nl.get_neighbors(cluster_index)[0]:
                     current_cluster_indices.add(new_index)
             new_cluster_indices = current_cluster_indices
+
+        return list(cluster_indices)
 
     @staticmethod
     def _get_new_cluster_mapping(zeolite: Zeotype, cluster: "Cluster", indices: List[int]):
@@ -459,6 +462,6 @@ if __name__ == '__main__':
 
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.add_cluster(35, 3)
+    z.add_cluster(35, 1000, 3)
     print([a for a in z.clusters[0]])
     z.integrate_cluster(0)
