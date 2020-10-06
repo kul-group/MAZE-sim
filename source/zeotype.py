@@ -33,15 +33,19 @@ class Zeotype(Atoms):
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
                  t_site_to_atom_indices=None, atom_indices_to_t_site=None):
 
-        # TODO: Add in copy method for zeotype objects (if symbol is a zeotype then you do extra things)
-
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
+
+        if type(symbols) == Zeotype:  # copy over some, but not all, attributes of copying zeotype
+            self.zeolite_type = symbols.zeolite_type
+            self.silent = silent
+            self.site_to_atom_indices = t_site_to_atom_indices
+            self.atom_indices_to_site = atom_indices_to_t_site
 
         self.zeolite_type = zeolite_type
         self.sites: List[str] = []
         self.clusters: List[Cluster] = []
-        self.adsorbates: List[Adsorbate] = []
+        self.adsorbates = []
         self.silent = silent
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
@@ -63,44 +67,6 @@ class Zeotype(Atoms):
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
         return zeotype
-
-    @classmethod
-    def build_from_cif(cls, fileobj):
-        """
-        Builds an zeotype object a cif file and stores the atom tags in an info dictionary
-        :param fileobj: The filepath to the cif file
-        :return: a zeotype object with an info dictionary that contains T-site labels
-        """
-        # TODO: Remove in future versions
-        atoms_gen = cls.read_cif_with_info(fileobj, store_tags=True)
-        atoms = next(atoms_gen)
-        zeotype = cls(atoms)
-        try:
-            zeotype.atom_sites_label = atoms.info['_atom_site_label']
-        except KeyError:
-            print("No atom site labels in CIF")
-            pass
-        return zeotype
-
-    @staticmethod
-    def read_cif_with_info(fileobj, store_tags=False, primitive_cell=False,
-                           subtrans_included=True, fractional_occupancies=True,
-                           reader='ase') -> Atoms:
-
-        # TODO: Remove in future versions
-        blocks = ase.io.cif.parse_cif(fileobj, reader)
-        # Find all CIF blocks with valid crystal data
-        images = []
-        for name, tags in blocks:
-            try:
-                atoms = ase.io.cif.tags2atoms(tags, store_tags, primitive_cell,
-                                              subtrans_included,
-                                              fractional_occupancies=fractional_occupancies)
-                images.append(atoms)
-            except KeyError:
-                pass
-        for atoms in images:
-            yield atoms
 
     @staticmethod
     def read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
@@ -160,17 +126,9 @@ class Zeotype(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def get_sites(self) -> List[str]:
-        """
-        :return: returns Zeotype sites
-        """
-        return self.sites
-
-    def get_zeolite_type(self) -> str:
-        """
-        :return: returns zeotype sites as a list
-        """
-        return self.zeolite_type
+    def update_nl(self):
+        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+        self.neighbor_list.update(self)
 
     def get_atom_types(self) -> Dict[str, List[int]]:
         """
@@ -218,7 +176,7 @@ class Zeotype(Atoms):
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
-        :return:
+        :return: a dictionary where the key is the element symbol and the value is the number in the zeotype
         """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
         count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
@@ -261,9 +219,7 @@ class Zeotype(Atoms):
         :param index: Index of cluster to remove from zeotype list
         :return: None
         """
-        # TODO: Replace with cluster[index] = None (no index distortion)
-
-        self.clusters.pop(index)
+        self.clusters[index] = None
 
     def integrate_cluster(self, cluster_index: int):
         cluster = self.clusters[cluster_index]
@@ -300,7 +256,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster_atoms = parent_zeotype[cluster_indices]
         new_cluster = Cluster(cluster_atoms)
-        # TODO: Copy over rel adsorbates and dictionaries from zeotype class to cluster
         new_cluster.parent_zeotype = parent_zeotype
         new_cluster.zeotype_to_cluster_index_map = \
             new_cluster._get_new_cluster_mapping(new_cluster.parent_zeotype, cluster_atoms, cluster_indices)
@@ -309,11 +264,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         new_cluster.neighbor_list.update(new_cluster)
 
         return new_cluster
-
-    def update_nl(self):
-        # TODO: move to zeotype
-        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        self.neighbor_list.update(self)
 
     def cap_atoms(self, cap_atoms_dict=None, bonds_needed=None, verbose=False):
         """each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
@@ -394,7 +344,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-
     @staticmethod
     def _get_cluster_indices(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
         """
@@ -449,11 +398,6 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
         return zeotype_to_cluster_index_map
 
-    def add_adsorbates(self, adsorbate_atoms):
-        # get adsorbate_atoms
-        # position adsorbate_atoms
-        #
-        ...
 
 
 # testing
