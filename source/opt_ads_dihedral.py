@@ -1,4 +1,4 @@
-import zeotype
+import zeotype  # import doesn't work
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.constraints import FixAtoms
 from ase.constraints import FixBondLengths
