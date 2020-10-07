@@ -206,8 +206,9 @@ class Zeotype(Atoms):
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
+        :param max_size: max size of cluster
         :param index: index of the central atom in the cluster
-        :param size: number of atoms in the final cluster
+        :param max_neighbors: number of neighbors from the host atom in the final cluster
         :return: index of the cluster in the zeotype cluster array
         """
         new_cluster = Cluster.build_from_zeolite(self, index, max_size, max_neighbors)
@@ -235,6 +236,11 @@ class Zeotype(Atoms):
             self[key].magmom = cluster[value].magmom
             self[key].charge = cluster[value].charge
 
+        for ads in cluster.adsorbates:
+            # integrates all adsorbates, even non integrated ones in cluster
+            ads_copy = ads.copy()
+            ads_copy.host_zeotype = self
+            ads_copy.integrate_ads()
 
 class Cluster(Zeotype):  # TODO include dynamic inheritance
 
