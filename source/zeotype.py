@@ -242,6 +242,9 @@ class Zeotype(Atoms):
             ads_copy.host_zeotype = self
             ads_copy.integrate_ads()
 
+    def integrate_adsorbate(self, adsorbate_index: int) -> None:
+        self.adsorbates[adsorbate_index].integrate_ads()
+
 class Cluster(Zeotype):  # TODO include dynamic inheritance
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
