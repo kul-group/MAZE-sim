@@ -3,3 +3,4 @@
 *.cif
 .idea
 InspectProfiles
+/demo/.ipynb_checkpoints/
