@@ -139,9 +139,13 @@ class Adsorbate(Atoms):
         for pos in best_positions:
             void = self.find_void(pos)
             void_avg_dist = self.avg_distance(void)  # average dist at void nearest to pos
+            best_pos = None
             if void_avg_dist > best_avg_dist:
                 best_avg_dist = void_avg_dist  # selects pos with largest nearby void
                 best_pos = pos
+
+        if best_pos is None:
+            assert False, 'No good positions at specified index'
         return best_pos
 
     def pick_donor(self):
@@ -191,7 +195,7 @@ class Adsorbate(Atoms):
         :param cutoff: minimum distance donor atom must be from host atoms
         :return: vector of best position to place adsorbate
         """
-        donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, self.host_zeotype[host_ind].symbol
+        donor_atom_symbol, host_atom_symbol = self[donor_ind].symbol, self.host_zeotype[host_ind].symbol
         donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
         donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
 
