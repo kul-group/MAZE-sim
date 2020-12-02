@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterable
 from ase import Atoms, Atom
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
@@ -215,12 +215,19 @@ class Zeotype(Atoms):
         self.clusters.append(new_cluster)
         return len(self.clusters) - 1  # returns final index in the clusters list
 
+    def add_custom_cluster(self, cluster_indices: Iterable[int]):
+        new_cluster = Cluster.build_from_zeolite(self, 0, 0, 0, cluster_indices=cluster_indices)
+        self.clusters.append(new_cluster)
+        return len(self.clusters) - 1  # returns final index in the clusters list
+
+
     def remove_cluster(self, index: int):
         """
         :param index: Index of cluster to remove from zeotype list
         :return: None
         """
         self.clusters[index] = None
+        self.build_from_zeolite
 
     def integrate_cluster(self, cluster_index: int):
         cluster = self.clusters[cluster_index]
@@ -261,8 +268,10 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         self.neighbor_list = neighbor_list
 
     @staticmethod
-    def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int) -> "Cluster":
-        cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
+    def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int,
+                           cluster_indices: Iterable[int] = None) -> "Cluster":
+        if cluster_indices is None:
+            cluster_indices = Cluster._get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster_atoms = parent_zeotype[cluster_indices]
         new_cluster = Cluster(cluster_atoms)
         new_cluster.parent_zeotype = parent_zeotype
