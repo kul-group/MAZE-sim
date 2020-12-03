@@ -9,6 +9,7 @@ import ase
 import ase.data
 
 
+
 def get_available_symbols(atom_list):
     """
     :param atom_list: A list of atom symbols to be excluded from returned list
@@ -22,6 +23,12 @@ def get_available_symbols(atom_list):
 
     return available_chem_symbols
 
+class Silanol():
+    def __init__(self, parent_zeotype, Si_index, O_index, H_index):
+        self.parent_zeotype = parent_zeotype
+        self.Si_index = Si_index
+        self.O_index = O_index
+        self.H_index = H_index
 
 class Zeotype(Atoms):
     """
