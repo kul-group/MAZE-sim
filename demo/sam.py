@@ -13,7 +13,7 @@ def main():
     cluster_indices = [191,
                        168, 120, 84, 96, 112,
                        159, 79, 63, 87, 35,
-                       175, 119, 127, 82, 103,
+                        175, 119, 127, 82, 103,
                        72,
                        152,
                        136, 28, 40, 36, 20,
@@ -21,12 +21,14 @@ def main():
                        144, 64, 0, 48, 64]
 
     cluster_index = z.add_custom_cluster(cluster_indices)
-    z.clusters[cluster_index].cap_atoms()
+    z.clusters[cluster_index].cap_atoms(hcap_type='si')
     view(z.clusters[cluster_index])
-    view(z)
+    #view(z)
     write(os.path.join(data_dir, 'sam_t8_cluster.traj'), z.clusters[cluster_index])
-
-
-
+    write(os.path.join(data_dir, 'overlay.traj'), z)
+    for a in z.clusters[cluster_index]:
+        if a.index not in z.clusters[cluster_index].zeotype_to_cluster_index_map:
+            z.append(a)
+    view(z)
 if __name__ == "__main__":
     main()
