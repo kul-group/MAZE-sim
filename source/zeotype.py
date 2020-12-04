@@ -7,6 +7,7 @@ import numpy as np
 from ase.io import cif
 import ase
 import ase.data
+from ase.visualize import view
 
 
 
@@ -23,12 +24,20 @@ def get_available_symbols(atom_list):
 
     return available_chem_symbols
 
+
 class Silanol():
-    def __init__(self, parent_zeotype, Si_index, O_index, H_index):
+    def __init__(self, parent_zeotype, Si_index, O_index, H_index, Si_neighbor_list):
         self.parent_zeotype = parent_zeotype
         self.Si_index = Si_index
         self.O_index = O_index
         self.H_index = H_index
+        self.Si_neighbor_list = Si_neighbor_list
+
+    def __str__(self):
+        return f'Si: {self.Si_index} O: {self.O_index} H: {self.H_index}'
+
+    def __repr__(self):
+        return self.__str__()
 
 class Zeotype(Atoms):
     """
@@ -259,6 +268,41 @@ class Zeotype(Atoms):
     def integrate_adsorbate(self, adsorbate_index: int) -> None:
         self.adsorbates[adsorbate_index].integrate_ads()
 
+    def find_silanol_groups(self):
+        silanol_list = []
+        for atom in self:
+            if atom.symbol == 'Si':
+                for neighbor_index in self.neighbor_list.get_neighbors(atom.index)[0]:
+                    if self[neighbor_index].symbol == 'O':
+                        for next_neighbor_index in self.neighbor_list.get_neighbors(self[neighbor_index].index)[0]:
+                            if self[next_neighbor_index].symbol == 'H':
+                                # found one!
+                                silanol = Silanol(self, atom.index, neighbor_index, next_neighbor_index, self.neighbor_list.get_neighbors(atom.index)[0])
+                                silanol_list.append(silanol)
+        return silanol_list
+
+    def find_silanol_nest_T_sites(self):
+        sites_list = []
+        sil_list = self.find_silanol_groups()
+        if self.atom_indices_to_site is None:
+
+            for sil in sil_list:
+                sites_list.append(sil.Si_index)
+                for i in sil.Si_neighbor_list:
+                    if 'Sn' == self[i].symbol:
+                        sites_list.append(i)
+        else:
+            for sil in sil_list:
+
+                if 'T' in self.atom_indices_to_site(sil.Si_index):
+                    sites_list.append(sil.Si_index)
+                else:
+                    for index in sil.Si_neighbor_list:
+                        if 'Sn' == self[index].symbol:
+                            sites_list.append(index)
+
+        return sites_list
+
 class Cluster(Zeotype):  # TODO include dynamic inheritance
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -371,6 +415,7 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         inv_map = {v: k for k, v in self.zeotype_to_cluster_index_map.items()}
         zeotype_index = inv_map[cluster_index]
         for possible_index in self.parent_zeotype.neighbor_list.get_neighbors(zeotype_index)[0]:
+            print(possible_index)
             if self.parent_zeotype[possible_index].symbol == 'Si' and possible_index not in self.zeotype_to_cluster_index_map.keys():
                 return self.parent_zeotype.get_positions()[possible_index]
 
@@ -460,12 +505,22 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
 
 
 
+
 # testing
 if __name__ == '__main__':
     from ase.io import read
-
-    b = read('BEA.cif')
+    b = read('/Users/dda/Code/zeotype/data/sam/sn_ti-periodic.traj')
     z = Zeotype(b)
-    z.add_cluster(35, 1000, 3)
-    print([a for a in z.clusters[0]])
-    z.integrate_cluster(0)
+    view(b)
+    si_list = z.find_silanol_groups()
+    print(si_list)
+    sites_list = []
+    for sil in si_list:
+        #if 'T' in z.atom_indices_to_site(sil.Si_index):
+        #sites_list.append(sil.Si_index)
+        #else:
+        for index in sil.Si_neighbor_list:
+            #if 'T' in z.atom_indices_to_site(index):
+            if 'Sn' == z[index].symbol:
+                sites_list.append(index)
+    print(list(set(sites_list)))
