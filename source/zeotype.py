@@ -340,16 +340,16 @@ class Zeotype(Atoms):
         :param bonds_needed: a dict mapping atom symbol to number of bonds needed
         :return: a dictionary of atom symbols and positions of cap atoms
         """
-        hcap_fun = self.get_hydrogen_cap_pos
         bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
         cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
         self_copy = copy.deepcopy(self)
         self_copy.pop(site_index)
+        self_copy.update_nl()
         indices, count = self_copy.count_elements()
         for si_index in indices['Si']:
-            tmp_si_index = si_index if si_index < site_index else site_index + 1  # because indices is messed up by del
-            if tmp_si_index not in indices_atom_to_cap:
-                continue
+            # tmp_si_index = si_index if si_index < site_index else site_index + 1  # because indices is messed up by del
+            # if tmp_si_index not in indices_atom_to_cap:
+            #     continue
             if self_copy.needs_cap(si_index, bonds_needed['Si']):
                 for i in range(bonds_needed['Si'] - len(self_copy.neighbor_list.get_neighbors(si_index)[0])):
                     pos = self_copy.get_oxygen_cap_pos(si_index)
@@ -357,11 +357,11 @@ class Zeotype(Atoms):
                     self_copy.update_nl()
 
         for o_index in indices['O']:
-            tmp_o_index = o_index if o_index < site_index else o_index + 1  # because indices is messed up by del
-            if tmp_o_index not in indices_atom_to_cap:
-                continue
+            # tmp_o_index = o_index if o_index < site_index else o_index + 1  # because indices is messed up by del
+            # if tmp_o_index not in indices_atom_to_cap:
+            #     continue
             if self_copy.needs_cap(o_index, bonds_needed['O']):
-                pos = hcap_fun(o_index)
+                pos = self_copy.get_hydrogen_cap_pos_site_dir(self, site_index, o_index)
                 cap_atoms_dict['H'].append(pos)
                 self_copy.update_nl()
 
@@ -377,7 +377,7 @@ class Zeotype(Atoms):
         """
         site_position = parent_zeolite[site_index].position
         direction = site_position - self.get_positions()[atom_to_be_capped_index]  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[atom_to_be_capped_index] + direction / np.linalg.norm(direction)
+        hydrogen_pos = self.get_positions()[atom_to_be_capped_index] + direction / np.abs(np.linalg.norm(direction))
         return hydrogen_pos
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
@@ -506,8 +506,8 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         :return: the hydrogen position to add the cap too
         """
         si_neighbor_position = self.find_si_neighbor(index)
-        direction = si_neighbor_position - self.get_positions()[index]  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
+        direction = si_neighbor_position  - self.get_positions()[index] # vector from neighbor to oxygen
+        hydrogen_pos = self.get_positions()[index] + direction / np.abs(np.linalg.norm(direction))
         return hydrogen_pos
 
     @staticmethod
