@@ -146,6 +146,20 @@ class Zeotype(Atoms):
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
 
+    def get_hetero_atoms(self, hetero_atoms_list=None) -> List[int]:
+        """
+        :return: Returns a list of all of the hetero-atoms in the zeotype
+        """
+        if not hetero_atoms_list:
+            hetero_atoms_list = ['Sn', 'Hf', 'Zr', 'Ge', 'Ti']
+
+        indices_list = []
+        for atom in self:
+            if atom.symbol in hetero_atoms_list:
+                indices_list.append(atom.index)
+
+        return indices_list
+
     def get_atom_types(self) -> Dict[str, List[int]]:
         """
         :return: Returns a dictionary of atom types where the key consists of the atom category
