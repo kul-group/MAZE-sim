@@ -358,7 +358,7 @@ If number of points is too small will return error
 <dd><p>Bases: <a class="reference internal" href="#source.zeotype.Zeotype" title="source.zeotype.Zeotype"><code class="xref py py-class docutils literal notranslate"><span class="pre">source.zeotype.Zeotype</span></code></a></p>
 <dl class="py method">
 <dt id="source.zeotype.Cluster.build_cap_atoms_dict">
-<code class="sig-name descname">build_cap_atoms_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bonds_needed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.build_cap_atoms_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">build_cap_atoms_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bonds_needed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hcap_fun</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.build_cap_atoms_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Builds a dictionary of the cap atom positions
 :param bonds_needed: a dict mapping atom symbol to number of bonds needed
 :return: a dictionary of atom symbols and positions of cap atoms</p>
@@ -366,12 +366,12 @@ If number of points is too small will return error
 
 <dl class="py method">
 <dt id="source.zeotype.Cluster.build_from_zeolite">
-<em class="property">static </em><code class="sig-name descname">build_from_zeolite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent_zeotype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#source.zeotype.Zeotype" title="source.zeotype.Zeotype">source.zeotype.Zeotype</a></span></em>, <em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_cluster_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_neighbors</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#source.zeotype.Cluster" title="source.zeotype.Cluster">source.zeotype.Cluster</a><a class="headerlink" href="#source.zeotype.Cluster.build_from_zeolite" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">build_from_zeolite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent_zeotype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#source.zeotype.Zeotype" title="source.zeotype.Zeotype">source.zeotype.Zeotype</a></span></em>, <em class="sig-param"><span class="n">index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_cluster_size</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">max_neighbors</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">cluster_indices</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#source.zeotype.Cluster" title="source.zeotype.Cluster">source.zeotype.Cluster</a><a class="headerlink" href="#source.zeotype.Cluster.build_from_zeolite" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="source.zeotype.Cluster.cap_atoms">
-<code class="sig-name descname">cap_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_atoms_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bonds_needed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.cap_atoms" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cap_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_atoms_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bonds_needed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">hcap_type</span><span class="o">=</span><span class="default_value">'bond'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.cap_atoms" title="Permalink to this definition">¶</a></dt>
 <dd><p>each bare Si atom needs 4 Si atoms in oxygen and each of those oxygen needs two neighbors
 A lot of these clusters we add a bunch of H to the ends of the O because this a chemically plausable
 way to cap the oxygens. For example, when a zeolite is growing in solution it starts off as SiOH4
@@ -382,8 +382,21 @@ way to cap the oxygens. For example, when a zeolite is growing in solution it st
 </dd></dl>
 
 <dl class="py method">
+<dt id="source.zeotype.Cluster.find_si_neighbor">
+<code class="sig-name descname">find_si_neighbor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.find_si_neighbor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="source.zeotype.Cluster.get_hydrogen_cap_pos">
 <code class="sig-name descname">get_hydrogen_cap_pos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.get_hydrogen_cap_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the position of a hydrogen cap position
+:param index: index of hydrogen cap
+:return: the hydrogen position to add the cap too</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Cluster.get_hydrogen_cap_pos_si_dir">
+<code class="sig-name descname">get_hydrogen_cap_pos_si_dir</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Cluster.get_hydrogen_cap_pos_si_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds the position of a hydrogen cap position
 :param index: index of hydrogen cap
 :return: the hydrogen position to add the cap too</p>
@@ -410,6 +423,12 @@ way to cap the oxygens. For example, when a zeolite is growing in solution it st
 </dd></dl>
 
 <dl class="py class">
+<dt id="source.zeotype.Silanol">
+<em class="property">class </em><code class="sig-prename descclassname">source.zeotype.</code><code class="sig-name descname">Silanol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent_zeotype</span></em>, <em class="sig-param"><span class="n">Si_index</span></em>, <em class="sig-param"><span class="n">O_index</span></em>, <em class="sig-param"><span class="n">H_index</span></em>, <em class="sig-param"><span class="n">Si_neighbor_list</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Silanol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
 <dt id="source.zeotype.Zeotype">
 <em class="property">class </em><code class="sig-prename descclassname">source.zeotype.</code><code class="sig-name descname">Zeotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">silent</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">zeolite_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">t_site_to_atom_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">atom_indices_to_t_site</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Zeotype" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.atoms.Atoms</span></code></p>
@@ -424,6 +443,11 @@ is given by the size parameter.
 :param max_neighbors: number of neighbors from the host atom in the final cluster
 :return: index of the cluster in the zeotype cluster array</p>
 </dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Zeotype.add_custom_cluster">
+<code class="sig-name descname">add_custom_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_indices</span><span class="p">:</span> <span class="n">Iterable<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Zeotype.add_custom_cluster" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="source.zeotype.Zeotype.build_from_cif_with_labels">
@@ -455,6 +479,16 @@ chemical symbol and the number of symbols of that type in the input list</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Zeotype.find_silanol_groups">
+<code class="sig-name descname">find_silanol_groups</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Zeotype.find_silanol_groups" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Zeotype.find_silanol_nest_T_sites">
+<code class="sig-name descname">find_silanol_nest_T_sites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#source.zeotype.Zeotype.find_silanol_nest_T_sites" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="source.zeotype.Zeotype.get_atom_types">
@@ -564,6 +598,9 @@ recored in two dictionaries.</p>
 
 
 <h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
