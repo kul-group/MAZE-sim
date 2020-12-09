@@ -443,7 +443,22 @@ class Zeotype(Atoms):
         return hydrogen_pos
 
 
-class Cluster(Zeotype):  # TODO include dynamic inheritance
+class ImperfectZeotype(Zeotype):
+    def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
+                 charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
+                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
+                 parent_zeotype=None, zeotype_to_cluster_index_map=None, neighbor_list=None):
+
+        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
+                         charges, scaled_positions, cell, pbc, celldisp, constraint,
+                         calculator, info, velocities, silent, zeolite_type)
+
+        self.parent_zeotype = parent_zeotype
+
+
+
+
+class Cluster(Zeotype):  # TODO include dynamic inheritance and
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
@@ -522,6 +537,15 @@ class Cluster(Zeotype):  # TODO include dynamic inheritance
         :return: a list of indices
         """
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
+        # instead of using zeolite use only the T sites
+        # Sn Ti Hf, Si , Al, Zn T sites
+        # Look at the
+        # The remove functions should take all the T site elements or what T sites
+        # what to remove should be different from the function that actually removes the T sites
+        # User
+
+        # if I give it the indices of 5 T sites. I remove 5 Si atoms I should create 5 * 4 O-H bonds
+        #
         nl.update(zeolite)
 
         cluster_indices = set()
