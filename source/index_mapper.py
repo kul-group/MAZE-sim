@@ -35,6 +35,14 @@ class IndexMapper:
         return name_to_main_dict
 
     def add_name(self, new_name, old_name, old_name_to_new_name, new_atom_indices=None):
+        """
+        If new_name already exist, this will still work well
+        :param new_name:
+        :param old_name:
+        :param old_name_to_new_name:
+        :param new_atom_indices:
+        :return:
+        """
         if new_name not in self.names:
             self.names.append(new_name)
 
