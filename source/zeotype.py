@@ -305,16 +305,7 @@ class Zeotype(Atoms):
     def get_indices(self):
         return [a.index for a in self]
 
-    def delete_atoms(self, indices_to_delete, iz_name='iz_1'):
-        new_indices = [a.index for a in self if a.index not in indices_to_delete]
-        iz = ImperfectZeotype(self[new_indices])
-        iz.name = iz_name
-        iz.parent_zeotype = self.parent_zeotype
-        iz.add_iz_to_index_mapper()
-        return iz
-
     def get_site_type(self, index):
-        # pz_index = self[index_mapper.get_index(self.name, self.parent_zeotype.name, )
         pz_index = self.index_mapper.get_index(self, self.parent_zeotype, index)
         return self.parent_zeotype.atom_indices_to_site[pz_index]
 
@@ -386,7 +377,28 @@ class ImperfectZeotype(Zeotype):
         old_to_new_map = self._get_old_to_new_map(self, atoms_to_add)
         self.index_mapper.add_name(atoms_name, self.name, old_to_new_map)
 
-    def
+    def integrate_cluster_2(self, cluster, include_ads=False):
+        assert (cluster.parent_zeotype is self.parent_zeotype), "Must have same parent zeotypes to integrate"
+
+        for c_atom in cluster:
+            s_index = self.index_mapper.get_index(cluster.name, self.name, c_atom.index)
+            if s_index is None:
+                continue
+            self[s_index].symbol = cluster[c_atom.index].symbol
+            self[s_index].position = cluster[c_atom.index].position
+            self[s_index].tag = cluster[c_atom.index].tag
+            self[s_index].momentum = cluster[c_atom.index].momentum
+            self[s_index].mass = cluster[c_atom.index].mass
+            self[s_index].magmom = cluster[c_atom.index].magmom
+            self[s_index].charge = cluster[c_atom.index].charge
+
+        if include_ads:
+            for ads in cluster.adsorbates:
+                self.integrate_adsorbate(ads, "adsorbate")
+
+
+    def integrate_adsorbate(self, adsorbate, adsorbate_name='adsorbate'):
+        self._add_atoms(adsorbate, adsorbate_name)
 
     def integrate_cluster(self, cluster_index: int):
         cluster = self.clusters[cluster_index]
