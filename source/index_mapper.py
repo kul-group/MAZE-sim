@@ -49,10 +49,10 @@ class IndexMapper:
         old_name_to_main_dict = self._reverse_main_index(old_name)
         main_to_new_name_dict = {}
         for old_ind, main_ind in old_name_to_main_dict.items():
-            main_to_new_name_dict[main_ind] = old_name_to_new_name.get(old_ind, default=None)
+            main_to_new_name_dict[main_ind] = old_name_to_new_name.get(old_ind, None)
 
         for i in self.main_index.keys():
-            self.main_index[i][new_name] = main_to_new_name_dict.get(i, default=None)
+            self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
 
         if new_atom_indices is not None:
             self.add_atoms(new_name, new_atom_indices)

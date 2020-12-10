@@ -44,19 +44,20 @@ class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
-
+    ##
+    ## initilization method
+    ##
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 site_to_atom_indices=None, atom_indices_to_site=None, name='pristine'):
+                 site_to_atom_indices=None, atom_indices_to_site=None, name='pristine', _is_zeotype=True):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
 
-
         # To Be compatible with ASE's atoms object, this code has to have the functionality to build from
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
-        #The following if statements take care of this functionality depending on
+        # The following if statements take care of this functionality depending on
         # if the object being built is a zeotype or if symbols is a zeotype (there are four unique paths)
 
         if isinstance(symbols, Zeotype):  # if symbols is a zeotype or zeotype subclass
@@ -65,24 +66,27 @@ class Zeotype(Atoms):
             self.clusters = symbols.clusters
             self.adsorbates = symbols.adsorbates
 
-            if __class__ == Zeotype:  # if the object being built is a zeotype
+            if _is_zeotype:  # if the object being built is a zeotype
                 self.zeolite_type = symbols.zeolite_type
                 self.site_to_atom_indices = symbols.site_to_atom_indices
                 self.atom_indices_to_site = symbols.atom_indices_to_site
-                self.index_mapper = IndexMapper(symbols.name, self.get_indices(self))
+                self.name = symbols.name
+                self.index_mapper = IndexMapper(self.name, self.get_indices(self))
                 self.parent_zeotype = self
 
             else:  # if the object being built is a subtype of zeotype
+                self.zeolite_type = zeolite_type
                 self.parent_zeotype = symbols.parent_zeotype
                 self.site_to_atom_indices = None
                 self.atom_indices_to_site = None
                 self.parent_zeotype = symbols
                 self.index_mapper = symbols.index_mapper
-                self.index_mapper.add_name(str(id(self)), symbols.name, self._get_old_to_new_map(symbols, self))
+                self.name = name  # use name
+                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
         else:  # if symbols is not a zeotype or zeotype child class
             self.silent = silent
             self.name = name
-            if __class__ == Zeotype:
+            if _is_zeotype:
                 self.index_mapper = IndexMapper(name, self.get_indices(self))
                 self.parent_zeotype = self
             else:
@@ -111,16 +115,16 @@ class Zeotype(Atoms):
         :param filepath:
         :return:
         """
-        atoms, site_to_atom_indices, atom_indices_to_site = cls.read_cif_note_sites(filepath)
+        atoms, site_to_atom_indices, atom_indices_to_site = cls._read_cif_note_sites(filepath)
         zeotype = cls(atoms)
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
         return zeotype
 
     @staticmethod
-    def read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
-                            subtrans_included=True, fractional_occupancies=True,
-                            reader='ase'):
+    def _read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
+                             subtrans_included=True, fractional_occupancies=True,
+                             reader='ase'):
         """
         The helper function used by build_from_cif_with_labels. This loads a CIF file
         using ase.io.cif.parse_cif and then finds the T-site information. After finding
@@ -174,6 +178,9 @@ class Zeotype(Atoms):
                     atoms[i].symbol = sym_to_original_element[sym]
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
+
+    def get_imperfect_zeolite(self):
+        return ImperfectZeotype(self)
 
     def update_nl(self):
         self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
@@ -325,6 +332,7 @@ class Zeotype(Atoms):
                             sites_list.append(index)
 
         return sites_list
+
     @staticmethod
     def get_indices(atoms_object):
         return [a.index for a in atoms_object]
@@ -356,20 +364,17 @@ class Zeotype(Atoms):
 
         return old_to_new_map
 
+
 class ImperfectZeotype(Zeotype):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 parent_zeotype=None, zeotype_to_cluster_index_map=None, neighbor_list=None, name='iz_1'):
+                 site_to_atom_indices=None, atom_indices_to_site=None, name='imperfect_zeotype'):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
-                         calculator, info, velocities, silent, zeolite_type, zeotype_to_cluster_index_map,
-                         neighbor_list, build_index_mapper=False)
-
-        self.parent_zeotype = parent_zeotype
-        self.index_mapper = self.parent_zeotype.index_mapper
-        self.name = name
+                         calculator, info, velocities, silent, zeolite_type,
+                         site_to_atom_indices, atom_indices_to_site, name, _is_zeotype=False)
 
     def _get_pz_to_iz_map_by_pos(self):
         """
@@ -379,7 +384,6 @@ class ImperfectZeotype(Zeotype):
         :return: a parent zeotype to imperfect zeotype index map
         """
         return self._get_old_to_new_map(self.parent_zeotype, self)
-
 
     def add_iz_to_index_mapper(self):
         pz_to_iz_map = self._get_pz_to_iz_map_by_pos()
