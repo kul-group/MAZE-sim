@@ -1,10 +1,17 @@
 from itertools import count
+from typing import Iterable
 class IndexMapper:
     """
     This class maps between the different atoms objects in a zeotype project.
-    It is essential for
+    It is essential for keeping track of the various
     """
-    def __init__(self, name: str, atom_indices):
+    def __init__(self, name: str, atom_indices: Iterable):
+        """
+
+        :param name: the str name of the atom-like object being used to initialize the Index Mapper.
+        This should be a zeotype object
+        :param atom_indices: A list of atom indices
+        """
         self.main_index = {}
         self.i_max = 0
         self.names = [name]
@@ -12,7 +19,12 @@ class IndexMapper:
             self.main_index[main_index] = {name: atom_index}
             self.i_max = main_index
 
-    def reverse_main_index(self, name):
+    def _reverse_main_index(self, name):
+        """
+
+        :param name:
+        :return:
+        """
         name_to_main_dict = {}
         for main_index, value in self.main_index.items():
             name_index = value[name]
@@ -23,8 +35,10 @@ class IndexMapper:
         return name_to_main_dict
 
     def add_name(self, new_name, old_name, old_name_to_new_name, new_atom_indices=None):
-        self.names.append(new_name)
-        old_name_to_main_dict = self.reverse_main_index(old_name)
+        if new_name not in self.names:
+            self.names.append(new_name)
+
+        old_name_to_main_dict = self._reverse_main_index(old_name)
         main_to_new_name_dict = {}
         for old_ind, main_ind in old_name_to_main_dict.items():
             main_to_new_name_dict[main_ind] = old_name_to_new_name.get(old_ind, default=None)
@@ -47,6 +61,19 @@ class IndexMapper:
             none_dict[name] = index
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
+
+    def delete_atoms(self, name, atom_indices_to_delete):
+        name_to_main_dict = self._reverse_main_index(name)
+        for i in atom_indices_to_delete:
+            self.main_index[name_to_main_dict[i]][name] = None
+
+    def update_indices(self, name, old_to_new_map):
+        for index, value in self.main_index.items():
+            old_value = value[name]
+            if old_value is None:
+                continue  #TODO: fix this bug of old values being skipped
+            value[name] = old_to_new_map[old_value]
+
 
     def get_index(self, sender_name, receiver_name, sender_index):
         for name_dict in self.main_index.values():
