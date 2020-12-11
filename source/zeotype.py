@@ -287,10 +287,11 @@ class Zeotype(Atoms):
         new_cluster = Cluster(self)
         indices_to_delete = self.get_indices_compliment(self, cluster_indices)
         new_cluster.delete_atoms(indices_to_delete)
-        iz = self.get_imperfect_zeolite()
-        iz.delete_atoms(cluster_indices)
-        self.clusters.append(new_cluster)
-        return new_cluster, iz
+        od = OpenDefect.build_from_indices(self, cluster_indices, cap_atoms=True)
+        # iz = self.get_imperfect_zeolite()
+        # iz.delete_atoms(cluster_indices)
+        # self.clusters.append(new_cluster)
+        return new_cluster, od
 
     def add_custom_cluster(self, cluster_indices: Iterable[int]):
         new_cluster = Cluster.build_from_zeolite(self, 0, 0, 0, cluster_indices=cluster_indices)
@@ -387,6 +388,59 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, silent, zeolite_type,
                          site_to_atom_indices, atom_indices_to_site, name, _is_zeotype=False)
 
+    def cap_atoms(self):
+        self.update_nl()
+        self.parent_zeotype.update_nl()
+        cap_atoms_dict = self.build_all_atoms_cap_dict()
+        for symbol, pos_list in cap_atoms_dict.items():
+            for pos in pos_list:
+               self._add_atoms(Atom(symbol, position=pos), 'caps')
+               # print('symbol ', symbol, 'pos ', pos)
+
+    def build_all_atoms_cap_dict(self, bonds_needed=None):
+        if bonds_needed is None:
+            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+
+        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        indices, count = self.count_elements()
+        for si_index in indices['Si']:
+            if self.needs_cap(si_index, bonds_needed['Si']):
+                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
+                    pos = self.get_oxygen_cap_pos(si_index)
+                    cap_atoms_dict['O'].append(pos)
+                    self.update_nl()
+
+        for o_index in indices['O']:
+            if self.needs_cap(o_index, bonds_needed['O']):
+                parent_index = self.index_mapper.get_index(self.name,self.parent_zeotype.name, o_index)
+                pos = self.get_H_pos_parent(parent_index)
+                cap_atoms_dict['H'].append(pos)
+                self.update_nl()
+
+        return dict(cap_atoms_dict)
+
+    def get_H_pos_parent(self, atom_to_cap_pi):
+        """
+        :param atom_to_cap_pi: atom to cap, parent index
+        :return: hydrogen position
+        """
+        atom_to_cap_self_i = self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_to_cap_pi)
+
+        site_position = self.find_missing_si_pos(atom_to_cap_pi)
+        if site_position is None:
+            site_position = self.get_hydrogen_cap_pos(atom_to_cap_self_i)
+
+        direction = site_position - self[atom_to_cap_self_i].position  # vector from neighbor to oxygen
+        hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.abs(np.linalg.norm(direction))
+        return hydrogen_pos
+
+    def find_missing_si_pos(self, oxygen_atom_to_cap_pi):
+        nl = self.parent_zeotype.neighbor_list.get_neighbors(oxygen_atom_to_cap_pi)[0]
+        for atom_index in nl:
+            if self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_index) is None:
+                if self.parent_zeotype[atom_index] == 'Si':
+                    return self.parent_zeotype[atom_index].position
+
     def _get_pz_to_iz_map_by_pos(self):
         """
         Get the index mapping between a parent zeotype and imperfect zeotype.
@@ -413,7 +467,6 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_atoms(self.name, new_atom_indices)
         old_to_new_map = self._get_old_to_new_map(self, atoms_to_add)
         self.index_mapper.add_name(atoms_name, self.name, old_to_new_map)
-
 
     def integrate_cluster(self, cluster, include_ads=False):
         assert (cluster.parent_zeotype is self.parent_zeotype), "Must have same parent zeotypes to integrate"
@@ -502,7 +555,8 @@ class ImperfectZeotype(Zeotype):
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
                 for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
-                    pos = self.get_oxygen_cap_pos(si_index)
+                    si_index_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, si_index)
+                    pos = self.get_oxygen_cap_pos(si_index_pi)
                     cap_atoms_dict['O'].append(pos)
                     self.update_nl()
 
@@ -514,17 +568,18 @@ class ImperfectZeotype(Zeotype):
 
         return dict(cap_atoms_dict)
 
-    def get_oxygen_cap_pos(self, index):
+    def get_oxygen_cap_pos(self, cap_pos_pi):
 
         """
         Find a position of an oxygen cap
-        :param index: index of atom needing cap
+        :param self_index: index of atom needing cap
         :return:
         """
-
-        neighbor = self.neighbor_list.get_neighbors(index)[0][-1]  # first index in the list of neighbor indicies
-        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-        oxygen_pos = self.get_positions()[index] + 1.6 * direction / np.linalg.norm(direction)
+        self_index = self.index_mapper.get_index(self.parent_zeotype.name, self.name, cap_pos_pi)
+        self.update_nl()
+        neighbor = self.neighbor_list.get_neighbors(self_index)[0][-1]  # first index in the list of neighbor indicies
+        direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
+        oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
         return oxygen_pos
 
     def get_hydrogen_cap_pos(self, index):
@@ -557,15 +612,13 @@ class OpenDefect(ImperfectZeotype):
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
                  site_to_atom_indices=None, atom_indices_to_site=None, name='open_defect'):
-
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
                          calculator, info, velocities, silent, zeolite_type,
                          site_to_atom_indices, atom_indices_to_site, name)
 
-
     @classmethod
-    def build_from_indices(cls, parent_zeotype, indices_to_delete):
+    def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
         new_od = cls(parent_zeotype)
 
         # new_od.neighbor_list.update(new_od)
@@ -576,6 +629,9 @@ class OpenDefect(ImperfectZeotype):
         # z_map_atom_indices_to_cap = list(set(z_map_atom_indices_to_cap))  # remove duplicate indices
 
         new_od.delete_atoms(indices_to_delete)
+        if cap_atoms:
+            new_od.cap_atoms()
+
         return new_od
 
         # od_map_atom_indices_to_cap = []
