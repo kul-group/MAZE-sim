@@ -392,9 +392,16 @@ class ImperfectZeotype(Zeotype):
         self.update_nl()
         self.parent_zeotype.update_nl()
         cap_atoms_dict = self.build_all_atoms_cap_dict()
+        symbol_list = []
+        position_list = []
         for symbol, pos_list in cap_atoms_dict.items():
             for pos in pos_list:
-               self._add_atoms(Atom(symbol, position=pos), 'caps')
+                symbol_list.append(symbol)
+                position_list.append(pos)
+
+        new_atoms = ase.Atoms(symbol_list, positions=position_list)
+        self._add_atoms(new_atoms, "cap")
+            #self._add_atoms(Atoms(symbol, position=pos), 'caps')
                # print('symbol ', symbol, 'pos ', pos)
 
     def build_all_atoms_cap_dict(self, bonds_needed=None):
