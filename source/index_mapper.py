@@ -78,13 +78,18 @@ class IndexMapper:
     def update_indices(self, name, old_to_new_map):
         for index, value in self.main_index.items():
             old_value = value[name]
-            if old_value is None:
-                continue  #TODO: fix this bug of old values being skipped
-            value[name] = old_to_new_map[old_value]
+            if old_value in old_to_new_map:
+                value[name] = old_to_new_map[old_value]
+            else:
+                value[name] = None
 
 
     def get_index(self, sender_name, receiver_name, sender_index):
         for name_dict in self.main_index.values():
-            if name_dict[sender_name] is sender_index:
+            my_name_dict = name_dict[sender_name]
+            my_sender_index = sender_index
+            print('my name dict ', my_name_dict, 'my sender index ', my_sender_index)
+            print('name_dict[sender_name] == sender_index ', name_dict[sender_name] == sender_index)
+            if name_dict[sender_name] == sender_index:
                 return name_dict[receiver_name]
 

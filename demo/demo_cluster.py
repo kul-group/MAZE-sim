@@ -1,28 +1,16 @@
-from source.zeotype import Zeotype
+from source.zeotype import Zeotype, ImperfectZeotype
 from ase.visualize import view
 
 
 def main():
     cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
+    #iz = ImperfectZeotype(zeolite)
+    #iz.delete_atoms([i for i in range(0, 90)])
     # make cluster
-    ci = zeolite.add_cluster(95, 500, 4)
-    cluster = zeolite.clusters[ci]
-    view(zeolite)
+    cluster, open_framework = zeolite.add_cluster(84, 400, 3)
     view(cluster)
-    # cap atoms
-    cluster.cap_atoms(verbose=True)
-    view(cluster)
-
-    # change all cluster atoms to Hg
-    for i in range(len(cluster)):
-        cluster[i].symbol = 'Hg'
-    view(cluster)
-    view(zeolite)
-
-    # now integrate in cluster
-    zeolite.integrate_cluster(ci)
-    view(zeolite)
+    view(open_framework)
 
 
 if __name__ == '__main__':
