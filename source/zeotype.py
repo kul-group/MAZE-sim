@@ -453,6 +453,7 @@ class ImperfectZeotype(Zeotype):
 
         site_position = self.find_missing_si_pos(atom_to_cap_pi)
         if site_position is None:
+            print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
             site_position = self.get_hydrogen_cap_pos(atom_to_cap_self_i)
 
         direction = site_position - self[atom_to_cap_self_i].position  # vector from neighbor to oxygen
@@ -463,7 +464,7 @@ class ImperfectZeotype(Zeotype):
         nl = self.parent_zeotype.neighbor_list.get_neighbors(oxygen_atom_to_cap_pi)[0]
         for atom_index in nl:
             if self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_index) is None:
-                if self.parent_zeotype[atom_index] == 'Si':
+                if self.parent_zeotype[atom_index].symbol == 'Si':
                     return self.parent_zeotype[atom_index].position
 
     def _get_pz_to_iz_map_by_pos(self):
@@ -522,10 +523,12 @@ class ImperfectZeotype(Zeotype):
                 self._add_atoms(Atom(symbol, position=pos), 'silanol_nest_cap')
 
     def create_silanol_defect(self, site_index):
-        atoms_to_cap = self.neighbor_list.get_neighbors(pz_site_index)[0]
-        self.delete_atoms(site_index)
-        pz_site_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, site_index)
-        self.cap_silanol_nest_atoms(atoms_to_cap, pz_site_index)
+        self.delete_atoms([site_index])
+        self.cap_atoms()  # TODO: replace with specific capping
+        # atoms_to_cap = self.neighbor_list.get_neighbors(pz_site_index)[0]
+        # self.delete_atoms(site_index)
+        # pz_site_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, site_index)
+        # self.cap_silanol_nest_atoms(atoms_to_cap, pz_site_index)
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
         """
