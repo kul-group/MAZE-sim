@@ -69,7 +69,7 @@ if __name__ == '__main__':
     from ase.neighborlist import NeighborList, natural_cutoffs
     b = read('BEA.cif')
     z = Zeotype(b)
-    z.add_cluster(35, 3)
+    z.get_cluster(35, 3)
     cluster = z.clusters[0]
     view(cluster)
     capped_clust = cap_clust(cluster)

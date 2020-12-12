@@ -259,7 +259,6 @@ class Adsorbate(Atoms):
         assert self not in self.host_zeotype.adsorbates, "cannot integrate single adsorbate object twice"
         if position_ads:
             self.position_ads()
-
         self.host_zeotype.extend(self)
         self.set_ads_zeotype_map()
         self.host_zeotype.adsorbates.append(self)

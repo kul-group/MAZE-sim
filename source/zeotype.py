@@ -44,7 +44,6 @@ class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
-
     ##
     ## initilization method
     ##
@@ -271,7 +270,7 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def add_cluster(self, index: int, max_size: int, max_neighbors: int, cluster_indices=None) -> int:
+    def get_cluster(self, index: int, max_size: int, max_neighbors: int, cluster_indices=None) -> int:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -293,17 +292,7 @@ class Zeotype(Atoms):
         # self.clusters.append(new_cluster)
         return new_cluster, od
 
-    def add_custom_cluster(self, cluster_indices: Iterable[int]):
-        new_cluster = Cluster.build_from_zeolite(self, 0, 0, 0, cluster_indices=cluster_indices)
-        self.clusters.append(new_cluster)
-        return len(self.clusters) - 1  # returns final index in the clusters list
 
-    def remove_cluster(self, index: int):
-        """
-        :param index: Index of cluster to remove from zeotype list
-        :return: None
-        """
-        self.clusters[index] = None
 
     def find_silanol_groups(self):
         silanol_list = []
@@ -388,8 +377,13 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, silent, zeolite_type,
                          site_to_atom_indices, atom_indices_to_site, name, _is_zeotype=False)
 
-    def cap_atoms(self):
-        self.update_nl()
+        if symbols is __class__:
+            self.atom_caps = symbols.atom_caps
+        else:
+            self.atom_caps = []
+
+    def cap_atoms(self, cap_name="cap"):
+        self.update_nl()  # might not be needed
         self.parent_zeotype.update_nl()
         cap_atoms_dict = self.build_all_atoms_cap_dict()
         symbol_list = []
@@ -400,9 +394,33 @@ class ImperfectZeotype(Zeotype):
                 position_list.append(pos)
 
         new_atoms = ase.Atoms(symbol_list, positions=position_list)
-        self._add_atoms(new_atoms, "cap")
-            #self._add_atoms(Atoms(symbol, position=pos), 'caps')
-               # print('symbol ', symbol, 'pos ', pos)
+        self.atom_caps.append(new_atoms)
+        self._add_atoms(new_atoms, cap_name)
+
+    def remove_caps(self, cap_name="cap"):
+        indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
+        self.delete_atoms(indices_to_delete)
+
+    def integrate_adsorbate(self, adsorbate, ads_name='ads'):
+        self.adsorbates.append(adsorbate)
+        self._add_atoms(adsorbate, ads_name)
+
+    def integrate_other_zeotype(self, other, name='other'):
+        for atom in other:
+            self_index = self.index_mapper.get_index(other.name, self.name, atom.index)
+            if self_index is not None:
+                self.change_atom_properties(self_index, atom.index, other)
+            else:
+                self._add_atoms(Atoms([atom]), name)
+
+    def change_atom_properties(self, self_index, other_index, other):
+        self[self_index].symbol = other[other_index].symbol
+        self[self_index].position = other[other_index].position
+        self[self_index].tag = other[other_index].tag
+        self[self_index].momentum = other[other_index].momentum
+        self[self_index].mass = other[other_index].mass
+        self[self_index].magmom = other[other_index].magmom
+        self[self_index].charge = other[other_index].charge
 
     def build_all_atoms_cap_dict(self, bonds_needed=None):
         if bonds_needed is None:
@@ -419,7 +437,7 @@ class ImperfectZeotype(Zeotype):
 
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
-                parent_index = self.index_mapper.get_index(self.name,self.parent_zeotype.name, o_index)
+                parent_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, o_index)
                 pos = self.get_H_pos_parent(parent_index)
                 cap_atoms_dict['H'].append(pos)
                 self.update_nl()
@@ -627,18 +645,9 @@ class OpenDefect(ImperfectZeotype):
     @classmethod
     def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
         new_od = cls(parent_zeotype)
-
-        # new_od.neighbor_list.update(new_od)
-        # z_map_atom_indices_to_cap = []
-        # for i in indices_to_delete:
-        #     z_map_atom_indices_to_cap.extend(new_od.neighbor_list.get_neighbors(i)[0])
-        #
-        # z_map_atom_indices_to_cap = list(set(z_map_atom_indices_to_cap))  # remove duplicate indices
-
         new_od.delete_atoms(indices_to_delete)
         if cap_atoms:
             new_od.cap_atoms()
-
         return new_od
 
         # od_map_atom_indices_to_cap = []
@@ -647,7 +656,6 @@ class OpenDefect(ImperfectZeotype):
         #     od_map_atom_indices_to_cap.append(new_index)
         #
         # new_od.cap(od_map_atom_indices_to_cap)
-
 
 class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
@@ -667,18 +675,8 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         if cluster_indices is None:
             cluster_indices = Cluster.get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster = Cluster(parent_zeotype)
-        # to_delete = list(set(parent_zeotype.get_indices(parent_zeotype)) - set(cluster_indices))
-        # cluster._delete_atoms(to_delete)
-        # maybe this should go in zeolite
-        cluster.zeolite_type = 'cluster'
-        cluster.parent_zeotype = parent_zeotype.parent_zeotype
-        cluster.site_to_atom_indices = None
-        cluster.atom_indices_to_site = None
-        cluster.index_mapper = parent_zeotype.index_mapper
-        cluster.name = cluster_name  # use name
-        cluster.index_mapper.add_name(cluster.name, parent_zeotype.name,
-                                      Zeotype._get_old_to_new_map(parent_zeotype, cluster))
-        #
+        to_delete = cluster.get_indices_compliment(cluster, cluster_indices)
+        cluster.delete_atoms(to_delete)
         return cluster
 
     def integrate_into_iz(self, imperfect_zeolte: ImperfectZeotype):

@@ -1,10 +1,13 @@
 from itertools import count
 from typing import Iterable
+
+
 class IndexMapper:
     """
     This class maps between the different atoms objects in a zeotype project.
     It is essential for keeping track of the various
     """
+
     def __init__(self, name: str, atom_indices: Iterable):
         """
 
@@ -83,7 +86,6 @@ class IndexMapper:
             else:
                 value[name] = None
 
-
     def get_index(self, sender_name, receiver_name, sender_index):
         for name_dict in self.main_index.values():
             my_name_dict = name_dict[sender_name]
@@ -91,3 +93,10 @@ class IndexMapper:
             if name_dict[sender_name] == sender_index:
                 return name_dict[receiver_name]
 
+    def get_overlap(self, name1, name2):
+        overlap_indices_name1 = []
+        for name_dict in self.main_index.values():
+            if name_dict[name1] is not None and name_dict[name2] is not None:
+                overlap_indices_name1.append(name_dict[name1])
+
+        return overlap_indices_name1

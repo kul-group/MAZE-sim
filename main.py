@@ -16,7 +16,7 @@ if __name__ == '__main__':
     cif_path = os.path.join(os.getcwd(), 'source', 'BEA.cif')
     #zeotype = Zeotype.build_from_cif(cif_path)
     z = Zeotype.build_from_cif_with_labels(cif_path)
-    z.add_cluster(88,40)
+    z.get_cluster(88, 40)
     test = copy.deepcopy(z.clusters[0])
     view(test)
     z.clusters[0].cap_atoms(verbose=True)
