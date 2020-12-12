@@ -64,7 +64,7 @@ class Zeotype(Atoms):
             self.silent = symbols.silent
             self.sites = symbols.sites
             self.clusters = symbols.clusters
-            self.adsorbates = symbols.adsorbates
+            self.adsorbates = symbols.adsorbates  # these could be removed...
 
             if _is_zeotype:  # if the object being built is a zeotype
                 self.zeolite_type = symbols.zeolite_type
@@ -395,7 +395,7 @@ class ImperfectZeotype(Zeotype):
 
         new_atoms = ase.Atoms(symbol_list, positions=position_list)
         self.atom_caps.append(new_atoms)
-        self._add_atoms(new_atoms, cap_name)
+        self.add_atoms(new_atoms, cap_name)
 
     def remove_caps(self, cap_name="cap"):
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
@@ -403,7 +403,7 @@ class ImperfectZeotype(Zeotype):
 
     def integrate_adsorbate(self, adsorbate, ads_name='ads'):
         self.adsorbates.append(adsorbate)
-        self._add_atoms(adsorbate, ads_name)
+        self.add_atoms(adsorbate, ads_name)
 
     def integrate_other_zeotype(self, other, name='other'):
         for atom in other:
@@ -411,7 +411,7 @@ class ImperfectZeotype(Zeotype):
             if self_index is not None:
                 self.change_atom_properties(self_index, atom.index, other)
             else:
-                self._add_atoms(Atoms([atom]), name)
+                self.add_atoms(Atoms([atom]), name)
 
     def change_atom_properties(self, self_index, other_index, other):
         self[self_index].symbol = other[other_index].symbol
@@ -454,7 +454,7 @@ class ImperfectZeotype(Zeotype):
         site_position = self.find_missing_si_pos(atom_to_cap_pi)
         if site_position is None:
             print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
-            site_position = self.get_hydrogen_cap_pos(atom_to_cap_self_i)
+            site_position = self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
 
         direction = site_position - self[atom_to_cap_self_i].position  # vector from neighbor to oxygen
         hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.abs(np.linalg.norm(direction))
@@ -486,7 +486,7 @@ class ImperfectZeotype(Zeotype):
         old_to_new_map = self._get_old_to_new_map(old_self, self)
         self.index_mapper.update_indices(self.name, old_to_new_map)
 
-    def _add_atoms(self, atoms_to_add, atoms_name):
+    def add_atoms(self, atoms_to_add, atoms_name):
         old_self = self.copy()
         self.extend(atoms_to_add)
         new_atom_indices = list(set([a.index for a in self]) - set([a.index for a in old_self]))
@@ -494,33 +494,9 @@ class ImperfectZeotype(Zeotype):
         old_to_new_map = self._get_old_to_new_map(self, atoms_to_add)
         self.index_mapper.add_name(atoms_name, self.name, old_to_new_map)
 
-    def integrate_cluster(self, cluster, include_ads=False):
-        assert (cluster.parent_zeotype is self.parent_zeotype), "Must have same parent zeotypes to integrate"
-
-        for c_atom in cluster:
-            s_index = self.index_mapper.get_index(cluster.name, self.name, c_atom.index)
-            if s_index is None:
-                continue
-            self[s_index].symbol = cluster[c_atom.index].symbol
-            self[s_index].position = cluster[c_atom.index].position
-            self[s_index].tag = cluster[c_atom.index].tag
-            self[s_index].momentum = cluster[c_atom.index].momentum
-            self[s_index].mass = cluster[c_atom.index].mass
-            self[s_index].magmom = cluster[c_atom.index].magmom
-            self[s_index].charge = cluster[c_atom.index].charge
-
-        if include_ads:
-            for ads in cluster.adsorbates:
-                self.integrate_adsorbate(ads, "adsorbate")
-
     def integrate_adsorbate(self, adsorbate, adsorbate_name='adsorbate'):
-        self._add_atoms(adsorbate, adsorbate_name)
+        self.add_atoms(adsorbate, adsorbate_name)
 
-    def cap_silanol_nest_atoms(self, indices_atom_to_cap, pz_site_index):
-        cap_atoms_dict = self.build_specific_cap_atoms_dict(indices_atom_to_cap, pz_site_index)
-        for symbol, pos_list in cap_atoms_dict.items():
-            for pos in pos_list:
-                self._add_atoms(Atom(symbol, position=pos), 'silanol_nest_cap')
 
     def create_silanol_defect(self, site_index):
         self.delete_atoms([site_index])
@@ -539,63 +515,6 @@ class ImperfectZeotype(Zeotype):
         """
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def build_specific_cap_atoms_dict(self, indices_atom_to_cap, pz_site_index):
-        """
-        Builds a dictionary of the cap atom positions
-        :param bonds_needed: a dict mapping atom symbol to number of bonds needed
-        :return: a dictionary of atom symbols and positions of cap atoms
-        """
-        bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
-        indices, count = self.count_elements()
-        for si_index in indices['Si']:
-            if si_index not in indices_atom_to_cap:
-                continue
-            if self.needs_cap(si_index, bonds_needed['Si']):
-                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
-                    pos = self.get_oxygen_cap_pos(si_index)
-                    cap_atoms_dict['O'].append(pos)
-                    self.update_nl()
-
-        for o_index in indices['O']:
-            if o_index not in indices_atom_to_cap:
-                continue
-            if self.needs_cap(o_index, bonds_needed['O']):
-                pos = self.get_hydrogen_cap_pos_site_dir(self, pz_site_index, o_index)
-                cap_atoms_dict['H'].append(pos)
-                self.update_nl()
-
-        return dict(cap_atoms_dict)
-
-    def build_cap_atoms_dict(self, bonds_needed=None, hcap_fun=None):
-        """
-        Builds a dictionary of the cap atom positions
-        :param bonds_needed: a dict mapping atom symbol to number of bonds needed
-        :return: a dictionary of atom symbols and positions of cap atoms
-        """
-        if hcap_fun is None:
-            hcap_fun = self.get_hydrogen_cap_pos
-
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
-        if bonds_needed is None:
-            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
-        indices, count = self.count_elements()
-        for si_index in indices['Si']:
-            if self.needs_cap(si_index, bonds_needed['Si']):
-                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
-                    si_index_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, si_index)
-                    pos = self.get_oxygen_cap_pos(si_index_pi)
-                    cap_atoms_dict['O'].append(pos)
-                    self.update_nl()
-
-        for o_index in indices['O']:
-            if self.needs_cap(o_index, bonds_needed['O']):
-                pos = hcap_fun(o_index)
-                cap_atoms_dict['H'].append(pos)
-                self.update_nl()
-
-        return dict(cap_atoms_dict)
-
     def get_oxygen_cap_pos(self, cap_pos_pi):
 
         """
@@ -610,7 +529,7 @@ class ImperfectZeotype(Zeotype):
         oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
         return oxygen_pos
 
-    def get_hydrogen_cap_pos(self, index):
+    def get_hydrogen_cap_pos_simple(self, index):
         """
         Finds the position of a hydrogen cap position
         :param index: index of hydrogen cap
@@ -621,18 +540,6 @@ class ImperfectZeotype(Zeotype):
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def get_hydrogen_cap_pos_site_dir(self, site_index, atom_to_be_capped_index):
-        """
-
-        :param parent_zeolite: The zeolite without the T site removed
-        :param site_index: the index of the T site that has been removed
-        :param atom_to_be_capped_index: the index of the atom where the cap is being added
-        :return: The position of the new hydrogen atom
-        """
-        site_position = self.parent_zeolite[site_index].position
-        direction = site_position - self.get_positions()[atom_to_be_capped_index]  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[atom_to_be_capped_index] + direction / np.abs(np.linalg.norm(direction))
-        return hydrogen_pos
 
 
 class OpenDefect(ImperfectZeotype):
