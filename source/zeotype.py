@@ -285,7 +285,7 @@ class Zeotype(Atoms):
 
         new_cluster = Cluster(self)
         indices_to_delete = self.get_indices_compliment(self, cluster_indices)
-        new_cluster.delete_atoms(indices_to_delete)
+        new_cluster = new_cluster.delete_atoms(indices_to_delete)
         od = OpenDefect.build_from_indices(self, cluster_indices, cap_atoms=True)
         # iz = self.get_imperfect_zeolite()
         # iz.delete_atoms(cluster_indices)
@@ -361,7 +361,10 @@ class Zeotype(Atoms):
         old_to_new_map = {}
 
         for new_index, pos in new_index_to_position_map.items():
-            old_to_new_map[old_position_to_index_map[pos]] = new_index
+            try:
+                old_to_new_map[old_position_to_index_map[pos]] = new_index
+            except KeyError:
+                continue
 
         return old_to_new_map
 
@@ -395,23 +398,26 @@ class ImperfectZeotype(Zeotype):
 
         new_atoms = ase.Atoms(symbol_list, positions=position_list)
         self.atom_caps.append(new_atoms)
-        self.add_atoms(new_atoms, cap_name)
+        return self.add_atoms(new_atoms, cap_name)
 
     def remove_caps(self, cap_name="cap"):
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
-        self.delete_atoms(indices_to_delete)
+        return self.delete_atoms(indices_to_delete)
 
     def integrate_adsorbate(self, adsorbate, ads_name='ads'):
         self.adsorbates.append(adsorbate)
         self.add_atoms(adsorbate, ads_name)
 
     def integrate_other_zeotype(self, other, name='other'):
+        new_self = __class__(self)
         for atom in other:
-            self_index = self.index_mapper.get_index(other.name, self.name, atom.index)
+            self_index = new_self.index_mapper.get_index(other.name, new_self.name, atom.index)
             if self_index is not None:
-                self.change_atom_properties(self_index, atom.index, other)
+                new_self.change_atom_properties(self_index, atom.index, other)
             else:
-                self.add_atoms(Atoms([atom]), name)
+                new_self = new_self.add_atoms(Atoms([atom]), name)
+
+        return new_self
 
     def change_atom_properties(self, self_index, other_index, other):
         self[self_index].symbol = other[other_index].symbol
@@ -481,30 +487,41 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(self, self.name, self.parent_zeotype.name, pz_to_iz_map)
 
     def delete_atoms(self, indices_to_delete):
-        old_self = self.copy()
-        del self[indices_to_delete]
-        old_to_new_map = self._get_old_to_new_map(old_self, self)
-        self.index_mapper.update_indices(self.name, old_to_new_map)
+        def _delete_atoms(iz, indices):
+            del iz[indices]
+
+        return self._change_atoms(_delete_atoms, indices_to_delete)
+
+
+    def _change_atoms(self, operation, *args, **kwargs):
+        new_self = __class__(self)
+        operation(new_self, *args, **kwargs)
+        new_self.name += '1'  # TODO: Replace with register new name
+        old_to_new_map = self._get_old_to_new_map(self, new_self)
+        self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
+        return new_self
 
     def add_atoms(self, atoms_to_add, atoms_name):
-        old_self = self.copy()
-        self.extend(atoms_to_add)
-        new_atom_indices = list(set([a.index for a in self]) - set([a.index for a in old_self]))
-        self.index_mapper.add_atoms(self.name, new_atom_indices)
-        old_to_new_map = self._get_old_to_new_map(self, atoms_to_add)
-        self.index_mapper.add_name(atoms_name, self.name, old_to_new_map)
+        # add atoms to indexer
+        new_self = __class__(self)
+        new_self.name += "1"
+
+        atom_indices = [a.index for a in atoms_to_add]
+        new_self.index_mapper.add_atoms(atoms_name, atom_indices)
+
+        old_to_new_map = new_self._get_old_to_new_map(self, new_self)
+        new_self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
+
+        new_self.extend(atoms_to_add)
+        old_to_new_map = new_self._get_old_to_new_map(atoms_to_add, new_self)
+        new_self.index_mapper.add_name(new_self.name, atoms_name, old_to_new_map)
+        return new_self
 
     def integrate_adsorbate(self, adsorbate, adsorbate_name='adsorbate'):
         self.add_atoms(adsorbate, adsorbate_name)
 
-
     def create_silanol_defect(self, site_index):
-        self.delete_atoms([site_index])
-        self.cap_atoms()  # TODO: replace with specific capping
-        # atoms_to_cap = self.neighbor_list.get_neighbors(pz_site_index)[0]
-        # self.delete_atoms(site_index)
-        # pz_site_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, site_index)
-        # self.cap_silanol_nest_atoms(atoms_to_cap, pz_site_index)
+        return self.delete_atoms([site_index]).cap_atoms()
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
         """
@@ -555,9 +572,9 @@ class OpenDefect(ImperfectZeotype):
     @classmethod
     def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
         new_od = cls(parent_zeotype)
-        new_od.delete_atoms(indices_to_delete)
+        new_od = new_od.delete_atoms(indices_to_delete)
         if cap_atoms:
-            new_od.cap_atoms()
+            new_od = new_od.cap_atoms()
         return new_od
 
         # od_map_atom_indices_to_cap = []
@@ -586,7 +603,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
             cluster_indices = Cluster.get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster = Cluster(parent_zeotype)
         to_delete = cluster.get_indices_compliment(cluster, cluster_indices)
-        cluster.delete_atoms(to_delete)
+        cluster = cluster.delete_atoms(to_delete)
         return cluster
 
     def integrate_into_iz(self, imperfect_zeolte: ImperfectZeotype):

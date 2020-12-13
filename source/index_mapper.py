@@ -67,12 +67,18 @@ class IndexMapper:
         return none_dict
 
     def add_atoms(self, name, new_atom_indices):
+        if name not in self.names:
+            for index, value in self.main_index.items():
+                value[name] = None
+            self.names.append(name)
+
         for index in new_atom_indices:
             none_dict = self.make_none_dict()  # could be slow
             none_dict[name] = index
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
 
+        x = self.main_index
     def delete_atoms(self, name, atom_indices_to_delete):
         name_to_main_dict = self._reverse_main_index(name)
         for i in atom_indices_to_delete:

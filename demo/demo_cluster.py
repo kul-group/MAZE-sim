@@ -8,11 +8,10 @@ def main():
     cluster, open_framework = zeolite.get_cluster(84, 400, 5)
     view(cluster)
     view(open_framework)
-    open_framework.remove_caps()
+    open_framework = open_framework.remove_caps()
     view(open_framework)
-    open_framework.integrate_other_zeotype(cluster)
+    open_framework = open_framework.integrate_other_zeotype(cluster)
     view(open_framework)
-
 
 if __name__ == '__main__':
     main()
