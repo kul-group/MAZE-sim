@@ -283,7 +283,7 @@ class Zeotype(Atoms):
         if cluster_indices is None:
             cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
 
-        new_cluster = Cluster(self)
+        new_cluster = Cluster(self, name='Cluster')
         indices_to_delete = self.get_indices_compliment(self, cluster_indices)
         new_cluster = new_cluster.delete_atoms(indices_to_delete)
         od = OpenDefect.build_from_indices(self, cluster_indices, cap_atoms=True)
@@ -408,7 +408,7 @@ class ImperfectZeotype(Zeotype):
         return self.add_atoms(adsorbate, ads_name)
 
     def integrate_other_zeotype(self, other, name='other'):
-        new_self = __class__(self)
+        new_self = self.__class__(self)
         for atom in other:
             self_index = new_self.index_mapper.get_index(other.name, new_self.name, atom.index)
             if self_index is not None:
@@ -442,21 +442,24 @@ class ImperfectZeotype(Zeotype):
 
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
-                parent_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, o_index)
-                pos = self.get_H_pos_parent(parent_index)
+                pos = self.get_H_pos_parent(o_index)
                 cap_atoms_dict['H'].append(pos)
                 self.update_nl()
 
         return dict(cap_atoms_dict)
 
-    def get_H_pos_parent(self, atom_to_cap_pi):
+    def get_H_pos_parent(self, atom_to_cap_self_i):
         """
         :param atom_to_cap_pi: atom to cap, parent index
         :return: hydrogen position
         """
-        atom_to_cap_self_i = self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_to_cap_pi)
+        atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
+        if atom_to_cap_pi is not None:
+            site_position = self.find_missing_si_pos(atom_to_cap_pi)
+        else:
+            print(f"atom_to_cap_self_index {atom_to_cap_self_i} maps to None")
+            site_position = None
 
-        site_position = self.find_missing_si_pos(atom_to_cap_pi)
         if site_position is None:
             print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
             site_position = self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
@@ -493,16 +496,15 @@ class ImperfectZeotype(Zeotype):
 
 
     def _change_atoms(self, operation, *args, **kwargs):
-        new_self = __class__(self)
+        new_self = self.__class__(self)
         operation(new_self, *args, **kwargs)
-        new_self.name += '1'  # TODO: Replace with register new name
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
     def add_atoms(self, atoms_to_add, atoms_name):
         # add atoms to indexer
-        new_self = __class__(self)
+        new_self = self.__class__(self)
         new_self.name += "1"
 
         atom_indices = [a.index for a in atoms_to_add]
@@ -528,14 +530,14 @@ class ImperfectZeotype(Zeotype):
         """
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def get_oxygen_cap_pos(self, cap_pos_pi):
+    def get_oxygen_cap_pos(self, self_index):
 
         """
         Find a position of an oxygen cap
         :param self_index: index of atom needing cap
         :return:
         """
-        self_index = self.index_mapper.get_index(self.parent_zeotype.name, self.name, cap_pos_pi)
+        # parend_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, self_index)
         self.update_nl()
         neighbor = self.neighbor_list.get_neighbors(self_index)[0][-1]  # first index in the list of neighbor indicies
         direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
@@ -568,6 +570,8 @@ class OpenDefect(ImperfectZeotype):
     @classmethod
     def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
         new_od = cls(parent_zeotype)
+        old_to_new_map = Zeotype._get_old_to_new_map(parent_zeotype, new_od)
+        new_od.index_mapper.add_name(new_od.name, parent_zeotype.name, old_to_new_map)
         new_od = new_od.delete_atoms(indices_to_delete)
         if cap_atoms:
             new_od = new_od.cap_atoms()
@@ -590,7 +594,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
                          calculator, info, velocities, silent, zeolite_type,
-                         site_to_atom_indices, atom_indices_to_site, name)
+                         site_to_atom_indices, atom_indices_to_site, name=name)
 
     @staticmethod
     def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int,
@@ -638,7 +642,6 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         # if I give it the indices of 5 T sites. I remove 5 Si atoms I should create 5 * 4 O-H bonds
         #
         nl.update(zeolite)
-
         cluster_indices = set()
         new_cluster_indices = set([index])
 
@@ -656,7 +659,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
 
     @staticmethod
-    def get_cluster_indices_multi_T_site(zeolite, indices : Iterable[int], max_size: int, max_neighbors: int) -> List[int]:
+    def get_cluster_indices_multi_T_site(zeolite, T_indices : Iterable[int], max_size: int, max_neighbors: int) -> List[int]:
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
@@ -667,19 +670,9 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         :return: a list of indices
         """
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
-        # instead of using zeolite use only the T sites
-        # Sn Ti Hf, Si , Al, Zn T sites
-        # Look at the
-        # The remove functions should take all the T site elements or what T sites
-        # what to remove should be different from the function that actually removes the T sites
-        # User
-
-        # if I give it the indices of 5 T sites. I remove 5 Si atoms I should create 5 * 4 O-H bonds
-        #
         nl.update(zeolite)
-
         cluster_indices = set()
-        new_cluster_indices = set([index])
+        new_cluster_indices = set(T_indices)
 
         for _ in range(max_neighbors):
             current_cluster_indices = set()
@@ -688,7 +681,8 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
                 if len(cluster_indices) >= max_size:
                     return list(cluster_indices)
                 for new_index in nl.get_neighbors(cluster_index)[0]:
-                    current_cluster_indices.add(new_index)
+                    if new_index not in T_indices:  # don't add T sites to current cluster indices
+                        current_cluster_indices.add(new_index)
             new_cluster_indices = current_cluster_indices
 
         return list(cluster_indices)
