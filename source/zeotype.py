@@ -405,8 +405,7 @@ class ImperfectZeotype(Zeotype):
         return self.delete_atoms(indices_to_delete)
 
     def integrate_adsorbate(self, adsorbate, ads_name='ads'):
-        self.adsorbates.append(adsorbate)
-        self.add_atoms(adsorbate, ads_name)
+        return self.add_atoms(adsorbate, ads_name)
 
     def integrate_other_zeotype(self, other, name='other'):
         new_self = __class__(self)
@@ -517,9 +516,6 @@ class ImperfectZeotype(Zeotype):
         new_self.index_mapper.add_name(new_self.name, atoms_name, old_to_new_map)
         return new_self
 
-    def integrate_adsorbate(self, adsorbate, adsorbate_name='adsorbate'):
-        self.add_atoms(adsorbate, adsorbate_name)
-
     def create_silanol_defect(self, site_index):
         return self.delete_atoms([site_index]).cap_atoms()
 
@@ -622,6 +618,45 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
     @staticmethod
     def get_cluster_indices(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
+        """
+        get the indices of a cluster from a zeolite when specifying the
+        center atom index and size of the cluster
+        :param zeolite: the zeolite from which to build the cluster
+        :param index: the centeral atom index
+        :param max_size: the max number of atoms in the final cluster
+        :param max_neighbors: the max number of neighbors from the starting cluster
+        :return: a list of indices
+        """
+        nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
+        # instead of using zeolite use only the T sites
+        # Sn Ti Hf, Si , Al, Zn T sites
+        # Look at the
+        # The remove functions should take all the T site elements or what T sites
+        # what to remove should be different from the function that actually removes the T sites
+        # User
+
+        # if I give it the indices of 5 T sites. I remove 5 Si atoms I should create 5 * 4 O-H bonds
+        #
+        nl.update(zeolite)
+
+        cluster_indices = set()
+        new_cluster_indices = set([index])
+
+        for _ in range(max_neighbors):
+            current_cluster_indices = set()
+            for cluster_index in new_cluster_indices:
+                cluster_indices.add(cluster_index)
+                if len(cluster_indices) >= max_size:
+                    return list(cluster_indices)
+                for new_index in nl.get_neighbors(cluster_index)[0]:
+                    current_cluster_indices.add(new_index)
+            new_cluster_indices = current_cluster_indices
+
+        return list(cluster_indices)
+
+
+    @staticmethod
+    def get_cluster_indices_multi_T_site(zeolite, indices : Iterable[int], max_size: int, max_neighbors: int) -> List[int]:
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
