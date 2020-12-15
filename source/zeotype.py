@@ -477,7 +477,7 @@ class ImperfectZeotype(Zeotype):
         nl = self.parent_zeotype.neighbor_list.get_neighbors(oxygen_atom_to_cap_pi)[0]
         for atom_index in nl:
             if self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_index) is None:
-                if self.parent_zeotype[atom_index].symbol == 'Si':
+                if self.parent_zeotype[atom_index].symbol == 'Si' or self.parent_zeotype[atom_index].symbol == 'H':
                     return atom_index
 
     def _get_pz_to_iz_map_by_pos(self):
