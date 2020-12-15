@@ -8,7 +8,9 @@ def main():
     c_in = Cluster.get_oh_cluster_indices(zeolite, 185)
     print(c_in)
     cluster, open_framework = zeolite.get_cluster(0,0,0,cluster_indices=c_in)
+
     view(cluster)
+
     #cluster = cluster.cap_atoms()
 
     # view(cluster)

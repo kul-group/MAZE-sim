@@ -428,6 +428,7 @@ class ImperfectZeotype(Zeotype):
         self[self_index].charge = other[other_index].charge
 
     def build_all_atoms_cap_dict(self, bonds_needed=None):
+        self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
 
@@ -442,38 +443,42 @@ class ImperfectZeotype(Zeotype):
 
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
-                pos = self.get_H_pos_parent(o_index)
+                pos = self.get_H_pos(o_index)
                 cap_atoms_dict['H'].append(pos)
                 self.update_nl()
 
         return dict(cap_atoms_dict)
 
-    def get_H_pos_parent(self, atom_to_cap_self_i):
+    def get_H_pos(self, atom_to_cap_self_i):
         """
         :param atom_to_cap_pi: atom to cap, parent index
         :return: hydrogen position
         """
         atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
         if atom_to_cap_pi is not None:
-            site_position = self.find_missing_si_pos(atom_to_cap_pi)
+            site_pi = self.find_missing_si(atom_to_cap_pi)
         else:
             print(f"atom_to_cap_self_index {atom_to_cap_self_i} maps to None")
-            site_position = None
+            site_pi = None
 
-        if site_position is None:
+        if site_pi is None:
             print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
-            site_position = self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
+            return self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
 
-        direction = site_position - self[atom_to_cap_self_i].position  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.abs(np.linalg.norm(direction))
+        direction = self.parent_zeotype.get_distance(atom_to_cap_self_i, site_pi, mic=True, vector=True)
+        hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def find_missing_si_pos(self, oxygen_atom_to_cap_pi):
+    def find_missing_si(self, oxygen_atom_to_cap_pi):
+        """
+        :param oxygen_atom_to_cap_pi:
+        :return: parent atom Si index
+        """
         nl = self.parent_zeotype.neighbor_list.get_neighbors(oxygen_atom_to_cap_pi)[0]
         for atom_index in nl:
             if self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_index) is None:
                 if self.parent_zeotype[atom_index].symbol == 'Si':
-                    return self.parent_zeotype[atom_index].position
+                    return atom_index
 
     def _get_pz_to_iz_map_by_pos(self):
         """

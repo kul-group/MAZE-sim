@@ -13,14 +13,19 @@ def main():
     z = Zeotype(read(sn_ti_traj_filepath))
     #cluster_indices = list(set(Cluster.get_oh_cluster_indices(z, 191)).union(Cluster.get_oh_cluster_indices(z, 152)))#Cluster.get_cluster_indices_multi_T_site(z, [191, 152], 1000, 3)
     cluster_indices = Cluster.get_oh_cluster_multi_t_sites(z, (191, 152))
+    #z[103].symbol = 'Xe'
+    #z[167].symbol = 'Au'
     print(cluster_indices)
     cluster, od = z.get_cluster(0,0,0, cluster_indices=cluster_indices)
     cluster = cluster.cap_atoms()
-    view(cluster)
-
+    od = od.cap_atoms()
     view(od)
+    #view(z)
+    #view(cluster)
+
+    #view(od)
     view(cluster)
-    # view(pc)
+    #view(pc)
     # cluster_indices = [191,
     #                    168, 120, 84, 96, 112,
     #                    159, 79, 63, 87, 35,
