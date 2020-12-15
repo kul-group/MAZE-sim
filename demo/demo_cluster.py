@@ -9,8 +9,8 @@ def main():
     print(c_in)
     cluster, open_framework = zeolite.get_cluster(0,0,0,cluster_indices=c_in)
 
-    view(cluster)
-
+    view(open_framework)
+    pass
     #cluster = cluster.cap_atoms()
 
     # view(cluster)

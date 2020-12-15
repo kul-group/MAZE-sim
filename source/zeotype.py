@@ -180,8 +180,8 @@ class Zeotype(Atoms):
     def get_imperfect_zeolite(self):
         return ImperfectZeotype(self)
 
-    def update_nl(self):
-        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
+    def update_nl(self, mult=1):
+        self.neighbor_list = NeighborList(natural_cutoffs(self, mult=mult), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
 
     def get_hetero_atoms(self, hetero_atoms_list=None) -> List[int]:
@@ -270,7 +270,7 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def get_cluster(self, index: int, max_size: int, max_neighbors: int, cluster_indices=None) -> int:
+    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> int:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -465,7 +465,7 @@ class ImperfectZeotype(Zeotype):
             print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
             return self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
 
-        direction = self.parent_zeotype.get_distance(atom_to_cap_self_i, site_pi, mic=True, vector=True)
+        direction = self.parent_zeotype.get_distance(atom_to_cap_pi, site_pi, mic=True, vector=True)
         hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
