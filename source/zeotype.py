@@ -621,6 +621,39 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
             imperfect_zeolte[iz_index].charge = self[atom.index].charge
 
     @staticmethod
+    def get_oh_cluster_multi_t_sites(zeolite, t_sites):
+        all_indces = set()
+        for t_site in t_sites:
+            all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
+
+        return list(all_indces)
+    @staticmethod
+    def get_oh_cluster_indices(zeolite, t_site):
+        nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
+        nl.update(zeolite)
+
+        all_indices = set([t_site])
+        oxygen_indices = set()
+        for index in nl.get_neighbors(t_site)[0]:
+            if zeolite[index].symbol == "O":
+                oxygen_indices.add(index)
+
+        si_indices = set()
+        for oxygen_index in oxygen_indices:
+            for index in nl.get_neighbors(oxygen_index)[0]:
+                if zeolite[index].symbol == "Si":
+                    si_indices.add(index)
+
+        for si_index in si_indices:
+            for index in nl.get_neighbors(si_index)[0]:
+                if zeolite[index].symbol == "O":
+                    oxygen_indices.add(index)
+
+        all_indices = all_indices.union(oxygen_indices).union(si_indices)
+
+        return list(all_indices)
+
+    @staticmethod
     def get_cluster_indices(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
         """
         get the indices of a cluster from a zeolite when specifying the

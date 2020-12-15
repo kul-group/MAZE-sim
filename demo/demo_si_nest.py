@@ -7,7 +7,7 @@ def main():
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     view(zeolite)
     iz = zeolite.get_imperfect_zeolite()
-    iz.create_silanol_defect(95)
+    iz = iz.create_silanol_defect(95)
     view(iz)
     # view(open_framework)
     # open_framework.remove_caps()

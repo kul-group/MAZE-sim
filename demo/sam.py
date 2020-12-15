@@ -10,17 +10,17 @@ def main():
     sn_ti_traj_filepath = os.path.join(data_dir, "sn_ti-periodic.traj")
     cluster_traj_filepath = os.path.join(data_dir, "sn_ti-8T-cluster.traj")
     pc = Zeotype(read(cluster_traj_filepath)) #perfect cluster
-    pc[0].symbol = 'Hg'
-    view(pc)
     z = Zeotype(read(sn_ti_traj_filepath))
-    cluster_indices = Cluster.get_cluster_indices_multi_T_site(z, [191, 152], 1000, 3)
+    #cluster_indices = list(set(Cluster.get_oh_cluster_indices(z, 191)).union(Cluster.get_oh_cluster_indices(z, 152)))#Cluster.get_cluster_indices_multi_T_site(z, [191, 152], 1000, 3)
+    cluster_indices = Cluster.get_oh_cluster_multi_t_sites(z, (191, 152))
+    print(cluster_indices)
     cluster, od = z.get_cluster(0,0,0, cluster_indices=cluster_indices)
-    print(cluster.name)
     cluster = cluster.cap_atoms()
     view(cluster)
 
     view(od)
     view(cluster)
+    # view(pc)
     # cluster_indices = [191,
     #                    168, 120, 84, 96, 112,
     #                    159, 79, 63, 87, 35,
