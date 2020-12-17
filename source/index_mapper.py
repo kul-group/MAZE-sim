@@ -44,7 +44,13 @@ class IndexMapper:
         """
         name_to_main_dict = {}
         for main_index, value in self.main_index.items():
-            name_index = value[name]
+            #TODO: Find source of this bug where not all names are registered
+            try:
+                name_index = value[name]
+            except KeyError:
+                print(f'name not found at index {main_index}')
+                continue
+
             if name_index is None:  # ignore none indices
                 continue
             name_to_main_dict[name_index] = main_index
@@ -60,8 +66,10 @@ class IndexMapper:
         return name1_to_name2_map
 
     def register_with_main(self, new_name, main_to_new_map):
+        self.names.append(new_name)
         for main_i in self.main_index.keys():
             self.main_index[main_i][new_name] = main_to_new_map.get(main_i, None)
+
 
     def register(self, old_name, new_name, old_to_new_map):
         assert new_name not in self.names, f'Error: {new_name} has already been registered'

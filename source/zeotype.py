@@ -276,7 +276,7 @@ class Zeotype(Atoms):
         new_cluster = Cluster(self)
         indices_to_delete = self.get_indices_compliment(self, cluster_indices)
         new_cluster = new_cluster.delete_atoms(indices_to_delete)
-        od = OpenDefect.build_from_indices(self, cluster_indices, cap_atoms=True)
+        od = OpenDefect.build_from_indices(self, cluster_indices)
         # iz = self.get_imperfect_zeolite()
         # iz.delete_atoms(cluster_indices)
         # self.clusters.append(new_cluster)
@@ -358,8 +358,9 @@ class Zeotype(Atoms):
 
     def __del__(self):
         pass
-        #if self.index_mapper is not None:
+        # if self.index_mapper is not None:
         #    self.index_mapper.delete_name(self.name)
+
 
 class ImperfectZeotype(Zeotype):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -376,21 +377,36 @@ class ImperfectZeotype(Zeotype):
         name = self.index_mapper.get_unique_name(self.__name__)
         self.index_mapper.add_name(name, parent.name, self._get_old_to_new_map(parent, self))
 
-    def cap_atoms(self, cap_name="cap"):
-        self.update_nl()  # might not be needed
-        self.parent_zeotype.update_nl()
-        cap_atoms_dict = self.build_all_atoms_cap_dict()
+    def build_cap_atoms(self, cap_atoms_dict):
         symbol_list = []
         position_list = []
         for symbol, pos_list in cap_atoms_dict.items():
             for pos in pos_list:
                 symbol_list.append(symbol)
                 position_list.append(pos)
+        return ase.Atoms(symbol_list, positions=position_list)
 
-        new_atoms = ase.Atoms(symbol_list, positions=position_list)
-        return self.add_atoms(new_atoms, cap_name)
+    def cap_atoms(self, cap_description=''):
+        #TODO: Find a way to map caps back to original
+        self.update_nl()  # might not be needed
+        self.parent_zeotype.update_nl()
+        new_self = self
+        o_cap_pos = self.build_O_atoms_cap_dict()
+        if o_cap_pos:
+            o_caps = self.build_cap_atoms(o_cap_pos)
+            new_self = self.add_atoms(o_caps, 'o_caps', cap_description)
 
-    def remove_caps(self, cap_name="cap"):
+        new_self.update_nl()  # might not be needed
+        new_self.parent_zeotype.update_nl()
+        h_cap_pos = new_self.build_H_atoms_cap_dict()
+        if h_cap_pos:
+            h_caps = new_self.build_cap_atoms(h_cap_pos)
+            new_self = new_self.add_atoms(h_caps, 'h_caps', cap_description)
+
+        return new_self
+
+    def remove_caps(self, cap_type='h_cap', cap_name="cap"):
+        assert cap_name in self.additions[cap_type], 'cap not in additions'
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
         return self.delete_atoms(indices_to_delete)
 
@@ -399,12 +415,15 @@ class ImperfectZeotype(Zeotype):
 
     def integrate_other_zeotype(self, other, name='other'):
         new_self = self.__class__(self)
+        atoms_to_add = ase.Atoms
         for atom in other:
             self_index = new_self.index_mapper.get_index(other.name, new_self.name, atom.index)
             if self_index is not None:
                 new_self.change_atom_properties(self_index, atom.index, other)
             else:
-                new_self = new_self.add_atoms(Atoms([atom]), name)
+                atoms_to_add.extend([atom])
+
+        new_self = new_self.add_atoms(atoms_to_add, atom_type='other_zeotype')
 
         return new_self
 
@@ -416,6 +435,34 @@ class ImperfectZeotype(Zeotype):
         self[self_index].mass = other[other_index].mass
         self[self_index].magmom = other[other_index].magmom
         self[self_index].charge = other[other_index].charge
+
+    def build_H_atoms_cap_dict(self, bonds_needed=None):
+        self.update_nl()
+        if bonds_needed is None:
+            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        indices, count = self.count_elements()
+        for o_index in indices['O']:
+            if self.needs_cap(o_index, bonds_needed['O']):
+                pos = self.get_H_pos(o_index)
+                cap_atoms_dict['H'].append(pos)
+
+        return dict(cap_atoms_dict)
+
+    def build_O_atoms_cap_dict(self, bonds_needed=None):
+        self.update_nl()
+        if bonds_needed is None:
+            bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
+
+        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        indices, count = self.count_elements()
+        for si_index in indices['Si']:
+            if self.needs_cap(si_index, bonds_needed['Si']):
+                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
+                    pos = self.get_oxygen_cap_pos(si_index)
+                    cap_atoms_dict['O'].append(pos)
+
+        return cap_atoms_dict
 
     def build_all_atoms_cap_dict(self, bonds_needed=None):
         self.update_nl()
@@ -429,13 +476,11 @@ class ImperfectZeotype(Zeotype):
                 for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
                     pos = self.get_oxygen_cap_pos(si_index)
                     cap_atoms_dict['O'].append(pos)
-                    self.update_nl()
 
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
                 pos = self.get_H_pos(o_index)
                 cap_atoms_dict['H'].append(pos)
-                self.update_nl()
 
         return dict(cap_atoms_dict)
 
@@ -445,29 +490,30 @@ class ImperfectZeotype(Zeotype):
         :return: hydrogen position
         """
         atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
-        if atom_to_cap_pi is not None:
-            site_pi = self.find_missing_si(atom_to_cap_pi)
-        else:
-            print(f"atom_to_cap_self_index {atom_to_cap_self_i} maps to None")
+        if atom_to_cap_pi is None:
             site_pi = None
+            print(f'atom_to_cap_self_i {atom_to_cap_self_i} does not map to parent zeotype')
+        else:
+            site_pi = self.find_missing_atom(atom_to_cap_pi, ['H', 'Si'])
 
         if site_pi is None:
-            print(f"For atom {atom_to_cap_pi} could not find adjacent Si")
+            print(f'atom_to_cap_self_i {atom_to_cap_self_i} No matching atom in parent found using h_finder')
             return self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
 
         direction = self.parent_zeotype.get_distance(atom_to_cap_pi, site_pi, mic=True, vector=True)
         hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def find_missing_si(self, oxygen_atom_to_cap_pi):
+    def find_missing_atom(self, oxygen_atom_to_cap_pi, atom_symbol_list):
         """
+        :param atom_symbol_list: The symbols to look for in the parent zeotype
         :param oxygen_atom_to_cap_pi:
-        :return: parent atom Si index
+        :return: parent atom Si index or H index
         """
         nl = self.parent_zeotype.neighbor_list.get_neighbors(oxygen_atom_to_cap_pi)[0]
         for atom_index in nl:
             if self.index_mapper.get_index(self.parent_zeotype.name, self.name, atom_index) is None:
-                if self.parent_zeotype[atom_index].symbol == 'Si' or self.parent_zeotype[atom_index].symbol == 'H':
+                if self.parent_zeotype[atom_index].symbol in atom_symbol_list:
                     return atom_index
 
     def _get_pz_to_iz_map_by_pos(self):
@@ -561,19 +607,28 @@ class ImperfectZeotype(Zeotype):
         """
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def get_oxygen_cap_pos(self, self_index):
+    def get_oxygen_cap_pos(self, atom_to_cap_self_i):
 
         """
         Find a position of an oxygen cap
         :param self_index: index of atom needing cap
         :return:
         """
+        atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
+        site_pi = self.find_missing_atom(atom_to_cap_pi, ['O'])
+
         # parend_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, self_index)
-        self.update_nl()
-        neighbor = self.neighbor_list.get_neighbors(self_index)[0][-1]  # first index in the list of neighbor indicies
-        direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-        oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
-        return oxygen_pos
+        if site_pi is None:
+            print("no matching parent oxygen found using old method")
+            self_index = atom_to_cap_self_i
+            self.update_nl()
+            neighbor = self.neighbor_list.get_neighbors(self_index)[0][
+                -1]  # first index in the list of neighbor indicies
+            direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
+            oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            return oxygen_pos
+        else:
+            return self.parent_zeotype.get_positions()[site_pi]
 
     def get_hydrogen_cap_pos_simple(self, index):
         """
@@ -592,22 +647,19 @@ class OpenDefect(ImperfectZeotype):
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
                  additions=None):
-
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
                          calculator, info, velocities, site_to_atom_indices,
                          atom_indices_to_site, additions)
 
     @classmethod
-    def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
+    def build_from_indices(cls, parent_zeotype, indices_to_delete):
         new_od = cls(parent_zeotype)
         new_od.set_attrs_source(new_od, parent_zeotype)
 
         old_to_new_map = Zeotype._get_old_to_new_map(parent_zeotype, new_od)
         new_od.index_mapper.add_name(new_od.name, parent_zeotype.name, old_to_new_map)
         new_od = new_od.delete_atoms(indices_to_delete)
-        if cap_atoms:
-            new_od = new_od.cap_atoms()
         return new_od
 
         # od_map_atom_indices_to_cap = []
