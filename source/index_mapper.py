@@ -33,6 +33,8 @@ class IndexMapper:
             self.main_index[main_index] = {'parent': atom_index}
             self.i_max = main_index
 
+    def get_reverse_main_index(self, name):
+        return self._reverse_main_index(name)
 
     def _reverse_main_index(self, name):
         """
@@ -49,6 +51,17 @@ class IndexMapper:
 
         return name_to_main_dict
 
+    def get_name1_to_name2_map(self, name1, name2):
+        name1_to_name2_map = {}
+        for row in self.main_index.values():
+            if row[name1] is not None:
+                name1_to_name2_map[name1] = row[name2]
+
+        return name1_to_name2_map
+
+    def register_with_main(self, new_name, main_to_new_map):
+        for main_i in self.main_index.keys():
+            self.main_index[main_i][new_name] = main_to_new_map.get(main_i, None)
 
     def register(self, old_name, new_name, old_to_new_map):
         assert new_name not in self.names, f'Error: {new_name} has already been registered'
@@ -94,11 +107,12 @@ class IndexMapper:
             none_dict[name] = None
         return none_dict
 
+
     def add_atoms(self, name, new_atom_indices):
-        if name not in self.names:
-            for index, value in self.main_index.items():
-                value[name] = None
-            self.names.append(name)
+        assert name not in self.names, 'name already exists'
+        for index, value in self.main_index.items():
+            value[name] = None
+        self.names.append(name)
 
         for index in new_atom_indices:
             none_dict = self.make_none_dict()  # could be slow
