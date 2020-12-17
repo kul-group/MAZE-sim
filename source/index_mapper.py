@@ -1,5 +1,8 @@
 from itertools import count
 from typing import Iterable
+import pandas as pd
+import numpy as np
+import ase
 
 
 class IndexMapper:
@@ -7,20 +10,38 @@ class IndexMapper:
     This class maps between the different atoms objects in a zeotype project.
     It is essential for keeping track of the various
     """
+    id = 0
+
+    @staticmethod
+    def get_id():
+        IndexMapper.id += 1
+        return str(IndexMapper.id)
+
+    @staticmethod
+    def get_unique_name(type_name: str):
+        return type_name + '_' + IndexMapper.get_id()
 
     def __init__(self, name: str, atom_indices: Iterable):
         """
-
         :param name: the str name of the atom-like object being used to initialize the Index Mapper.
         This should be a zeotype object
         :param atom_indices: A list of atom indices
         """
         self.main_index = {}
+        self.name_index = pd.DataFrame(columns=['name', 'type', 'origin', 'host'])
+        try:
+            the_type = name.split('_')[1]
+        except IndexError:
+            the_type = np.nan
+
         self.i_max = 0
         self.names = [name]
         for main_index, atom_index in zip(count(), atom_indices):
             self.main_index[main_index] = {name: atom_index}
             self.i_max = main_index
+
+        self.name_index = self.name_index.append({'name': name, 'type': the_type, 'origin': '__init__', 'host': np.nan},
+                                                 ignore_index=True)
 
     def _reverse_main_index(self, name):
         """
@@ -79,6 +100,7 @@ class IndexMapper:
             self.main_index[self.i_max] = none_dict
 
         x = self.main_index
+
     def delete_atoms(self, name, atom_indices_to_delete):
         name_to_main_dict = self._reverse_main_index(name)
         for i in atom_indices_to_delete:
@@ -106,3 +128,18 @@ class IndexMapper:
                 overlap_indices_name1.append(name_dict[name1])
 
         return overlap_indices_name1
+
+    def delete_name(self, name):
+        self.names.remove(name)
+        for index, old_row in self.main_index.items():
+            new_row = self.make_none_dict()
+            for key in new_row.keys():
+                new_row[key] = old_row[key]
+
+            self.main_index[index] = new_row
+
+
+if __name__ == "__main__":
+    index = [i for i in range(100)]
+    im = IndexMapper('fish-abc', index)
+    print(IndexMapper.__name__)

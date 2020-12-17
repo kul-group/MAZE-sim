@@ -10,7 +10,6 @@ import ase.data
 from ase.visualize import view
 from source.index_mapper import IndexMapper
 
-
 def get_available_symbols(atom_list):
     """
     :param atom_list: A list of atom symbols to be excluded from returned list
@@ -80,7 +79,7 @@ class Zeotype(Atoms):
                 self.site_to_atom_indices = None
                 self.atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
-                self.name = name  # use name
+                self.name = self.index_mapper.get_unique_name(self.__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
         else:  # if symbols is not a zeotype or zeotype child class
             self.silent = silent
@@ -368,6 +367,9 @@ class Zeotype(Atoms):
 
         return old_to_new_map
 
+    def __del__(self):
+        self.index_mapper.delete_name(self.name)
+        print("object deleted")
 
 class ImperfectZeotype(Zeotype):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -384,6 +386,10 @@ class ImperfectZeotype(Zeotype):
             self.atom_caps = symbols.atom_caps
         else:
             self.atom_caps = []
+
+    def register_self(self, parent):
+        name = self.index_mapper.get_unique_name(self.__name__)
+        self.index_mapper.add_name(name, parent.name, self._get_old_to_new_map(parent, self))
 
     def cap_atoms(self, cap_name="cap"):
         self.update_nl()  # might not be needed
