@@ -18,30 +18,21 @@ class IndexMapper:
         return str(IndexMapper.id)
 
     @staticmethod
-    def get_unique_name(type_name: str):
-        return type_name + '_' + IndexMapper.get_id()
+    def get_unique_name(name: str):
+        return name + '_' + IndexMapper.get_id()
 
-    def __init__(self, name: str, atom_indices: Iterable):
+    def __init__(self, atom_indices: Iterable):
         """
-        :param name: the str name of the atom-like object being used to initialize the Index Mapper.
-        This should be a zeotype object
-        :param atom_indices: A list of atom indices
+        :param atom_indices: A list of atom indices from a Zeotype
         """
+
         self.main_index = {}
-        self.name_index = pd.DataFrame(columns=['name', 'type', 'origin', 'host'])
-        try:
-            the_type = name.split('_')[1]
-        except IndexError:
-            the_type = np.nan
-
         self.i_max = 0
-        self.names = [name]
+        self.names = ['parent']
         for main_index, atom_index in zip(count(), atom_indices):
-            self.main_index[main_index] = {name: atom_index}
+            self.main_index[main_index] = {'parent': atom_index}
             self.i_max = main_index
 
-        self.name_index = self.name_index.append({'name': name, 'type': the_type, 'origin': '__init__', 'host': np.nan},
-                                                 ignore_index=True)
 
     def _reverse_main_index(self, name):
         """
@@ -57,6 +48,22 @@ class IndexMapper:
             name_to_main_dict[name_index] = main_index
 
         return name_to_main_dict
+
+
+    def register(self, old_name, new_name, old_to_new_map):
+        assert new_name not in self.names, f'Error: {new_name} has already been registered'
+        assert old_name in self.names, f'Error: {old_name} has not been registered'
+        self.names.append(new_name)
+
+        old_name_to_main_dict = self._reverse_main_index(old_name)
+        main_to_new_name_dict = {}
+        for old_ind, main_ind in old_name_to_main_dict.items():
+            main_to_new_name_dict[main_ind] = old_to_new_map.get(old_ind, None)
+
+        for i in self.main_index.keys():
+            self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
+
+
 
     def add_name(self, new_name, old_name, old_name_to_new_name, new_atom_indices=None):
         """

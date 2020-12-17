@@ -48,8 +48,8 @@ class Zeotype(Atoms):
     ##
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 site_to_atom_indices=None, atom_indices_to_site=None, name='pristine', _is_zeotype=True):
+                 calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
+                 additions=None, name='parent', _is_zeotype=True):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
@@ -60,47 +60,37 @@ class Zeotype(Atoms):
         # if the object being built is a zeotype or if symbols is a zeotype (there are four unique paths)
 
         if isinstance(symbols, Zeotype):  # if symbols is a zeotype or zeotype subclass
-            self.silent = symbols.silent
-            self.sites = symbols.sites
-            self.clusters = symbols.clusters
-            self.adsorbates = symbols.adsorbates  # these could be removed...
+            self.additions = symbols.additions
 
             if _is_zeotype:  # if the object being built is a zeotype
-                self.zeolite_type = symbols.zeolite_type
                 self.site_to_atom_indices = symbols.site_to_atom_indices
                 self.atom_indices_to_site = symbols.atom_indices_to_site
-                self.name = symbols.name
-                self.index_mapper = IndexMapper(self.name, self.get_indices(self))
+                self.name = 'parent'  # must be parent to agree with index mapper
+                self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
 
             else:  # if the object being built is a subtype of zeotype
-                self.zeolite_type = zeolite_type
                 self.parent_zeotype = symbols.parent_zeotype
                 self.site_to_atom_indices = None
                 self.atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
                 self.name = self.index_mapper.get_unique_name(self.__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
+
         else:  # if symbols is not a zeotype or zeotype child class
-            self.silent = silent
-            self.name = name
             if _is_zeotype:
-                self.index_mapper = IndexMapper(name, self.get_indices(self))
+                self.name = 'parent'  # must be parent for code to work properly
+                self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
             else:
+                self.name = None
                 self.index_mapper = None
                 self.parent_zeotype = None
 
-            self.zeolite_type = zeolite_type
-            self.sites: List[str] = []
-            self.clusters: List[Cluster] = []
-            self.adsorbates = []
             self.site_to_atom_indices = site_to_atom_indices
             self.atom_indices_to_site = atom_indices_to_site
-
-        # executed in all cases
-        self.neighbor_list = NeighborList(natural_cutoffs(self), bothways=True, self_interaction=False)
-        self.neighbor_list.update(self)
+            self.additions = additions
+            self.update_nl()
 
     @classmethod
     def build_from_cif_with_labels(cls, filepath) -> "Zeotype":
@@ -500,10 +490,23 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(self, self.name, self.parent_zeotype.name, pz_to_iz_map)
 
     def delete_atoms(self, indices_to_delete):
-        def _delete_atoms(iz, indices):
-            del iz[indices]
+        new_self_a = ase.Atoms(self)
+        del new_self_a[indices_to_delete]
+        new_self = self.__class__(new_self_a)
+        self.set_attrs_source(new_self, self)
+        old_to_new_map = self._get_old_to_new_map(self, new_self)
+        self.index_mapper.register(self.name, new_self.name, old_to_new_map)
+        return new_self
 
-        return self._change_atoms(_delete_atoms, indices_to_delete)
+    @staticmethod
+    def set_attrs_source(new_z: ImperfectZeotype, source_z: Zeotype):
+        new_z.parent_zeotype = source_z.parent_zeotype
+        new_z.index_mapper = source_z.index_mapper
+        #TODO: Add in additional methods such as addition copier
+        new_z.name = new_z.index_mapper.get_unique_name(new_z.__name__)
+
+
+    def register(self, new_self):
 
 
     def _change_atoms(self, operation, *args, **kwargs):
