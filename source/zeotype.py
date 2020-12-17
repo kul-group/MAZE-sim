@@ -10,6 +10,7 @@ import ase.data
 from ase.visualize import view
 from source.index_mapper import IndexMapper
 
+
 def get_available_symbols(atom_list):
     """
     :param atom_list: A list of atom symbols to be excluded from returned list
@@ -43,6 +44,7 @@ class Zeotype(Atoms):
     """
     This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
     """
+
     ##
     ## initilization method
     ##
@@ -73,7 +75,7 @@ class Zeotype(Atoms):
                 self.site_to_atom_indices = None
                 self.atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
-                self.name = self.index_mapper.get_unique_name(self.__name__)  # use name
+                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
 
         else:  # if symbols is not a zeotype or zeotype child class
@@ -271,7 +273,7 @@ class Zeotype(Atoms):
         if cluster_indices is None:
             cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
 
-        new_cluster = Cluster(self, name='Cluster')
+        new_cluster = Cluster(self)
         indices_to_delete = self.get_indices_compliment(self, cluster_indices)
         new_cluster = new_cluster.delete_atoms(indices_to_delete)
         od = OpenDefect.build_from_indices(self, cluster_indices, cap_atoms=True)
@@ -279,8 +281,6 @@ class Zeotype(Atoms):
         # iz.delete_atoms(cluster_indices)
         # self.clusters.append(new_cluster)
         return new_cluster, od
-
-
 
     def find_silanol_groups(self):
         silanol_list = []
@@ -357,8 +357,9 @@ class Zeotype(Atoms):
         return old_to_new_map
 
     def __del__(self):
-        self.index_mapper.delete_name(self.name)
-        print("object deleted")
+        pass
+        #if self.index_mapper is not None:
+        #    self.index_mapper.delete_name(self.name)
 
 class ImperfectZeotype(Zeotype):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -370,7 +371,6 @@ class ImperfectZeotype(Zeotype):
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
                          calculator, info, velocities, site_to_atom_indices, atom_indices_to_site,
                          additions, _is_zeotype=False)
-
 
     def register_self(self, parent):
         name = self.index_mapper.get_unique_name(self.__name__)
@@ -388,7 +388,6 @@ class ImperfectZeotype(Zeotype):
                 position_list.append(pos)
 
         new_atoms = ase.Atoms(symbol_list, positions=position_list)
-        self.atom_caps.append(new_atoms)
         return self.add_atoms(new_atoms, cap_name)
 
     def remove_caps(self, cap_name="cap"):
@@ -494,15 +493,11 @@ class ImperfectZeotype(Zeotype):
         return new_self
 
     @staticmethod
-    def set_attrs_source(new_z: ImperfectZeotype, source_z: Zeotype):
+    def set_attrs_source(new_z: 'ImperfectZeotype', source_z: Zeotype):
         new_z.parent_zeotype = source_z.parent_zeotype
         new_z.index_mapper = source_z.index_mapper
-        #TODO: Add in additional methods such as addition copier
-        new_z.name = new_z.index_mapper.get_unique_name(new_z.__name__)
-
-
-    def register(self, new_self):
-
+        new_z.additions = copy.deepcopy(source_z.additions)
+        new_z.name = new_z.index_mapper.get_unique_name(type(new_z).__name__)
 
     def _change_atoms(self, operation, *args, **kwargs):
         new_self = self.__class__(self)
@@ -513,40 +508,46 @@ class ImperfectZeotype(Zeotype):
 
     def add_atoms(self, atoms_to_add, atom_type, short_description=''):
         # add atoms to indexer
-        #register atoms_to_add with index mapper
+        # register atoms_to_add with index mapper
         atom_indices = [atom.index for atom in atoms_to_add]
         new_atom_name = self.index_mapper.get_unique_name(atom_type) + '_' + short_description
         self.index_mapper.add_atoms(new_atom_name, atom_indices)
 
-        #create a new self
+        # create a new self
         new_self_a = ase.Atoms(self)
         new_self_a.extend(atoms_to_add)
         new_self = self.__class__(new_self_a)
         self.set_attrs_source(new_self, self)
 
-        #map new self to new atoms object and self
+        # map new self to new atoms object and self
         self_to_new_self_map = self._get_old_to_new_map(self, new_self)
         atoms_to_new_self_map = self._get_old_to_new_map(atoms_to_add, new_self)
 
-        #combine maps into a single map to main indexer
+        # combine maps into a single map to main indexer
         main_to_new_self_map = {}
-        #first map to self
+        # first map to self
         self_to_main_map = self.index_mapper.get_reverse_main_index(self.name)
         for self_i, new_self_i in self_to_new_self_map.items():
             main_index = self_to_main_map[self_i]
             main_to_new_self_map[main_index] = new_self_i
-        #then map to atoms
-        atoms_to_main_map = self.index_mapper.get_reverse_main_index(atoms_to_add)
+        # then map to atoms
+        atoms_to_main_map = self.index_mapper.get_reverse_main_index(new_atom_name)
         for atoms_i, new_self_i in atoms_to_new_self_map.items():
             main_index = atoms_to_main_map[atoms_i]
             main_to_new_self_map[main_index] = new_self_i
-        #finally register object
+        # finally register object
         self.index_mapper.register_with_main(new_self.name, main_to_new_self_map)
-        #add new_atom_name to additions list
+        # add new_atom_name to additions list
         new_self.additions[atom_type].append(new_atom_name)
 
         return new_self
 
+    def remove_addition(self, addition_name, addition_type):
+        addition_to_self_map = self.index_mapper.get_name1_to_name2_map(addition_name, self.name)
+        to_delete = list(addition_to_self_map.values())
+        new_self = self.delete_atoms(to_delete)
+        new_self.additions[addition_type].remove(addition_name)
+        return new_self
 
     def create_silanol_defect(self, site_index):
         return self.delete_atoms([site_index]).cap_atoms()
@@ -586,20 +587,22 @@ class ImperfectZeotype(Zeotype):
         return hydrogen_pos
 
 
-
 class OpenDefect(ImperfectZeotype):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 site_to_atom_indices=None, atom_indices_to_site=None, name='open_defect'):
+                 calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
+                 additions=None):
+
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
-                         calculator, info, velocities, silent, zeolite_type,
-                         site_to_atom_indices, atom_indices_to_site, name)
+                         calculator, info, velocities, site_to_atom_indices,
+                         atom_indices_to_site, additions)
 
     @classmethod
     def build_from_indices(cls, parent_zeotype, indices_to_delete, cap_atoms=True):
         new_od = cls(parent_zeotype)
+        new_od.set_attrs_source(new_od, parent_zeotype)
+
         old_to_new_map = Zeotype._get_old_to_new_map(parent_zeotype, new_od)
         new_od.index_mapper.add_name(new_od.name, parent_zeotype.name, old_to_new_map)
         new_od = new_od.delete_atoms(indices_to_delete)
@@ -614,17 +617,18 @@ class OpenDefect(ImperfectZeotype):
         #
         # new_od.cap(od_map_atom_indices_to_cap)
 
+
 class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, silent: bool = False, zeolite_type: str = '',
-                 site_to_atom_indices=None, atom_indices_to_site=None, name='Cluster'):
+                 calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
+                 additions=None):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
-                         calculator, info, velocities, silent, zeolite_type,
-                         site_to_atom_indices, atom_indices_to_site, name=name)
+                         calculator, info, velocities, site_to_atom_indices,
+                         atom_indices_to_site, additions)
 
     @staticmethod
     def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int,
@@ -657,6 +661,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
             all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
 
         return list(all_indces)
+
     @staticmethod
     def get_oh_cluster_indices(zeolite, t_site):
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
@@ -720,9 +725,9 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
         return list(cluster_indices)
 
-
     @staticmethod
-    def get_cluster_indices_multi_T_site(zeolite, T_indices : Iterable[int], max_size: int, max_neighbors: int) -> List[int]:
+    def get_cluster_indices_multi_T_site(zeolite, T_indices: Iterable[int], max_size: int, max_neighbors: int) -> List[
+        int]:
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster

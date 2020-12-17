@@ -151,7 +151,11 @@ class IndexMapper:
         return overlap_indices_name1
 
     def delete_name(self, name):
-        self.names.remove(name)
+        try:
+            self.names.remove(name)
+        except:
+            print(name)
+            return None
         for index, old_row in self.main_index.items():
             new_row = self.make_none_dict()
             for key in new_row.keys():
