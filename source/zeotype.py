@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Iterable
+from typing import List, Dict, Tuple, Iterable, Union, Optional
 from ase import Atoms, Atom
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
@@ -9,9 +9,10 @@ import ase
 import ase.data
 from ase.visualize import view
 from source.index_mapper import IndexMapper
+from source.adsorbate import Adsorbate
 
 
-def get_available_symbols(atom_list):
+def get_available_symbols(atom_list: List[str]) -> List[str]:
     """
     :param atom_list: A list of atom symbols to be excluded from returned list
     :return: a list of all possible atom symbols that do not include items from
@@ -26,28 +27,31 @@ def get_available_symbols(atom_list):
 
 
 class Silanol():
-    def __init__(self, parent_zeotype, Si_index, O_index, H_index, Si_neighbor_list):
+    def __init__(self, parent_zeotype: 'Zeotype', Si_index: int, O_index: int, H_index: int, Si_neighbor_list: List[int]):
         self.parent_zeotype = parent_zeotype
         self.Si_index = Si_index
         self.O_index = O_index
         self.H_index = H_index
         self.Si_neighbor_list = Si_neighbor_list
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Si: {self.Si_index} O: {self.O_index} H: {self.H_index}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
 
 class Zeotype(Atoms):
     """
-    This is a Zeotype class that inherits from Atoms. It represents a Zeolite.
+    A class that inherits from ase.Atoms, which represents an unmodified zeotype. If a zeotype is built from a cif
+    file from the zeolite structure database, then the atoms are tagged according to their unique site and the
+    dictionaries site_to_atom_indices and atom_indices_to_site are filled. If not these dictionaries are set to none.
+    This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as
+    as methods to build an imperfect zeotype from a parent Zeotype class. Imperfect zeotypes have additional
+    functionality and are dependent on a parent zeotype class.
+
     """
 
-    ##
-    ## initilization method
-    ##
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
@@ -91,16 +95,17 @@ class Zeotype(Atoms):
             self.site_to_atom_indices = site_to_atom_indices
             self.atom_indices_to_site = atom_indices_to_site
             self.additions = copy.deepcopy(additions) if additions else defaultdict(list)
-            self.update_nl()
+
+        self.update_nl()
 
     @classmethod
-    def build_from_cif_with_labels(cls, filepath) -> "Zeotype":
+    def build_from_cif_with_labels(cls, filepath: str) -> "Zeotype":
         """
         Takes a filepath/fileobject of a cif file and returns a Zeotype or child class with T-sites
         labeled as specified in the cif file. The dictionaries for T site labels are also filled in
         these map from the T-site to a list of atom indices. The atom indices to t sites maps atom
         indices to T-sites.
-        :param filepath:
+        :param filepath: Filepath of the
         :return:
         """
         atoms, site_to_atom_indices, atom_indices_to_site = cls._read_cif_note_sites(filepath)
@@ -112,7 +117,7 @@ class Zeotype(Atoms):
     @staticmethod
     def _read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
                              subtrans_included=True, fractional_occupancies=True,
-                             reader='ase'):
+                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int,str]]:
         """
         The helper function used by build_from_cif_with_labels. This loads a CIF file
         using ase.io.cif.parse_cif and then finds the T-site information. After finding
@@ -167,14 +172,22 @@ class Zeotype(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def get_imperfect_zeolite(self):
+    def get_imperfect_zeolite(self) -> 'ImperfectZeotype':
+        """
+        :return: An imperfect Zeotype constructed from the current Zeotype
+        """
         return ImperfectZeotype(self)
 
-    def update_nl(self, mult=1):
+    def update_nl(self, mult: int = 1 ) -> None:
+        """
+        Builds and updates neighborlist
+        :param mult: The mult (multiply) parameter for natural cutoffs (Default 1)
+        :return: None
+        """
         self.neighbor_list = NeighborList(natural_cutoffs(self, mult=mult), bothways=True, self_interaction=False)
         self.neighbor_list.update(self)
 
-    def get_hetero_atoms(self, hetero_atoms_list=None) -> List[int]:
+    def get_hetero_atoms(self, hetero_atoms_list: Optional[List[str]] = None) -> List[int]:
         """
         :return: Returns a list of all of the hetero-atoms in the zeotype
         """
@@ -245,7 +258,7 @@ class Zeotype(Atoms):
         return indices, count
 
     @staticmethod
-    def count_atomtypes(atomtype_list) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
+    def count_atomtypes(atomtype_list: List[str]) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
         Counts the number of different atoms of each type in a list of atom symbols
         :param atomtype_list: A list of atom chemical symbols
@@ -282,7 +295,11 @@ class Zeotype(Atoms):
         # self.clusters.append(new_cluster)
         return new_cluster, od
 
-    def find_silanol_groups(self):
+    def find_silanol_groups(self) -> List[Silanol]:
+        """
+        Finds all of the silanol groups in the Zeotype
+        :return: A list of Silanol groups
+        """
         silanol_list = []
         for atom in self:
             if atom.symbol == 'Si':
@@ -296,7 +313,11 @@ class Zeotype(Atoms):
                                 silanol_list.append(silanol)
         return silanol_list
 
-    def find_silanol_nest_T_sites(self):
+    def find_silanol_nest_T_sites(self) -> List[int]:
+        """
+        Finds all of the T sites that are in silanol nests
+        :return: A list of T sites in silanol nests
+        """
         sites_list = []
         sil_list = self.find_silanol_groups()
         if self.atom_indices_to_site is None:
@@ -319,19 +340,36 @@ class Zeotype(Atoms):
         return sites_list
 
     @staticmethod
-    def get_indices_compliment(zeotype, indices):
+    def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
+        """
+        Gets the compliment of indices in a Zeotype
+        :param zeotype: Zeotype containing all indices
+        :param indices: Indices to get the compliment of
+        :return: Compliment of indices
+        """
         return list(set([a.index for a in zeotype]) - set(indices))
 
     @staticmethod
-    def get_indices(atoms_object):
+    def get_indices(atoms_object: Atoms) -> List[int]:
+        """
+        Get the indices in an atoms object
+        :param atoms_object: Atoms object to get Indices of
+        :return: List of indices in Atoms object
+        """
         return [a.index for a in atoms_object]
 
-    def get_site_type(self, index):
+    def get_site_type(self, index: int) -> str:
+        """
+        Get the idenity of a site
+        :param index: Index of site in self
+        :return: Label for the site (comes from CIF) file
+        """
+        assert self.parent_zeotype.atom_indices_to_site is not None, 'atom_indices_to_site is None, cannot get label'
         pz_index = self.index_mapper.get_index(self, self.parent_zeotype, index)
         return self.parent_zeotype.atom_indices_to_site[pz_index]
 
     @staticmethod
-    def _get_old_to_new_map(old, new):
+    def _get_old_to_new_map(old: Atoms, new: Atoms) -> Dict[int, int]:
         """
         Get the index mapping between old and new self.
         his matching is done by position, so it is essential that the atom
@@ -356,13 +394,17 @@ class Zeotype(Atoms):
 
         return old_to_new_map
 
-    def __del__(self):
-        pass
-        # if self.index_mapper is not None:
-        #    self.index_mapper.delete_name(self.name)
+    def __del__(self) -> None:
+        if self.index_mapper is not None:
+            self.index_mapper.delete_name(self.name)
 
 
 class ImperfectZeotype(Zeotype):
+    """
+    This imperfect zeotype inherits from Zeotype and requires a parent zeotype to function properly.
+    This represents an imperfect Zeotype such as zeotype with some modification like an adsorbate addition
+    or the removal a cluster.
+    """
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
@@ -373,11 +415,18 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, site_to_atom_indices, atom_indices_to_site,
                          additions, _is_zeotype=False)
 
-    def register_self(self, parent):
+    def register_self(self, source: Zeotype) -> None:
+        """
+        This method registers the current ImperfectZeotype with the index_mapper by using the common
+        positions between the atoms in self and source.
+        :param source: Source Zeotype or subclass that was used to build current ImperfectZeotype
+        for the mapping to work correctly, the atom positions must be identical. This
+        :return: None
+        """
         name = self.index_mapper.get_unique_name(self.__name__)
-        self.index_mapper.add_name(name, parent.name, self._get_old_to_new_map(parent, self))
+        self.index_mapper.add_name(name, source.name, self._get_old_to_new_map(source, self))
 
-    def build_cap_atoms(self, cap_atoms_dict):
+    def build_cap_atoms(self, cap_atoms_dict: Dict[str, np.array]) -> Atoms:
         symbol_list = []
         position_list = []
         for symbol, pos_list in cap_atoms_dict.items():
@@ -386,8 +435,13 @@ class ImperfectZeotype(Zeotype):
                 position_list.append(pos)
         return ase.Atoms(symbol_list, positions=position_list)
 
-    def cap_atoms(self, cap_description=''):
-        #TODO: Find a way to map caps back to original
+    def cap_atoms(self, cap_description: str = '') -> 'ImperfectZeotype':
+        """
+        Cap all of the atoms in the ImpefectZeotype
+        :param cap_description: A short description for the caps that will be added
+        :return: A copy of self with the correct parameters added
+        """
+        # TODO: Find a way to map caps back to original
         self.update_nl()  # might not be needed
         self.parent_zeotype.update_nl()
         new_self = self
@@ -405,29 +459,54 @@ class ImperfectZeotype(Zeotype):
 
         return new_self
 
-    def remove_caps(self, cap_type='h_cap', cap_name="cap"):
+    def remove_caps(self, cap_type: str = 'h_cap', cap_name:str = "cap") -> 'ImperfectZeotype':
+        """
+        Remove caps from an imperfect zeotype
+        :param cap_type: The type of cap (h_cap, o_cap)
+        :param cap_name: The name of the cap
+        :return: A copy of self with the caps removed
+        """
         assert cap_name in self.additions[cap_type], 'cap not in additions'
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
+        self.additions[cap_type].remove(cap_name)
         return self.delete_atoms(indices_to_delete)
 
-    def integrate_adsorbate(self, adsorbate, ads_name='ads'):
+    def integrate_adsorbate(self, adsorbate: Atoms, ads_name='ads') -> 'ImperfectZeotype':
+        """
+        Add an adsorbate into the imperfect zeotype
+        :param adsorbate: Adsorbate object
+        :param ads_name: name of the adsorbate
+        :return: a copy of imperfect zeotype with the adsorabte added
+        """
         return self.add_atoms(adsorbate, ads_name)
 
-    def integrate_other_zeotype(self, other, name='other'):
+    def integrate_other_zeotype(self, other: Zeotype):
+        """
+        Integrate another zeotype into the current zeotype
+        :param other: the other zeotype to integrate
+        :return: a new imperfect zeotype with the other zeotype integrated
+        """
         new_self = self.__class__(self)
-        atoms_to_add = ase.Atoms
+        atoms_to_add = ase.Atoms()
         for atom in other:
             self_index = new_self.index_mapper.get_index(other.name, new_self.name, atom.index)
             if self_index is not None:
                 new_self.change_atom_properties(self_index, atom.index, other)
             else:
-                atoms_to_add.extend([atom])
+                atoms_to_add.extend(atom)
 
         new_self = new_self.add_atoms(atoms_to_add, atom_type='other_zeotype')
 
         return new_self
 
-    def change_atom_properties(self, self_index, other_index, other):
+    def change_atom_properties(self, self_index: int, other_index: int, other: Atoms) -> None:
+        """
+        Change the atom properties
+        :param self_index: index of self that needs to be changed
+        :param other_index: index of other that holds the properties to change self
+        :param other: other Atoms object that the other_indices corresponds to
+        :return: None
+        """
         self[self_index].symbol = other[other_index].symbol
         self[self_index].position = other[other_index].position
         self[self_index].tag = other[other_index].tag
@@ -436,7 +515,12 @@ class ImperfectZeotype(Zeotype):
         self[self_index].magmom = other[other_index].magmom
         self[self_index].charge = other[other_index].charge
 
-    def build_H_atoms_cap_dict(self, bonds_needed=None):
+    def build_H_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None):
+        """
+        Build a dictionary of hydrogen caps
+        :param bonds_needed: Number of bonds needed for each atom
+        :return: A list of positions of H caps
+        """
         self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
@@ -449,7 +533,12 @@ class ImperfectZeotype(Zeotype):
 
         return dict(cap_atoms_dict)
 
-    def build_O_atoms_cap_dict(self, bonds_needed=None):
+    def build_O_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None):
+        """
+        Builds a dictionary of oxygen caps
+        :param bonds_needed: Number of bonds needed for each atom
+        :return: A list of oxygen cap positions
+        """
         self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
@@ -464,7 +553,12 @@ class ImperfectZeotype(Zeotype):
 
         return cap_atoms_dict
 
-    def build_all_atoms_cap_dict(self, bonds_needed=None):
+    def build_all_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None) -> Dict[str, np.array]:
+        """
+        Builds a dictionary for all atoms (not currently being used, but could be resurrected).
+        :param bonds_needed: number of bonds needed for each atom type
+        :return: A list of capping atoms to add
+        """
         self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
@@ -484,9 +578,9 @@ class ImperfectZeotype(Zeotype):
 
         return dict(cap_atoms_dict)
 
-    def get_H_pos(self, atom_to_cap_self_i):
+    def get_H_pos(self, atom_to_cap_self_i: int) -> np.array:
         """
-        :param atom_to_cap_pi: atom to cap, parent index
+        :param atom_to_cap_self_i: atom to cap index (self index)
         :return: hydrogen position
         """
         atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
@@ -504,7 +598,7 @@ class ImperfectZeotype(Zeotype):
         hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def find_missing_atom(self, oxygen_atom_to_cap_pi, atom_symbol_list):
+    def find_missing_atom(self, oxygen_atom_to_cap_pi, atom_symbol_list) -> int:
         """
         :param atom_symbol_list: The symbols to look for in the parent zeotype
         :param oxygen_atom_to_cap_pi:
@@ -516,20 +610,13 @@ class ImperfectZeotype(Zeotype):
                 if self.parent_zeotype[atom_index].symbol in atom_symbol_list:
                     return atom_index
 
-    def _get_pz_to_iz_map_by_pos(self):
-        """
-        Get the index mapping between a parent zeotype and imperfect zeotype.
-        This matching is done by position, so it is essential that the atom
-        positions have not changed after the iz was created.
-        :return: a parent zeotype to imperfect zeotype index map
-        """
-        return self._get_old_to_new_map(self.parent_zeotype, self)
 
-    def add_iz_to_index_mapper(self):
-        pz_to_iz_map = self._get_pz_to_iz_map_by_pos()
-        self.index_mapper.add_name(self, self.name, self.parent_zeotype.name, pz_to_iz_map)
-
-    def delete_atoms(self, indices_to_delete):
+    def delete_atoms(self, indices_to_delete) -> 'ImperfectZeotype':
+        """
+        Delete atoms from imperfect zeotype by returning a copy with atoms deleted
+        :param indices_to_delete: Indices of atoms in current zeotype to delete
+        :return: a copy of self with atoms deleted
+        """
         new_self_a = ase.Atoms(self)
         del new_self_a[indices_to_delete]
         new_self = self.__class__(new_self_a)
@@ -539,24 +626,47 @@ class ImperfectZeotype(Zeotype):
         return new_self
 
     @staticmethod
-    def set_attrs_source(new_z: 'ImperfectZeotype', source_z: Zeotype):
-        new_z.parent_zeotype = source_z.parent_zeotype
-        new_z.index_mapper = source_z.index_mapper
-        new_z.additions = copy.deepcopy(source_z.additions)
+    def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
+        """
+        Set the attribuets of a new imperfect zeotype to that of its source
+        :param new_z: Newly created zeolite without attributes set
+        :param source: the source from which new_z was created
+        :return: None
+        """
+        new_z.parent_zeotype = source.parent_zeotype
+        new_z.index_mapper = source.index_mapper
+        new_z.additions = copy.deepcopy(source.additions)
         new_z.name = new_z.index_mapper.get_unique_name(type(new_z).__name__)
 
-    def _change_atoms(self, operation, *args, **kwargs):
+    def _change_atoms(self, operation, *args, **kwargs) -> 'ImperfectZeotype':
+        """
+        Applies a custom function to the atoms and returns a new self
+        :param operation:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         new_self = self.__class__(self)
         operation(new_self, *args, **kwargs)
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
-    def add_atoms(self, atoms_to_add, atom_type, short_description=''):
+    def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'ImperfectZeotype':
+        """
+        Adds additional atoms to current imperfect zeotype
+        :param atoms_to_add: The new atoms to add
+        :param atom_type: A str describing the type of atoms that are being added
+        :param short_description: A short description of the atoms that are being added (optional)
+        :return: A new imperfect zeotype with the atoms added
+        """
         # add atoms to indexer
         # register atoms_to_add with index mapper
         atom_indices = [atom.index for atom in atoms_to_add]
-        new_atom_name = self.index_mapper.get_unique_name(atom_type) + '_' + short_description
+        if short_description:
+            new_atom_name = self.index_mapper.get_unique_name(atom_type) + '_' + short_description
+        else:
+            new_atom_name = self.index_mapper.get_unique_name(atom_type)
         self.index_mapper.add_atoms(new_atom_name, atom_indices)
 
         # create a new self
@@ -588,14 +698,25 @@ class ImperfectZeotype(Zeotype):
 
         return new_self
 
-    def remove_addition(self, addition_name, addition_type):
+    def remove_addition(self, addition_name, addition_type) -> 'ImperfectZeotype':
+        """
+        Removes an addition to the zeotype
+        :param addition_name: name of the addition
+        :param addition_type: the type of additon (h_cap, o_cap, ect.)
+        :return: A new zeotype with the additional atoms remvoed
+        """
         addition_to_self_map = self.index_mapper.get_name1_to_name2_map(addition_name, self.name)
         to_delete = list(addition_to_self_map.values())
         new_self = self.delete_atoms(to_delete)
         new_self.additions[addition_type].remove(addition_name)
         return new_self
 
-    def create_silanol_defect(self, site_index):
+    def create_silanol_defect(self, site_index) -> 'ImperfectZeotype':
+        """
+        Creates a silanol defect by deleting an atom and capping the resulting imperfect zeotype
+        :param site_index:
+        :return: An imperfect zeotype with a silanol defect
+        """
         return self.delete_atoms([site_index]).cap_atoms()
 
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
@@ -607,12 +728,12 @@ class ImperfectZeotype(Zeotype):
         """
         return len(self.neighbor_list.get_neighbors(atom_index)[0]) < bonds_needed
 
-    def get_oxygen_cap_pos(self, atom_to_cap_self_i):
+    def get_oxygen_cap_pos(self, atom_to_cap_self_i) -> np.array:
 
         """
         Find a position of an oxygen cap
         :param self_index: index of atom needing cap
-        :return:
+        :return: A position array of the oxygen cap position
         """
         atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
         site_pi = self.find_missing_atom(atom_to_cap_pi, ['O'])
@@ -630,7 +751,7 @@ class ImperfectZeotype(Zeotype):
         else:
             return self.parent_zeotype.get_positions()[site_pi]
 
-    def get_hydrogen_cap_pos_simple(self, index):
+    def get_hydrogen_cap_pos_simple(self, index) -> np.array:
         """
         Finds the position of a hydrogen cap position
         :param index: index of hydrogen cap
@@ -653,7 +774,7 @@ class OpenDefect(ImperfectZeotype):
                          atom_indices_to_site, additions)
 
     @classmethod
-    def build_from_indices(cls, parent_zeotype, indices_to_delete):
+    def build_from_indices(cls, parent_zeotype: Zeotype, indices_to_delete: Iterable[int]) -> 'OpenDefect':
         new_od = cls(parent_zeotype)
         new_od.set_attrs_source(new_od, parent_zeotype)
 
@@ -661,13 +782,6 @@ class OpenDefect(ImperfectZeotype):
         new_od.index_mapper.add_name(new_od.name, parent_zeotype.name, old_to_new_map)
         new_od = new_od.delete_atoms(indices_to_delete)
         return new_od
-
-        # od_map_atom_indices_to_cap = []
-        # for i in z_map_atom_indices_to_cap:
-        #     new_index = new_od.index_mapper.get_index(parent_zeotype.name, new_od.name, i)
-        #     od_map_atom_indices_to_cap.append(new_index)
-        #
-        # new_od.cap(od_map_atom_indices_to_cap)
 
 
 class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
@@ -684,7 +798,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
 
     @staticmethod
     def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int,
-                           cluster_indices: Iterable[int] = None, cluster_name="Cluster") -> "Cluster":
+                           cluster_indices: Iterable[int] = None) -> "Cluster":
         if cluster_indices is None:
             cluster_indices = Cluster.get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
         cluster = Cluster(parent_zeotype)
@@ -692,22 +806,8 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         cluster = cluster.delete_atoms(to_delete)
         return cluster
 
-    def integrate_into_iz(self, imperfect_zeolte: ImperfectZeotype):
-        assert isinstance(imperfect_zeolte, ImperfectZeotype), "must be of type imperfect zeotype"
-        assert isinstance(imperfect_zeolte, ImperfectZeotype), "must be of type imperfect zeotype"
-        assert imperfect_zeolte.parent_zeotype == imperfect_zeolte.parent_zeotype, "iz must have same parent as cluster "
-        for atom in self:
-            iz_index = self.index_mapper.get_index(self.name, imperfect_zeolte.name, atom.index)
-            imperfect_zeolte[iz_index].symbol = self[atom.index].symbol
-            imperfect_zeolte[iz_index].position = self[atom.index].position
-            imperfect_zeolte[iz_index].tag = self[atom.index].tag
-            imperfect_zeolte[iz_index].momentum = self[atom.index].momentum
-            imperfect_zeolte[iz_index].mass = self[atom.index].mass
-            imperfect_zeolte[iz_index].magmom = self[atom.index].magmom
-            imperfect_zeolte[iz_index].charge = self[atom.index].charge
-
     @staticmethod
-    def get_oh_cluster_multi_t_sites(zeolite, t_sites):
+    def get_oh_cluster_multi_t_sites(zeolite, t_sites) -> List[int]:
         all_indces = set()
         for t_site in t_sites:
             all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
@@ -715,7 +815,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         return list(all_indces)
 
     @staticmethod
-    def get_oh_cluster_indices(zeolite, t_site):
+    def get_oh_cluster_indices(zeolite, t_site) -> List[int]:
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
         nl.update(zeolite)
 

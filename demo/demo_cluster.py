@@ -1,7 +1,6 @@
 from source.zeotype import Zeotype, ImperfectZeotype, Cluster
 from ase.visualize import view
 
-
 def main():
     cif_dir = "/Users/dda/Code/zeotype/data/BEA.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
