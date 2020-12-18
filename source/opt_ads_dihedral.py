@@ -11,7 +11,7 @@ def constrain_host(host, index):
     :return: constrained host zeotype object
     '''
 
-    host_ind_to_constrain = host._get_cluster_indices(host, index=index, max_neighbors=1)  # ind of framework atoms
+    host_ind_to_constrain = host.get_cluster_indices(host, index=index, max_neighbors=1)  # ind of framework atoms
     c = FixAtoms(host_ind_to_constrain)
     host.set_constraint(c)  # constrain everything except adsorbate, central atom, and adjacent oxygen
     return host  # should apply change to a copy??

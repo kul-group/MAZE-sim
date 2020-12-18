@@ -6,7 +6,7 @@ from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
 import source.zeotype
-
+import ase
 
 class Adsorbate(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -259,7 +259,6 @@ class Adsorbate(Atoms):
         assert self not in self.host_zeotype.adsorbates, "cannot integrate single adsorbate object twice"
         if position_ads:
             self.position_ads()
-
         self.host_zeotype.extend(self)
         self.set_ads_zeotype_map()
         self.host_zeotype.adsorbates.append(self)
@@ -298,13 +297,20 @@ if __name__ == '__main__':
     from ase.build import molecule
 
     zeotype = source.zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
-    print(zeotype[30].symbol)
-    zeotype[20].symbol = 'Sn'  # for visualization
-    mol = molecule('CH3OH')
+    iz = zeotype.get_imperfect_zeolite()
+    iz[174].symbol = 'Sn'
+
+    iz = iz.delete_atoms([185, 113, 118, 63, 78, 92, 112, 150])
+    mol = ase.Atoms('Hg') #molecule('CH3OH')
+    for a in mol:
+        print(a.symbol, a.index)
     ads = Adsorbate(mol)
-    ads.host_zeotype = zeotype
-    ads.position_ads()
-    view(ads)
-    view(zeotype)
-    ads.integrate_ads()
-    view(zeotype)
+    #ads.host_zeotype = iz
+    ads.position_ads(0, 167, pos=[6.660, 6.660, 9.820])
+    iz = iz.integrate_adsorbate(ads)
+    print(iz)
+    view(iz)
+    # for p in ads.get_positions():
+    #     print(p)
+    # view(ads)
+    # ads.integrate_ads()

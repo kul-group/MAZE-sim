@@ -6,12 +6,10 @@ from pathlib import Path
 
 def main():
     data_dir = os.path.join(Path(os.getcwd()).parent, 'data', 'sam')
-
     sn_ti_traj_filepath = os.path.join(data_dir, "sn_ti-periodic.traj")
     cluster_traj_filepath = os.path.join(data_dir, "sn_ti-8T-cluster.traj")
     pc = Zeotype(read(cluster_traj_filepath)) #perfect cluster
     z = Zeotype(read(sn_ti_traj_filepath))
-    #cluster_indices = list(set(Cluster.get_oh_cluster_indices(z, 191)).union(Cluster.get_oh_cluster_indices(z, 152)))#Cluster.get_cluster_indices_multi_T_site(z, [191, 152], 1000, 3)
     cluster_indices = Cluster.get_oh_cluster_multi_t_sites(z, (191, 152))
     cluster, od = z.get_cluster(0,0,0, cluster_indices=cluster_indices)
     cluster = cluster.cap_atoms()
