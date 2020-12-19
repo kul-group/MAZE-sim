@@ -4,12 +4,14 @@ from ase.constraints import FixAtoms
 from ase.constraints import FixBondLengths
 
 def constrain_host(host, index):
-    '''
-    constrains a zeotype so only adsorbate, central atom, and adjacent oxygens can move.
-    :param host: host zeotype object
-    :param index: index of central atom in host zeotype
-    :return: constrained host zeotype object
-    '''
+    """constrains a zeotype so only adsorbate, central atom, and adjacent
+    oxygens can move. :param host: host zeotype object :param index: index of
+    central atom in host zeotype :return: constrained host zeotype object
+
+    Args:
+        host:
+        index:
+    """
 
     host_ind_to_constrain = host.get_cluster_indices(host, index=index, max_neighbors=1)  # ind of framework atoms
     c = FixAtoms(host_ind_to_constrain)
@@ -17,11 +19,13 @@ def constrain_host(host, index):
     return host  # should apply change to a copy??
 
 def constrain_ads_bonds(host):
-    '''
-    Constrains the distance between atoms in adsorbate to adjacent adsorbate atoms
-    :param host: host zeotype with adsorbate
-    :return: host zeotype with constrained adsorbate
-    '''
+    """Constrains the distance between atoms in adsorbate to adjacent adsorbate
+    atoms :param host: host zeotype with adsorbate :return: host zeotype with
+    constrained adsorbate
+
+    Args:
+        host:
+    """
     atom_types = host.get_atom_types()
     ads_inds = [atom_types[i] for i in atom_types.keys() if 'adsorbate' in i]  # gets the indicies of adsorbate atoms
 

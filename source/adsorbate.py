@@ -14,6 +14,28 @@ class Adsorbate(Atoms):
                  calculator=None, info=None, velocities=None,  host_zeotype=None, ads_to_zeotype_index_map=None,
                  new_positions=None):
 
+        """
+        Args:
+            symbols:
+            positions:
+            numbers:
+            tags:
+            momenta:
+            masses:
+            magmoms:
+            charges:
+            scaled_positions:
+            cell:
+            pbc:
+            celldisp:
+            constraint:
+            calculator:
+            info:
+            velocities:
+            host_zeotype:
+            ads_to_zeotype_index_map:
+            new_positions:
+        """
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions, cell,
                          pbc, celldisp, constraint, calculator, info, velocities)
 
@@ -22,10 +44,12 @@ class Adsorbate(Atoms):
         self.new_positions = new_positions
 
     def min_distance(self, ads_position) -> float:
-        """
-        minimum distance from atom in a host to adsorbate
-        :param ads_position: np.array x,y,z of adsorbate position
-        :return: float, minimum distance between an atom in host zeotype and adsorbate position
+        """minimum distance from atom in a host to adsorbate :param
+        ads_position: np.array x,y,z of adsorbate position :return: float,
+        minimum distance between an atom in host zeotype and adsorbate position
+
+        Args:
+            ads_position:
         """
         assert self.host_zeotype is not None, "Cannot find min distance when host zeotype is None"
 
@@ -35,10 +59,12 @@ class Adsorbate(Atoms):
         return min_distance
 
     def avg_distance(self, ads_position):
-        """
-        average distance from position to all host atoms
-        :param ads_position: np.array x,y,z of adsorbate position
-        :return: float, average distance of host zeotype atoms to adsorbate position
+        """average distance from position to all host atoms :param ads_position:
+        np.array x,y,z of adsorbate position :return: float, average distance of
+        host zeotype atoms to adsorbate position
+
+        Args:
+            ads_position:
         """
         assert self.host_zeotype is not None, "Cannot find average distance when host zeotype is None"
 
@@ -48,10 +74,13 @@ class Adsorbate(Atoms):
         return avg_distance
 
     def find_void(self, void_position_guess):
-        """
-        finds nearest empty region in host zeotype
-        :param void_position_guess: An initial guess for the center of the void as a np.array with x,y,z position
-        :return: np.array position of center of empty void
+        """finds nearest empty region in host zeotype :param
+        void_position_guess: An initial guess for the center of the void as a
+        np.array with x,y,z position :return: np.array position of center of
+        empty void
+
+        Args:
+            void_position_guess:
         """
 
         # TODO: Find a way to speed this up
@@ -64,11 +93,14 @@ class Adsorbate(Atoms):
 
     @staticmethod
     def sphere_sample(radius, num_pts=500):
-        """
-        generates random positions on the surface of a sphere of certain radius
-        :param radius: radius of sphere surface to sample
-        :param num_pts: number of points to try
-        :return: list of x,y,z positions on surface of sphere
+        """generates random positions on the surface of a sphere of certain
+        radius :param radius: radius of sphere surface to sample :param num_pts:
+        number of points to try :return: list of x,y,z positions on surface of
+        sphere
+
+        Args:
+            radius:
+            num_pts:
         """
         position_list = []
         for _ in range(int(num_pts)):
@@ -84,13 +116,17 @@ class Adsorbate(Atoms):
         return position_list
 
     def get_viable_positions(self, index, radius, cutoff, num_pts=None):
-        """
-        finds positions near host atom far enough from other framework atoms.
-        :param index: index of host atom at center
-        :param radius: radius around host atom to test points
-        :param cutoff: minimum distance from other host atoms allowed for test points
-        :param num_pts: number of points to try
+        """finds positions near host atom far enough from other framework atoms.
+        :param index: index of host atom at center :param radius: radius around
+        host atom to test points :param cutoff: minimum distance from other host
+        atoms allowed for test points :param num_pts: number of points to try
         :return: list. positions of points which meet cutoff criteria
+
+        Args:
+            index:
+            radius:
+            cutoff:
+            num_pts:
         """
         assert (radius > cutoff), "radius larger than cutoff distance"
         assert self.host_zeotype is not None, "host zeotype cannot be none"
@@ -107,15 +143,20 @@ class Adsorbate(Atoms):
         return viable_positions
 
     def get_viable_pos_cluster_centers(self, index, radius, cutoff, num_pts=None):
-        """
-        finds positions near host atom far enough from other framework atoms,
-        clusters these viable positions and returns the centers of these clusters.
-        If number of points is too small will return error
-        :param index: index of host atom at center
-        :param radius: radius around host atom to test points
-        :param cutoff: minimum distance from other host atoms allowed for test points
-        :param num_pts: number of points to try
-        :return: list. center positions of clusters of points which meet criteria
+        """finds positions near host atom far enough from other framework atoms,
+        clusters these viable positions and returns the centers of these
+        clusters. If number of points is too small will return error :param
+        index: index of host atom at center :param radius: radius around host
+        atom to test points :param cutoff: minimum distance from other host
+        atoms allowed for test points :param num_pts: number of points to try
+        :return: list. center positions of clusters of points which meet
+        criteria
+
+        Args:
+            index:
+            radius:
+            cutoff:
+            num_pts:
         """
 
         viable_pos = self.get_viable_positions(index, radius, cutoff, num_pts)
@@ -125,13 +166,17 @@ class Adsorbate(Atoms):
         return cluster_centers
 
     def find_best_place(self, index, radius, cutoff, num_pts=500):
-        """
-        picks the best location to place an adsorbate around the host atom
-        :param index: index of host atom at center
-        :param radius: radius around host atom to test points
-        :param cutoff: minimum distance from other host atoms allowed for test points
-        :param num_pts: number of points to try
+        """picks the best location to place an adsorbate around the host atom
+        :param index: index of host atom at center :param radius: radius around
+        host atom to test points :param cutoff: minimum distance from other host
+        atoms allowed for test points :param num_pts: number of points to try
         :return: array. x,y,z position of best location
+
+        Args:
+            index:
+            radius:
+            cutoff:
+            num_pts:
         """
 
         best_positions = self.get_viable_pos_cluster_centers(index, radius, cutoff, num_pts)
@@ -149,11 +194,9 @@ class Adsorbate(Atoms):
         return best_pos
 
     def pick_donor(self):
-        """
-        finds atom in adsorbate most likely to bind to metal
-        Heuristic: N > O > P > S > X > C > H
-        :param ads: adsorbate atoms object
-        :return: index of donor atom in adsorbate
+        """finds atom in adsorbate most likely to bind to metal Heuristic: N > O
+        > P > S > X > C > H :param ads: adsorbate atoms object :return: index of
+        donor atom in adsorbate
         """
 
         ads_symbols = {}
@@ -170,10 +213,11 @@ class Adsorbate(Atoms):
             raise ValueError("Cannot find viable donor atom in adsorbate")
 
     def pick_host_atom(self) -> int:
-        """
-        picks element with largest atomic number higher than 14 (Si) if one exists. If none exist,
-         pick Al as a donor atom.
-        :return: index of host atom
+        """picks element with largest atomic number higher than 14 (Si) if one exists. If none exist,
+            pick Al as a donor atom.
+
+        Returns:
+            index of host atom
         """
         sym_index_map, count = self.host_zeotype.count_elements()
         max_atomic_num_sym = max(sym_index_map.keys(), key=lambda x: atomic_numbers[x])
@@ -187,13 +231,17 @@ class Adsorbate(Atoms):
                 raise
 
     def pick_ads_position(self, donor_ind, host_ind, radius=None, cutoff=None):
-        """
-        Finds a good position to add adsorbate to host
-        :param donor_ind: index of donor atom on adsorbate
-        :param host_ind: index of host binding site
-        :param radius: distance between host atom and donor atom
-        :param cutoff: minimum distance donor atom must be from host atoms
-        :return: vector of best position to place adsorbate
+        """Finds a good position to add adsorbate to host :param donor_ind:
+        index of donor atom on adsorbate :param host_ind: index of host binding
+        site :param radius: distance between host atom and donor atom :param
+        cutoff: minimum distance donor atom must be from host atoms :return:
+        vector of best position to place adsorbate
+
+        Args:
+            donor_ind:
+            host_ind:
+            radius:
+            cutoff:
         """
         donor_atom_symbol, host_atom_symbol = self[donor_ind].symbol, self.host_zeotype[host_ind].symbol
         donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
@@ -208,9 +256,11 @@ class Adsorbate(Atoms):
         return pos
 
     def get_donor_vec(self, donor_index):
-        """
-        finds direction of lone pair electrons on an adsorbate donor atom
+        """finds direction of lone pair electrons on an adsorbate donor atom
         :return: vector direction of donor atoms
+
+        Args:
+            donor_index:
         """
         nl = NeighborList(natural_cutoffs(self), self_interaction=False, bothways=True)
         nl.update(self)
@@ -226,13 +276,17 @@ class Adsorbate(Atoms):
         return donor_vec
 
     def position_ads(self, donor_ind=None, host_ind=None, pos=None):
-        """
-        Rotates and positions adsorbate according to specified parameters
-        if no parameters are provided, a reasonable position is found
-        :param pos: vector, the position to place adsorbate's donor atom
-        :param host_ind: integer, index of site in host which adsorbate will be bound
-        :param donor_ind: integer, index of donor atom on adsorbate
-        :return: atoms object with adsorbate in host
+        """Rotates and positions adsorbate according to specified parameters if
+        no parameters are provided, a reasonable position is found :param pos:
+        vector, the position to place adsorbate's donor atom :param host_ind:
+        integer, index of site in host which adsorbate will be bound :param
+        donor_ind: integer, index of donor atom on adsorbate :return: atoms
+        object with adsorbate in host
+
+        Args:
+            donor_ind:
+            host_ind:
+            pos:
         """
 
         if donor_ind is None:
@@ -252,9 +306,10 @@ class Adsorbate(Atoms):
         self.translate(pos - self.get_positions()[donor_ind])
 
     def integrate_ads(self, position_ads=False):
-        """
-        append adsorbate to main atom
-        :return:
+        """append adsorbate to main atom :return:
+
+        Args:
+            position_ads:
         """
         assert self not in self.host_zeotype.adsorbates, "cannot integrate single adsorbate object twice"
         if position_ads:
@@ -265,9 +320,8 @@ class Adsorbate(Atoms):
 
 
     def set_ads_zeotype_map(self):
-        """
-        Get the mapping between an adsorbate and the zeolite where it was added
-        :return: a zeotype to adsorbate index dictionary
+        """Get the mapping between an adsorbate and the zeolite where it was
+        added :return: a zeotype to adsorbate index dictionary
         """
         ads_position_index_map = {}
         for atom in self:
@@ -285,10 +339,7 @@ class Adsorbate(Atoms):
         self.ads_to_zeotype_index_map = ads_to_zeotype_index_map
 
     def remove_ads(self):
-        """
-        also tricky
-        :return:
-        """
+        """also tricky :return:"""
         ...
 
 if __name__ == '__main__':

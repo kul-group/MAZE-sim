@@ -4,6 +4,10 @@ from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from collections import defaultdict
 def type_atoms(atoms_obj):
+    """
+    Args:
+        atoms_obj:
+    """
     type_dict = defaultdict(list)
 
     # Getting neighbor list

@@ -6,6 +6,11 @@ from ase import Atom
 def needs_neighb(clust, index):
     # checks if an atom in a cluster has missing bonds
     # only checks O, Si, and common metal atoms
+    """
+    Args:
+        clust:
+        index:
+    """
     nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
     nl.update(clust)
     a = clust[index]  # atom object
@@ -17,17 +22,29 @@ def needs_neighb(clust, index):
         return(False)
 
 def get_cap_ox(clust):
+    """
+    Args:
+        clust:
+    """
     ox_inds = [i.index for i in clust if i.symbol == 'O']
     ox_to_cap = [j for j in ox_inds if needs_neighb(clust, j)]
     return(ox_to_cap)
 
 def get_cap_si(clust):
+    """
+    Args:
+        clust:
+    """
     si_inds = [i.index for i in clust if i.symbol == 'Si']
     si_to_cap = [j for j in si_inds if needs_neighb(clust, j)]
     return(si_to_cap)
 
 def add_cap_ox(clust):
     # TODO: fix bug where adds multiple oxygen's to the same place
+    """
+    Args:
+        clust:
+    """
     nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
     nl.update(clust)
     new_clust = clust
@@ -44,6 +61,10 @@ def add_cap_ox(clust):
     return (new_clust)
 
 def add_cap_h(clust):
+    """
+    Args:
+        clust:
+    """
     nl = NeighborList(natural_cutoffs(clust), bothways=True, self_interaction=False)
     nl.update(clust)
     new_clust = clust
@@ -57,6 +78,10 @@ def add_cap_h(clust):
     return(new_clust)
 
 def cap_clust(clust):
+    """
+    Args:
+        clust:
+    """
     si_capped = add_cap_ox(clust)     # cluster with capped si
     ox_capped = add_cap_h(si_capped)  # cluster with capped o
     return(ox_capped)

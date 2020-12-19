@@ -5,6 +5,11 @@ from pathlib import Path
 from .zeotype import Zeotype
 
 def download_cif(code: str, data_dir='data'):
+    """
+    Args:
+        code (str):
+        data_dir:
+    """
     Path(data_dir).mkdir(parents=True, exist_ok=True)  # create output directory if it doesn't exist
     output_path = os.path.join(data_dir, code + '.cif')  # sets ouput path to data_dir/code.cif
     root_url = "https://europe.iza-structure.org/IZA-SC/cif/"  # sets root URL for the
@@ -20,6 +25,11 @@ def download_cif(code: str, data_dir='data'):
 
 
 def build_zeolite_from_code(code, data_dir='data'):
+    """
+    Args:
+        code:
+        data_dir:
+    """
     output_path = os.path.join(data_dir, code + '.cif')
     if not os.path.exists(output_path):
         download_cif(code, data_dir)  # will throw error if not successful

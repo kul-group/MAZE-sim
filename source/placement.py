@@ -5,46 +5,52 @@ import numpy as np
 from random import random
 
 def min_dist(pos, host):
-    '''
-    minimum distance from position to a host atom
-    :param pos: vector x,y,z position
-    :param host: host atoms object
-    :return: float, minimum distance
-    '''
+    """minimum distance from position to a host atom :param pos: vector x,y,z
+    position :param host: host atoms object :return: float, minimum distance
+
+    Args:
+        pos:
+        host:
+    """
     dummy_atom = Atom('H', position=pos)
     dummy_host = host + dummy_atom
     return(min(dummy_host.get_distances(-1, [i for i in range(len(host))], mic=True)))
 
 def avg_dist(pos, host):
-    '''
-    average distance from position to all host atoms
-    :param pos: vector x,y,z position
-    :param host: host atoms object
-    :return: float, average distance
-    '''
+    """average distance from position to all host atoms :param pos: vector x,y,z
+    position :param host: host atoms object :return: float, average distance
+
+    Args:
+        pos:
+        host:
+    """
     dummy_atom = Atom('H', position=pos)
     dummy_host = host + dummy_atom
     return(np.average(dummy_host.get_distances(-1, [i for i in range(len(host))], mic=True)))
 
 def find_void(pos, host):
-    '''
-    finds nearest empty region in host
-    :param pos: vector x,y,z position
-    :param host: host atoms object
-    :return: vector position of center of empty void
-    '''
+    """finds nearest empty region in host :param pos: vector x,y,z position
+    :param host: host atoms object :return: vector position of center of empty
+    void
+
+    Args:
+        pos:
+        host:
+    """
     guess = pos
     func = lambda pos: -1*min_dist(pos, host) # 1 param function for scipy.minimize
     ans = minimize(func, guess)
     return(ans.x)
 
 def sphere_sample(radius, num_pts=None):
-    '''
-    generates random positions on the surface of a sphere of certain radius
-    :param radius: radius of sphere surface to sample
-    :param num_pts: number of points to try
-    :return: list of x,y,z positions on surface of sphere
-    '''
+    """generates random positions on the surface of a sphere of certain radius
+    :param radius: radius of sphere surface to sample :param num_pts: number of
+    points to try :return: list of x,y,z positions on surface of sphere
+
+    Args:
+        radius:
+        num_pts:
+    """
     if num_pts == None:
         num_pts = 500
     vect_list = []
@@ -59,17 +65,21 @@ def sphere_sample(radius, num_pts=None):
     return(vect_list)
 
 def get_place_clusters(host, index, radius, cutoff, num_pts=None):
-    '''
-    finds positions near host atom far enough from other framework atoms,
+    """finds positions near host atom far enough from other framework atoms,
     clusters these viable positions and returns the centers of these clusters.
-    If number of points is too small will return error
-    :param host: host atoms object
-    :param index: index of host atom at center
-    :param radius: radius around host atom to test points
-    :param cutoff: minimum distance from other host atoms allowed for test points
-    :param num_pts: number of points to try
+    If number of points is too small will return error :param host: host atoms
+    object :param index: index of host atom at center :param radius: radius
+    around host atom to test points :param cutoff: minimum distance from other
+    host atoms allowed for test points :param num_pts: number of points to try
     :return: list. center positions of clusters of points which meet criteria
-    '''
+
+    Args:
+        host:
+        index:
+        radius:
+        cutoff:
+        num_pts:
+    """
     assert (radius > cutoff)
     if num_pts == None:
         num_pts = 500
@@ -88,15 +98,19 @@ def get_place_clusters(host, index, radius, cutoff, num_pts=None):
     return(cluster_centers)
 
 def find_best_place(host, index, radius, cutoff, num_pts=None):
-    '''
-    picks the best location to place an adsorbate around the host atom
-    :param host: host atoms object
-    :param index: index of host atom at center
-    :param radius: radius around host atom to test points
-    :param cutoff: minimum distance from other host atoms allowed for test points
-    :param num_pts: number of points to try
-    :return: vector. x,y,z position of best location
-    '''
+    """picks the best location to place an adsorbate around the host atom :param
+    host: host atoms object :param index: index of host atom at center :param
+    radius: radius around host atom to test points :param cutoff: minimum
+    distance from other host atoms allowed for test points :param num_pts:
+    number of points to try :return: vector. x,y,z position of best location
+
+    Args:
+        host:
+        index:
+        radius:
+        cutoff:
+        num_pts:
+    """
     if num_pts == None:
         num_pts = 500
     viable_pos = get_place_clusters(host, index, radius, cutoff, num_pts)

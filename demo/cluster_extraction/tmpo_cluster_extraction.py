@@ -7,6 +7,10 @@ from ase.neighborlist import natural_cutoffs, NeighborList
 import glob
 
 def find_tmpo(atoms):
+    """
+    Args:
+        atoms:
+    """
     tmpo_indices = []
     p_index = None
     for a in atoms:
