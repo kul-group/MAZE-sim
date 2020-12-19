@@ -3,12 +3,15 @@ from ase.neighborlist import NeighborList, natural_cutoffs
 # Obtains the indicies of a cluster in a zeolite given center atom and cluster size
 
 def get_cluster(atoms, index, size):
-    '''
-    :param atoms: atoms object 
-    :param size: min number of atoms in cluster (not number of T-sites!), integer
-    :param index: index at center of cluster, integer
-    :return: list of indicies included in the cluster
-    '''
+    """
+    Args:
+        atoms: atoms object
+        index: index at center of cluster, integer
+        size: min number of atoms in cluster (not number of T-sites!), integer
+
+    Returns:
+        list of indicies included in the cluster
+    """
 
     if type(index) != int:
         raise ValueError('index must be an integer')

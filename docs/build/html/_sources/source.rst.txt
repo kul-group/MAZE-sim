@@ -84,6 +84,15 @@ source.zeotype module
    :undoc-members:
    :show-inheritance:
 
+source.zeotype.Zeotype class
+----------------------------
+
+.. autoclass:: source.zeotype.Zeotype
+   :members:
+   :private-members:
+   :special-members:
+
+
 Module contents
 ---------------
 

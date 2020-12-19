@@ -5,12 +5,13 @@ from ase import Atom
 import numpy as np
 
 def pick_donor(ads):
-    '''
-    finds atom in adsorbate most likely to bind to metal
-    Heuristic: N > O > P > S > X > C > H
-    :param ads: adsorbate atoms object
-    :return: index of donor atom in adsorbate
-    '''
+    """finds atom in adsorbate most likely to bind to metal Heuristic: N > O > P
+    > S > X > C > H :param ads: adsorbate atoms object :return: index of donor
+    atom in adsorbate
+
+    Args:
+        ads:
+    """
 
     donors = ['N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I', 'C', 'H']
     ads_symbols = [k.symbol for k in ads]
@@ -22,11 +23,12 @@ def pick_donor(ads):
         return ValueError("Cannot find donor atom in ads")
 
 def pick_host_atom(host):
-    '''
-    picks element with largest atomic number higher than 14 (Si), else, Al
-    :param host: host atoms object
-    :return: index of host atom
-    '''
+    """picks element with largest atomic number higher than 14 (Si), else, Al
+    :param host: host atoms object :return: index of host atom
+
+    Args:
+        host:
+    """
 
     atom_nums = host.get_atomic_numbers()
     max_num = max(atom_nums)
@@ -42,16 +44,21 @@ def pick_host_atom(host):
         return(host_ind)
 
 def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
-    '''
-    Finds a good position to add adsorbate to host
-    :param ads: adsorbate atoms object
-    :param host: host atoms object
-    :param donor_ind: index of donor atom on adsorbate
-    :param host_ind: index of host binding site
-    :param radius: distance between host atom and donor atom
-    :param cutoff: minimum distance donor atom must be from host atoms
-    :return: vector of best position to place adsorbate
-    '''
+    """Finds a good position to add adsorbate to host :param ads: adsorbate
+    atoms object :param host: host atoms object :param donor_ind: index of donor
+    atom on adsorbate :param host_ind: index of host binding site :param radius:
+    distance between host atom and donor atom :param cutoff: minimum distance
+    donor atom must be from host atoms :return: vector of best position to place
+    adsorbate
+
+    Args:
+        ads:
+        host:
+        donor_ind:
+        host_ind:
+        radius:
+        cutoff:
+    """
     donor_atom_symbol, host_atom_symbol = ads[donor_ind].symbol, host[host_ind].symbol
     donor_atom_number, host_atom_number = atomic_numbers[donor_atom_symbol], atomic_numbers[host_atom_symbol]
     donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
@@ -65,16 +72,20 @@ def pick_pos(ads, host, donor_ind, host_ind, radius=None, cutoff=None):
     return(pos)
 
 def place_ads(ads, host, donor_ind=None, host_ind=None, pos=None):
-    '''
-    Places adsorbate in host according to specified parameters
-    :param pos: vector, the position to place adsorbate's donor atom
-    :param host_ind: integer, index of site in host which adsorbate will be bound
-    :param donor_ind: integer, index of donor atom on adsorbate
-    :param ads: adsorbate atoms object
-    :param host: host atoms object
-    :param elements: list
-    :return: atoms object with adsorbate in host
-    '''
+    """Places adsorbate in host according to specified parameters :param pos:
+    vector, the position to place adsorbate's donor atom :param host_ind:
+    integer, index of site in host which adsorbate will be bound :param
+    donor_ind: integer, index of donor atom on adsorbate :param ads: adsorbate
+    atoms object :param host: host atoms object :param elements: list :return:
+    atoms object with adsorbate in host
+
+    Args:
+        ads:
+        host:
+        donor_ind:
+        host_ind:
+        pos:
+    """
 
     if donor_ind == None:
         donor_ind = pick_donor(ads)

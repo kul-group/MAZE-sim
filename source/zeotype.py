@@ -1,16 +1,16 @@
-from typing import List, Dict, Tuple, Iterable, Union, Optional
-from ase import Atoms, Atom
-from ase.neighborlist import natural_cutoffs, NeighborList
-from collections import defaultdict
 import copy
-import numpy as np
-from ase.io import cif
+from collections import defaultdict
+from typing import List, Dict, Tuple, Iterable, Optional
+
 import ase
 import ase.data
+import numpy as np
+from ase import Atoms
+from ase.io import cif
+from ase.neighborlist import natural_cutoffs, NeighborList
 from ase.visualize import view
-from source.index_mapper import IndexMapper
-from source.adsorbate import Adsorbate
 
+from source.index_mapper import IndexMapper
 
 def get_available_symbols(atom_list: List[str]) -> List[str]:
     """
@@ -40,7 +40,6 @@ class Silanol():
     def __repr__(self) -> str:
         return self.__str__()
 
-
 class Zeotype(Atoms):
     """
     A class that inherits from ase.Atoms, which represents an unmodified zeotype. If a zeotype is built from a cif
@@ -49,7 +48,6 @@ class Zeotype(Atoms):
     This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as
     as methods to build an imperfect zeotype from a parent Zeotype class. Imperfect zeotypes have additional
     functionality and are dependent on a parent zeotype class.
-
     """
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -105,8 +103,9 @@ class Zeotype(Atoms):
         labeled as specified in the cif file. The dictionaries for T site labels are also filled in
         these map from the T-site to a list of atom indices. The atom indices to t sites maps atom
         indices to T-sites.
-        :param filepath: Filepath of the
-        :return:
+
+        :param filepath: Filepath of the cif file
+        :return: Zeotype with labeled sites
         """
         atoms, site_to_atom_indices, atom_indices_to_site = cls._read_cif_note_sites(filepath)
         zeotype = cls(atoms)
@@ -261,10 +260,11 @@ class Zeotype(Atoms):
     def count_atomtypes(atomtype_list: List[str]) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
         Counts the number of different atoms of each type in a list of atom symbols
+
         :param atomtype_list: A list of atom chemical symbols
         :return: A tuple of two dictionaries the first containing a mapping between the chemical
-        symbol and the indices in the symbol and the second containing a mapping between the
-        chemical symbol and the number of symbols of that type in the input list
+            symbol and the indices in the symbol and the second containing a mapping between the
+            chemical symbol and the number of symbols of that type in the input list
         """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
         count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
@@ -277,6 +277,7 @@ class Zeotype(Atoms):
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
+
         :param cluster_indices: Indices of cluster to make
         :param max_size: max size of cluster
         :param index: index of the central atom in the cluster
@@ -298,6 +299,7 @@ class Zeotype(Atoms):
     def find_silanol_groups(self) -> List[Silanol]:
         """
         Finds all of the silanol groups in the Zeotype
+
         :return: A list of Silanol groups
         """
         silanol_list = []
@@ -316,6 +318,7 @@ class Zeotype(Atoms):
     def find_silanol_nest_T_sites(self) -> List[int]:
         """
         Finds all of the T sites that are in silanol nests
+
         :return: A list of T sites in silanol nests
         """
         sites_list = []
@@ -343,6 +346,7 @@ class Zeotype(Atoms):
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
         """
         Gets the compliment of indices in a Zeotype
+
         :param zeotype: Zeotype containing all indices
         :param indices: Indices to get the compliment of
         :return: Compliment of indices
@@ -353,6 +357,7 @@ class Zeotype(Atoms):
     def get_indices(atoms_object: Atoms) -> List[int]:
         """
         Get the indices in an atoms object
+
         :param atoms_object: Atoms object to get Indices of
         :return: List of indices in Atoms object
         """
@@ -361,6 +366,7 @@ class Zeotype(Atoms):
     def get_site_type(self, index: int) -> str:
         """
         Get the idenity of a site
+
         :param index: Index of site in self
         :return: Label for the site (comes from CIF) file
         """
@@ -374,6 +380,7 @@ class Zeotype(Atoms):
         Get the index mapping between old and new self.
         his matching is done by position, so it is essential that the atom
         positions have not changed. It is also essential that new <= old
+
         :return: A mapping between old and new
         """
         new_index_to_position_map = {}
@@ -419,8 +426,9 @@ class ImperfectZeotype(Zeotype):
         """
         This method registers the current ImperfectZeotype with the index_mapper by using the common
         positions between the atoms in self and source.
+
         :param source: Source Zeotype or subclass that was used to build current ImperfectZeotype
-        for the mapping to work correctly, the atom positions must be identical. This
+            for the mapping to work correctly, the atom positions must be identical. This
         :return: None
         """
         name = self.index_mapper.get_unique_name(self.__name__)
@@ -438,6 +446,7 @@ class ImperfectZeotype(Zeotype):
     def cap_atoms(self, cap_description: str = '') -> 'ImperfectZeotype':
         """
         Cap all of the atoms in the ImpefectZeotype
+
         :param cap_description: A short description for the caps that will be added
         :return: A copy of self with the correct parameters added
         """
@@ -462,6 +471,7 @@ class ImperfectZeotype(Zeotype):
     def remove_caps(self, cap_type: str = 'h_cap', cap_name:str = "cap") -> 'ImperfectZeotype':
         """
         Remove caps from an imperfect zeotype
+
         :param cap_type: The type of cap (h_cap, o_cap)
         :param cap_name: The name of the cap
         :return: A copy of self with the caps removed
@@ -474,6 +484,7 @@ class ImperfectZeotype(Zeotype):
     def integrate_adsorbate(self, adsorbate: Atoms, ads_name='ads') -> 'ImperfectZeotype':
         """
         Add an adsorbate into the imperfect zeotype
+
         :param adsorbate: Adsorbate object
         :param ads_name: name of the adsorbate
         :return: a copy of imperfect zeotype with the adsorabte added
@@ -483,6 +494,7 @@ class ImperfectZeotype(Zeotype):
     def integrate_other_zeotype(self, other: Zeotype):
         """
         Integrate another zeotype into the current zeotype
+
         :param other: the other zeotype to integrate
         :return: a new imperfect zeotype with the other zeotype integrated
         """
@@ -502,6 +514,7 @@ class ImperfectZeotype(Zeotype):
     def change_atom_properties(self, self_index: int, other_index: int, other: Atoms) -> None:
         """
         Change the atom properties
+
         :param self_index: index of self that needs to be changed
         :param other_index: index of other that holds the properties to change self
         :param other: other Atoms object that the other_indices corresponds to
@@ -518,6 +531,7 @@ class ImperfectZeotype(Zeotype):
     def build_H_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None):
         """
         Build a dictionary of hydrogen caps
+
         :param bonds_needed: Number of bonds needed for each atom
         :return: A list of positions of H caps
         """
@@ -536,6 +550,7 @@ class ImperfectZeotype(Zeotype):
     def build_O_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None):
         """
         Builds a dictionary of oxygen caps
+
         :param bonds_needed: Number of bonds needed for each atom
         :return: A list of oxygen cap positions
         """
@@ -556,6 +571,7 @@ class ImperfectZeotype(Zeotype):
     def build_all_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None) -> Dict[str, np.array]:
         """
         Builds a dictionary for all atoms (not currently being used, but could be resurrected).
+
         :param bonds_needed: number of bonds needed for each atom type
         :return: A list of capping atoms to add
         """
@@ -612,8 +628,8 @@ class ImperfectZeotype(Zeotype):
 
 
     def delete_atoms(self, indices_to_delete) -> 'ImperfectZeotype':
-        """
-        Delete atoms from imperfect zeotype by returning a copy with atoms deleted
+        """Delete atoms from imperfect zeotype by returning a copy with atoms deleted
+
         :param indices_to_delete: Indices of atoms in current zeotype to delete
         :return: a copy of self with atoms deleted
         """
@@ -629,6 +645,7 @@ class ImperfectZeotype(Zeotype):
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
         """
         Set the attribuets of a new imperfect zeotype to that of its source
+
         :param new_z: Newly created zeolite without attributes set
         :param source: the source from which new_z was created
         :return: None
@@ -641,6 +658,7 @@ class ImperfectZeotype(Zeotype):
     def _change_atoms(self, operation, *args, **kwargs) -> 'ImperfectZeotype':
         """
         Applies a custom function to the atoms and returns a new self
+
         :param operation:
         :param args:
         :param kwargs:
@@ -655,6 +673,7 @@ class ImperfectZeotype(Zeotype):
     def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'ImperfectZeotype':
         """
         Adds additional atoms to current imperfect zeotype
+
         :param atoms_to_add: The new atoms to add
         :param atom_type: A str describing the type of atoms that are being added
         :param short_description: A short description of the atoms that are being added (optional)
@@ -701,6 +720,7 @@ class ImperfectZeotype(Zeotype):
     def remove_addition(self, addition_name, addition_type) -> 'ImperfectZeotype':
         """
         Removes an addition to the zeotype
+
         :param addition_name: name of the addition
         :param addition_type: the type of additon (h_cap, o_cap, ect.)
         :return: A new zeotype with the additional atoms remvoed
@@ -714,6 +734,7 @@ class ImperfectZeotype(Zeotype):
     def create_silanol_defect(self, site_index) -> 'ImperfectZeotype':
         """
         Creates a silanol defect by deleting an atom and capping the resulting imperfect zeotype
+
         :param site_index:
         :return: An imperfect zeotype with a silanol defect
         """
@@ -722,6 +743,7 @@ class ImperfectZeotype(Zeotype):
     def needs_cap(self, atom_index: int, bonds_needed: int) -> bool:
         """
         Finds if an atom needs a cap
+
         :param atom_index: index of atom to check for cap
         :param bonds_needed: number of bonds an atom needs
         :return: boolean stating if an atom needs a cap
@@ -732,6 +754,7 @@ class ImperfectZeotype(Zeotype):
 
         """
         Find a position of an oxygen cap
+
         :param self_index: index of atom needing cap
         :return: A position array of the oxygen cap position
         """
@@ -754,6 +777,7 @@ class ImperfectZeotype(Zeotype):
     def get_hydrogen_cap_pos_simple(self, index) -> np.array:
         """
         Finds the position of a hydrogen cap position
+
         :param index: index of hydrogen cap
         :return: the hydrogen position to add the cap too
         """
@@ -845,6 +869,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
+
         :param zeolite: the zeolite from which to build the cluster
         :param index: the centeral atom index
         :param max_size: the max number of atoms in the final cluster
@@ -883,6 +908,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
+
         :param zeolite: the zeolite from which to build the cluster
         :param index: the centeral atom index
         :param max_size: the max number of atoms in the final cluster

@@ -135,5 +135,9 @@ class TestZeotype(TestCase):
         self.fail()
 
     def assertIsEmptyList(self, my_list):
+        """
+        Args:
+            my_list:
+        """
         self.assertIsInstance(my_list, list)
         self.assertEqual(len(my_list), 0)
