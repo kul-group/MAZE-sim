@@ -10,7 +10,7 @@ from ase.io import cif
 from ase.neighborlist import natural_cutoffs, NeighborList
 from ase.visualize import view
 
-from source.index_mapper import IndexMapper
+from .index_mapper import IndexMapper
 
 def get_available_symbols(atom_list: List[str]) -> List[str]:
     """
