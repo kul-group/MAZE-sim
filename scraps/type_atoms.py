@@ -55,5 +55,5 @@ def type_atoms(atoms_obj):
 # testing
 if __name__ == '__main__':
     from ase.io import read
-    b = read('BEA.cif')
+    b = read('../source/BEA.cif')
     print(type_atoms(b))

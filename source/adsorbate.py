@@ -7,41 +7,29 @@ from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
 import source.zeotype
 import ase
+import warnings
+
 
 class Adsorbate(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None,  host_zeotype=None, ads_to_zeotype_index_map=None,
-                 new_positions=None):
+                 calculator=None, info=None, velocities=None,  host_zeotype=None, name='', description=''):
 
-        """
-        Args:
-            symbols:
-            positions:
-            numbers:
-            tags:
-            momenta:
-            masses:
-            magmoms:
-            charges:
-            scaled_positions:
-            cell:
-            pbc:
-            celldisp:
-            constraint:
-            calculator:
-            info:
-            velocities:
-            host_zeotype:
-            ads_to_zeotype_index_map:
-            new_positions:
-        """
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions, cell,
                          pbc, celldisp, constraint, calculator, info, velocities)
 
+        assert '_' not in description, 'cannot add _ to description'
+        if isinstance(symbols, Adsorbate):
+            if host_zeotype is None:
+                host_zeotype = symbols.host_zeotype
+            if description == '':
+                description = symbols.description
+            if name == '':
+                name = symbols.name
+
         self.host_zeotype = host_zeotype
-        self.ads_to_zeotype_index_map = ads_to_zeotype_index_map
-        self.new_positions = new_positions
+        self.description = description
+        self.name = name
 
     def min_distance(self, ads_position) -> float:
         """minimum distance from atom in a host to adsorbate :param
@@ -267,15 +255,18 @@ class Adsorbate(Atoms):
         # gets neighbors of donor atom and adds the vectors from neighbor to donor
         # for most donor atoms this is roughly in the proper binding direction
         donor_neighbors = nl.get_neighbors(donor_index)[0]  # neighbor's index
-        donor_vec = [0, 0, 0]
+        donor_vec = np.array([0, 0, 0])
         for i in donor_neighbors:
             a = self.get_distance(i, donor_index, vector=True)
             donor_vec = donor_vec + a
+        if np.linalg.norm(donor_vec) == 0:
+            warnings.warn("donor vector with magnitude 0 found, providing default  vector")
+            return np.array([1, 0, 0])
 
         donor_vec = donor_vec / np.linalg.norm(donor_vec)  # normalizes donor vec
         return donor_vec
 
-    def position_ads(self, donor_ind=None, host_ind=None, pos=None):
+    def position_ads(self, donor_ind=None, host_ind=None, pos=None) -> "Adsorbate":
         """Rotates and positions adsorbate according to specified parameters if
         no parameters are provided, a reasonable position is found :param pos:
         vector, the position to place adsorbate's donor atom :param host_ind:
@@ -296,51 +287,16 @@ class Adsorbate(Atoms):
         if pos is None:
             pos = self.pick_ads_position(donor_ind, host_ind)
 
-        dummy_host = self.host_zeotype + Atom('H',
-                                                             position=pos)  # add dummy hydrogen atom to get distances to host atoms
+        dummy_host = self.host_zeotype + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
         vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
         donor_vec = self.get_donor_vec(donor_ind)  # get the direction of lone pairs on donor atom
 
+        new_self = self.__class__(self)
         # rotate the ads into binding direction, move the ads to proper pos and combine
-        self.rotate(donor_vec, vec)
-        self.translate(pos - self.get_positions()[donor_ind])
+        new_self.rotate(donor_vec, vec)
+        new_self.translate(pos - self.get_positions()[donor_ind])
+        return new_self
 
-    def integrate_ads(self, position_ads=False):
-        """append adsorbate to main atom :return:
-
-        Args:
-            position_ads:
-        """
-        assert self not in self.host_zeotype.adsorbates, "cannot integrate single adsorbate object twice"
-        if position_ads:
-            self.position_ads()
-        self.host_zeotype.extend(self)
-        self.set_ads_zeotype_map()
-        self.host_zeotype.adsorbates.append(self)
-
-
-    def set_ads_zeotype_map(self):
-        """Get the mapping between an adsorbate and the zeolite where it was
-        added :return: a zeotype to adsorbate index dictionary
-        """
-        ads_position_index_map = {}
-        for atom in self:
-            ads_position_index_map[str(atom.position)] = atom.index
-
-        zeotype_position_index_map = {}
-        for atom in self.host_zeotype:
-            zeotype_position_index_map[str(atom.position)] = atom.index
-
-        ads_to_zeotype_index_map = {}
-
-        for pos, index in ads_position_index_map.items():
-            ads_to_zeotype_index_map[index] = zeotype_position_index_map[pos]
-
-        self.ads_to_zeotype_index_map = ads_to_zeotype_index_map
-
-    def remove_ads(self):
-        """also tricky :return:"""
-        ...
 
 if __name__ == '__main__':
     from ase.io import read
@@ -352,14 +308,14 @@ if __name__ == '__main__':
     iz[174].symbol = 'Sn'
 
     iz = iz.delete_atoms([185, 113, 118, 63, 78, 92, 112, 150])
-    mol = ase.Atoms('Hg') #molecule('CH3OH')
-    for a in mol:
-        print(a.symbol, a.index)
-    ads = Adsorbate(mol)
-    #ads.host_zeotype = iz
-    ads.position_ads(0, 167, pos=[6.660, 6.660, 9.820])
-    iz = iz.integrate_adsorbate(ads)
-    print(iz)
+    mol = molecule('CH3OH')
+    ads = Adsorbate(mol, host_zeotype=iz)
+    ads = ads.position_ads(0, 167, pos=[6.660, 6.660, 9.820])
+    iz, ads = iz.integrate_adsorbate(ads)
+    print(type(iz))
+    print(ads.name)
+    view(iz)
+    iz = iz.remove_adsorbate(ads)
     view(iz)
     # for p in ads.get_positions():
     #     print(p)

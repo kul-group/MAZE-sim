@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>source package &mdash; Zeotype Project 0.1 documentation</title>
+  <title>ZeoSE Code &mdash; Zeotype Project 0.1 documentation</title>
   
 
   
@@ -34,7 +34,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="ZeoSE Index Mapper" href="design_pattern.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -78,8 +79,25 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">ZeoSE Index Mapper</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ZeoSE Code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-adsorbate-module">source.adsorbate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-cap-clust-module">source.cap_clust module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-source.cif_download">source.cif_download module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-extra-framework-module">source.extra_framework module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-get-cluster-module">source.get_cluster module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-place-adsorbate-module">source.place_adsorbate module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-placement-module">source.placement module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-pores-module">source.pores module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-type-atoms-module">source.type_atoms module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-source.zeotype">source.zeotype module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-zeotype-zeotype-class">source.zeotype.Zeotype class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-source">Module contents</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -125,7 +143,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>source package</li>
+      <li>ZeoSE Code</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -144,301 +162,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="source-package">
-<h1>source package<a class="headerlink" href="#source-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="zeose-code">
+<h1>ZeoSE Code<a class="headerlink" href="#zeose-code" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.adsorbate">
-<span id="source-adsorbate-module"></span><h2>source.adsorbate module<a class="headerlink" href="#module-source.adsorbate" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="source.adsorbate.Adsorbate">
-<em class="property">class </em><code class="sig-prename descclassname">source.adsorbate.</code><code class="sig-name descname">Adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">host_zeotype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ads_to_zeotype_index_map</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">new_positions</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ase.atoms.Atoms</span></code></p>
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">host_zeotype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ads_to_zeotype_index_map</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">new_positions</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>symbols:
-positions:
-numbers:
-tags:
-momenta:
-masses:
-magmoms:
-charges:
-scaled_positions:
-cell:
-pbc:
-celldisp:
-constraint:
-calculator:
-info:
-velocities:
-host_zeotype:
-ads_to_zeotype_index_map:
-new_positions:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.avg_distance">
-<code class="sig-name descname">avg_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ads_position</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.avg_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.avg_distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>average distance from position to all host atoms :param ads_position:
-np.array x,y,z of adsorbate position :return: float, average distance of
-host zeotype atoms to adsorbate position</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>ads_position:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.find_best_place">
-<code class="sig-name descname">find_best_place</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">cutoff</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">500</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.find_best_place"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.find_best_place" title="Permalink to this definition">¶</a></dt>
-<dd><p>picks the best location to place an adsorbate around the host atom
-:param index: index of host atom at center :param radius: radius around
-host atom to test points :param cutoff: minimum distance from other host
-atoms allowed for test points :param num_pts: number of points to try
-:return: array. x,y,z position of best location</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>index:
-radius:
-cutoff:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.find_void">
-<code class="sig-name descname">find_void</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">void_position_guess</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.find_void"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.find_void" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds nearest empty region in host zeotype :param
-void_position_guess: An initial guess for the center of the void as a
-np.array with x,y,z position :return: np.array position of center of
-empty void</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>void_position_guess:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.get_donor_vec">
-<code class="sig-name descname">get_donor_vec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">donor_index</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.get_donor_vec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.get_donor_vec" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds direction of lone pair electrons on an adsorbate donor atom
-:return: vector direction of donor atoms</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>donor_index:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.get_viable_pos_cluster_centers">
-<code class="sig-name descname">get_viable_pos_cluster_centers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">cutoff</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.get_viable_pos_cluster_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.get_viable_pos_cluster_centers" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds positions near host atom far enough from other framework atoms,
-clusters these viable positions and returns the centers of these
-clusters. If number of points is too small will return error :param
-index: index of host atom at center :param radius: radius around host
-atom to test points :param cutoff: minimum distance from other host
-atoms allowed for test points :param num_pts: number of points to try
-:return: list. center positions of clusters of points which meet
-criteria</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>index:
-radius:
-cutoff:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.get_viable_positions">
-<code class="sig-name descname">get_viable_positions</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">cutoff</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.get_viable_positions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.get_viable_positions" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds positions near host atom far enough from other framework atoms.
-:param index: index of host atom at center :param radius: radius around
-host atom to test points :param cutoff: minimum distance from other host
-atoms allowed for test points :param num_pts: number of points to try
-:return: list. positions of points which meet cutoff criteria</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>index:
-radius:
-cutoff:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.integrate_ads">
-<code class="sig-name descname">integrate_ads</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">position_ads</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.integrate_ads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.integrate_ads" title="Permalink to this definition">¶</a></dt>
-<dd><p>append adsorbate to main atom :return:</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>position_ads:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.min_distance">
-<code class="sig-name descname">min_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ads_position</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.min_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.min_distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>minimum distance from atom in a host to adsorbate :param
-ads_position: np.array x,y,z of adsorbate position :return: float,
-minimum distance between an atom in host zeotype and adsorbate position</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>ads_position:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.pick_ads_position">
-<code class="sig-name descname">pick_ads_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">donor_ind</span></em>, <em class="sig-param"><span class="n">host_ind</span></em>, <em class="sig-param"><span class="n">radius</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cutoff</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.pick_ads_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.pick_ads_position" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds a good position to add adsorbate to host :param donor_ind:
-index of donor atom on adsorbate :param host_ind: index of host binding
-site :param radius: distance between host atom and donor atom :param
-cutoff: minimum distance donor atom must be from host atoms :return:
-vector of best position to place adsorbate</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>donor_ind:
-host_ind:
-radius:
-cutoff:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.pick_donor">
-<code class="sig-name descname">pick_donor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.pick_donor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.pick_donor" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds atom in adsorbate most likely to bind to metal Heuristic: N &gt; O
-&gt; P &gt; S &gt; X &gt; C &gt; H :param ads: adsorbate atoms object :return: index of
-donor atom in adsorbate</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.pick_host_atom">
-<code class="sig-name descname">pick_host_atom</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.pick_host_atom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.pick_host_atom" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>picks element with largest atomic number higher than 14 (Si) if one exists. If none exist,</dt><dd><p>pick Al as a donor atom.</p>
-</dd>
-<dt>Returns:</dt><dd><p>index of host atom</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.position_ads">
-<code class="sig-name descname">position_ads</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">donor_ind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">host_ind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pos</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.position_ads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.position_ads" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rotates and positions adsorbate according to specified parameters if
-no parameters are provided, a reasonable position is found :param pos:
-vector, the position to place adsorbate’s donor atom :param host_ind:
-integer, index of site in host which adsorbate will be bound :param
-donor_ind: integer, index of donor atom on adsorbate :return: atoms
-object with adsorbate in host</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>donor_ind:
-host_ind:
-pos:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.remove_ads">
-<code class="sig-name descname">remove_ads</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.remove_ads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.remove_ads" title="Permalink to this definition">¶</a></dt>
-<dd><p>also tricky :return:</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.set_ads_zeotype_map">
-<code class="sig-name descname">set_ads_zeotype_map</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.set_ads_zeotype_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.set_ads_zeotype_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the mapping between an adsorbate and the zeolite where it was
-added :return: a zeotype to adsorbate index dictionary</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="source.adsorbate.Adsorbate.sphere_sample">
-<em class="property">static </em><code class="sig-name descname">sphere_sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">500</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/adsorbate.html#Adsorbate.sphere_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.adsorbate.Adsorbate.sphere_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>generates random positions on the surface of a sphere of certain
-radius :param radius: radius of sphere surface to sample :param num_pts:
-number of points to try :return: list of x,y,z positions on surface of
-sphere</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>radius:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.adsorbate.random">
-<code class="sig-prename descclassname">source.adsorbate.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#source.adsorbate.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="source-adsorbate-module">
+<h2>source.adsorbate module<a class="headerlink" href="#source-adsorbate-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.cap_clust">
-<span id="source-cap-clust-module"></span><h2>source.cap_clust module<a class="headerlink" href="#module-source.cap_clust" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="source.cap_clust.add_cap_h">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">add_cap_h</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#add_cap_h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.add_cap_h" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.cap_clust.add_cap_ox">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">add_cap_ox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#add_cap_ox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.add_cap_ox" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.cap_clust.cap_clust">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">cap_clust</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#cap_clust"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.cap_clust" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.cap_clust.get_cap_ox">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">get_cap_ox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#get_cap_ox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.get_cap_ox" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.cap_clust.get_cap_si">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">get_cap_si</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#get_cap_si"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.get_cap_si" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.cap_clust.needs_neighb">
-<code class="sig-prename descclassname">source.cap_clust.</code><code class="sig-name descname">needs_neighb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clust</span></em>, <em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/cap_clust.html#needs_neighb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.cap_clust.needs_neighb" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>clust:
-index:</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="source-cap-clust-module">
+<h2>source.cap_clust module<a class="headerlink" href="#source-cap-clust-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-source.cif_download">
 <span id="source-cif-download-module"></span><h2>source.cif_download module<a class="headerlink" href="#module-source.cif_download" title="Permalink to this headline">¶</a></h2>
@@ -466,141 +199,20 @@ data_dir:</p>
 <div class="section" id="source-extra-framework-module">
 <h2>source.extra_framework module<a class="headerlink" href="#source-extra-framework-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.get_cluster">
-<span id="source-get-cluster-module"></span><h2>source.get_cluster module<a class="headerlink" href="#module-source.get_cluster" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="source.get_cluster.get_cluster">
-<code class="sig-prename descclassname">source.get_cluster.</code><code class="sig-name descname">get_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms</span></em>, <em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/get_cluster.html#get_cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.get_cluster.get_cluster" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>atoms: atoms object
-index: index at center of cluster, integer
-size: min number of atoms in cluster (not number of T-sites!), integer</p>
-</dd>
-<dt>Returns:</dt><dd><p>list of indicies included in the cluster</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="source-get-cluster-module">
+<h2>source.get_cluster module<a class="headerlink" href="#source-get-cluster-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="source-place-adsorbate-module">
 <h2>source.place_adsorbate module<a class="headerlink" href="#source-place-adsorbate-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.placement">
-<span id="source-placement-module"></span><h2>source.placement module<a class="headerlink" href="#module-source.placement" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="source.placement.avg_dist">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">avg_dist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">host</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#avg_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.avg_dist" title="Permalink to this definition">¶</a></dt>
-<dd><p>average distance from position to all host atoms :param pos: vector x,y,z
-position :param host: host atoms object :return: float, average distance</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pos:
-host:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.find_best_place">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">find_best_place</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span></em>, <em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">cutoff</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#find_best_place"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.find_best_place" title="Permalink to this definition">¶</a></dt>
-<dd><p>picks the best location to place an adsorbate around the host atom :param
-host: host atoms object :param index: index of host atom at center :param
-radius: radius around host atom to test points :param cutoff: minimum
-distance from other host atoms allowed for test points :param num_pts:
-number of points to try :return: vector. x,y,z position of best location</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>host:
-index:
-radius:
-cutoff:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.find_void">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">find_void</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">host</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#find_void"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.find_void" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds nearest empty region in host :param pos: vector x,y,z position
-:param host: host atoms object :return: vector position of center of empty
-void</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pos:
-host:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.get_place_clusters">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">get_place_clusters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">host</span></em>, <em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">cutoff</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#get_place_clusters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.get_place_clusters" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds positions near host atom far enough from other framework atoms,
-clusters these viable positions and returns the centers of these clusters.
-If number of points is too small will return error :param host: host atoms
-object :param index: index of host atom at center :param radius: radius
-around host atom to test points :param cutoff: minimum distance from other
-host atoms allowed for test points :param num_pts: number of points to try
-:return: list. center positions of clusters of points which meet criteria</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>host:
-index:
-radius:
-cutoff:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.min_dist">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">min_dist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">host</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#min_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.min_dist" title="Permalink to this definition">¶</a></dt>
-<dd><p>minimum distance from position to a host atom :param pos: vector x,y,z
-position :param host: host atoms object :return: float, minimum distance</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>pos:
-host:</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.random">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; x in the interval [0, 1).<a class="headerlink" href="#source.placement.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="source.placement.sphere_sample">
-<code class="sig-prename descclassname">source.placement.</code><code class="sig-name descname">sphere_sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span></em>, <em class="sig-param"><span class="n">num_pts</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/placement.html#sphere_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.placement.sphere_sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>generates random positions on the surface of a sphere of certain radius
-:param radius: radius of sphere surface to sample :param num_pts: number of
-points to try :return: list of x,y,z positions on surface of sphere</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>radius:
-num_pts:</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="source-placement-module">
+<h2>source.placement module<a class="headerlink" href="#source-placement-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.pores">
-<span id="source-pores-module"></span><h2>source.pores module<a class="headerlink" href="#module-source.pores" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="source.pores.Pores">
-<em class="property">class </em><code class="sig-prename descclassname">source.pores.</code><code class="sig-name descname">Pores</code><a class="reference internal" href="_modules/source/pores.html#Pores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.pores.Pores" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-</dd></dl>
-
+<div class="section" id="source-pores-module">
+<h2>source.pores module<a class="headerlink" href="#source-pores-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-source.type_atoms">
-<span id="source-type-atoms-module"></span><h2>source.type_atoms module<a class="headerlink" href="#module-source.type_atoms" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="source.type_atoms.type_atoms">
-<code class="sig-prename descclassname">source.type_atoms.</code><code class="sig-name descname">type_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms_obj</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/type_atoms.html#type_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.type_atoms.type_atoms" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>atoms_obj:</p>
-</dd>
-</dl>
-</dd></dl>
-
+<div class="section" id="source-type-atoms-module">
+<h2>source.type_atoms module<a class="headerlink" href="#source-type-atoms-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-source.zeotype">
 <span id="source-zeotype-module"></span><h2>source.zeotype module<a class="headerlink" href="#module-source.zeotype" title="Permalink to this headline">¶</a></h2>
@@ -874,7 +486,7 @@ or the removal a cluster.</p>
 
 <dl class="py method">
 <dt id="source.zeotype.ImperfectZeotype.integrate_adsorbate">
-<code class="sig-name descname">integrate_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span><span class="p">:</span> <span class="n">ase.atoms.Atoms</span></em>, <em class="sig-param"><span class="n">ads_name</span><span class="o">=</span><span class="default_value">'ads'</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#source.zeotype.ImperfectZeotype" title="source.zeotype.ImperfectZeotype">source.zeotype.ImperfectZeotype</a><a class="reference internal" href="_modules/source/zeotype.html#ImperfectZeotype.integrate_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.ImperfectZeotype.integrate_adsorbate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">integrate_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span><span class="p">:</span> <span class="n">ase.atoms.Atoms</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span><a class="reference internal" href="#source.zeotype.ImperfectZeotype" title="source.zeotype.ImperfectZeotype">source.zeotype.ImperfectZeotype</a><span class="p">, </span>source.adsorbate.Adsorbate<span class="p">]</span><a class="reference internal" href="_modules/source/zeotype.html#ImperfectZeotype.integrate_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.ImperfectZeotype.integrate_adsorbate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an adsorbate into the imperfect zeotype</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -954,6 +566,14 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 </dd></dl>
 
 <dl class="py method">
+<dt id="source.zeotype.ImperfectZeotype.remove_adsorbate">
+<code class="sig-name descname">remove_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>source.adsorbate.Adsorbate<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#source.zeotype.ImperfectZeotype" title="source.zeotype.ImperfectZeotype">source.zeotype.ImperfectZeotype</a><a class="reference internal" href="_modules/source/zeotype.html#ImperfectZeotype.remove_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.ImperfectZeotype.remove_adsorbate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an existing adsorbate from the ImperfectZeotype
+:param adsorbate: adsorbate object or str
+:return: new imperfect zeotype with item removed</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="source.zeotype.ImperfectZeotype.remove_caps">
 <code class="sig-name descname">remove_caps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'h_cap'</span></em>, <em class="sig-param"><span class="n">cap_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'cap'</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#source.zeotype.ImperfectZeotype" title="source.zeotype.ImperfectZeotype">source.zeotype.ImperfectZeotype</a><a class="reference internal" href="_modules/source/zeotype.html#ImperfectZeotype.remove_caps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.ImperfectZeotype.remove_caps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove caps from an imperfect zeotype</p>
@@ -973,7 +593,7 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 <dl class="py method">
 <dt id="source.zeotype.ImperfectZeotype.set_attrs_source">
 <em class="property">static </em><code class="sig-name descname">set_attrs_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_z</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#source.zeotype.ImperfectZeotype" title="source.zeotype.ImperfectZeotype">source.zeotype.ImperfectZeotype</a></span></em>, <em class="sig-param"><span class="n">source</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#id0" title="source.zeotype.Zeotype">source.zeotype.Zeotype</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/source/zeotype.html#ImperfectZeotype.set_attrs_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.ImperfectZeotype.set_attrs_source" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the attribuets of a new imperfect zeotype to that of its source</p>
+<dd><p>Set the attributes of a new imperfect zeotype to that of its source</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1487,6 +1107,13 @@ is given by the size parameter.</p>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="design_pattern.html" class="btn btn-neutral float-left" title="ZeoSE Index Mapper" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

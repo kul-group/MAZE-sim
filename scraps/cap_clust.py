@@ -92,7 +92,7 @@ if __name__ == '__main__':
     from zeotype import Zeotype
     from ase.visualize import view
     from ase.neighborlist import NeighborList, natural_cutoffs
-    b = read('BEA.cif')
+    b = read('../source/BEA.cif')
     z = Zeotype(b)
     z.get_cluster(35, 3)
     cluster = z.clusters[0]

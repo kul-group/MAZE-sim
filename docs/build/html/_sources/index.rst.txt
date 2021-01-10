@@ -12,6 +12,8 @@ This project aims to extend ASE to more naturally represent the properties of ze
    :maxdepth: 2
 
    background
+   design_pattern
+   source
    :caption: Contents:
 
 

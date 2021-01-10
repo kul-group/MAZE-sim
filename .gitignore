@@ -1,3 +1,4 @@
+*.traj
 *.xml
 *.iml
 *.cif

@@ -44,6 +44,6 @@ def get_cluster(atoms, index, size):
 # testing
 if __name__ == '__main__':
     from ase.io import read
-    b = read('BEA.cif')
+    b = read('../source/BEA.cif')
     a = get_cluster(b, 101, 5)
     print(a)

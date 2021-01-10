@@ -1,0 +1,248 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>source.type_atoms &mdash; Zeotype Project 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Zeotype Project
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_pattern.html">ZeoSE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source.html">ZeoSE Code</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Zeotype Project</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>source.type_atoms</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for source.type_atoms</h1><div class="highlight"><pre>
+<span></span><span class="c1"># types atoms in a zeolite</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">natural_cutoffs</span><span class="p">,</span> <span class="n">NeighborList</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<div class="viewcode-block" id="type_atoms"><a class="viewcode-back" href="../../source.html#source.type_atoms.type_atoms">[docs]</a><span class="k">def</span> <span class="nf">type_atoms</span><span class="p">(</span><span class="n">atoms_obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        atoms_obj:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">type_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="c1"># Getting neighbor list</span>
+    <span class="n">nl</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">natural_cutoffs</span><span class="p">(</span><span class="n">atoms_obj</span><span class="p">),</span> <span class="n">bothways</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">self_interaction</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">nl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">atoms_obj</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">atoms_obj</span><span class="p">:</span>
+        <span class="c1"># labels framework atoms</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;framework-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+        <span class="c1"># label carbon and nitrogen as adsorbate</span>
+        <span class="k">elif</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">]:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;adsorbate-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+
+        <span class="c1"># label Cu, Ni as extraframework</span>
+        <span class="k">elif</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Cu&#39;</span><span class="p">,</span> <span class="s1">&#39;Ni&#39;</span><span class="p">]:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;extraframework-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+
+        <span class="c1"># label oxygens as framework, adsorbate, or bound adsorbate</span>
+        <span class="k">elif</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span>
+            <span class="n">neigh_ind</span> <span class="o">=</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neigh_ind</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">neigh_sym1</span><span class="p">,</span> <span class="n">neigh_sym2</span> <span class="o">=</span> <span class="n">atoms_obj</span><span class="p">[</span><span class="n">neigh_ind</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">atoms_obj</span><span class="p">[</span><span class="n">neigh_ind</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">symbol</span>
+                <span class="c1"># assign framework oxygens</span>
+                <span class="k">if</span> <span class="n">neigh_sym1</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">neigh_sym2</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;framework-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+                <span class="c1"># assign bound adsorbate oxygen</span>
+                <span class="k">elif</span> <span class="n">neigh_sym1</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">neigh_sym2</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;bound-adsorbate-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+                <span class="k">elif</span> <span class="n">neigh_sym2</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">neigh_sym1</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;bound-adsorbate-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+                <span class="c1"># assign rest as adsorbate oxygen</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;adsorbate-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+            <span class="c1"># assign rest as adsorbate oxygen</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;adsorbate-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="o">.</span><span class="n">symbol</span>
+        <span class="c1"># all others get &#39;none&#39; type</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+        <span class="n">type_dict</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">type_dict</span><span class="p">)</span></div>
+
+<span class="c1"># testing</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;BEA.cif&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">type_atoms</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Dexter Antonio, Sam Holton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

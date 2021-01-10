@@ -1,6 +1,6 @@
 import copy
 from collections import defaultdict
-from typing import List, Dict, Tuple, Iterable, Optional
+from typing import List, Dict, Tuple, Iterable, Optional, Union
 
 import ase
 import ase.data
@@ -11,6 +11,7 @@ from ase.neighborlist import natural_cutoffs, NeighborList
 from ase.visualize import view
 
 from .index_mapper import IndexMapper
+from .adsorbate import Adsorbate
 
 def get_available_symbols(atom_list: List[str]) -> List[str]:
     """
@@ -27,7 +28,19 @@ def get_available_symbols(atom_list: List[str]) -> List[str]:
 
 
 class Silanol():
-    def __init__(self, parent_zeotype: 'Zeotype', Si_index: int, O_index: int, H_index: int, Si_neighbor_list: List[int]):
+    """
+    This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite
+    """
+    def __init__(self, parent_zeotype: 'Zeotype', Si_index: int, O_index: int, H_index: int,
+                 Si_neighbor_list: List[int]):
+        """
+       Create a Silanol object
+        :param parent_zeotype: The parent zeolite, where the silanol group is located
+        :param Si_index: the index of the Si atom
+        :param O_index: the index of the O atom
+        :param H_index: the index of the H atom
+        :param Si_neighbor_list: The neighbor list of the Si atom, useful for other algos
+        """
         self.parent_zeotype = parent_zeotype
         self.Si_index = Si_index
         self.O_index = O_index
@@ -35,10 +48,19 @@ class Silanol():
         self.Si_neighbor_list = Si_neighbor_list
 
     def __str__(self) -> str:
+        """
+        This ensures the str rep of ta Silanol object is nice
+        :return: str rep of object
+        """
         return f'Si: {self.Si_index} O: {self.O_index} H: {self.H_index}'
 
     def __repr__(self) -> str:
+        """
+        Makes repr same as str
+        :return: str rep of object
+        """
         return self.__str__()
+
 
 class Zeotype(Atoms):
     """
@@ -116,7 +138,7 @@ class Zeotype(Atoms):
     @staticmethod
     def _read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
                              subtrans_included=True, fractional_occupancies=True,
-                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int,str]]:
+                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
         """
         The helper function used by build_from_cif_with_labels. This loads a CIF file
         using ase.io.cif.parse_cif and then finds the T-site information. After finding
@@ -177,7 +199,7 @@ class Zeotype(Atoms):
         """
         return ImperfectZeotype(self)
 
-    def update_nl(self, mult: int = 1 ) -> None:
+    def update_nl(self, mult: int = 1) -> None:
         """
         Builds and updates neighborlist
         :param mult: The mult (multiply) parameter for natural cutoffs (Default 1)
@@ -412,6 +434,7 @@ class ImperfectZeotype(Zeotype):
     This represents an imperfect Zeotype such as zeotype with some modification like an adsorbate addition
     or the removal a cluster.
     """
+
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
@@ -468,7 +491,7 @@ class ImperfectZeotype(Zeotype):
 
         return new_self
 
-    def remove_caps(self, cap_type: str = 'h_cap', cap_name:str = "cap") -> 'ImperfectZeotype':
+    def remove_caps(self, cap_type: str = 'h_cap', cap_name: str = "cap") -> 'ImperfectZeotype':
         """
         Remove caps from an imperfect zeotype
 
@@ -478,10 +501,11 @@ class ImperfectZeotype(Zeotype):
         """
         assert cap_name in self.additions[cap_type], 'cap not in additions'
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
-        self.additions[cap_type].remove(cap_name)
-        return self.delete_atoms(indices_to_delete)
+        new_self = self.delete_atoms(indices_to_delete)
+        new_self.additions[cap_type].remove(cap_name)
+        return new_self
 
-    def integrate_adsorbate(self, adsorbate: Atoms, ads_name='ads') -> 'ImperfectZeotype':
+    def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['ImperfectZeotype', Adsorbate]:
         """
         Add an adsorbate into the imperfect zeotype
 
@@ -489,7 +513,30 @@ class ImperfectZeotype(Zeotype):
         :param ads_name: name of the adsorbate
         :return: a copy of imperfect zeotype with the adsorabte added
         """
-        return self.add_atoms(adsorbate, ads_name)
+        ads_name = 'adsorbate'
+        ads = Adsorbate(adsorbate)
+        new_self = self.add_atoms(adsorbate, ads_name, short_description=ads.description)
+        ads.name = new_self.additions[ads_name][-1]
+        return new_self, ads
+
+    def remove_adsorbate(self, adsorbate: Union[Adsorbate, str]) -> "ImperfectZeotype":
+        """
+        Removes an existing adsorbate from the ImperfectZeotype
+        :param adsorbate: adsorbate object or str
+        :return: new imperfect zeotype with item removed
+        """
+        ads_cat = 'adsorbate'
+        if hasattr(adsorbate, "name"):
+            ads_name = adsorbate.name
+        else:
+            assert isinstance(adsorbate, str), 'adsorbate must have .name attr or be str'
+            ads_name = adsorbate
+        assert adsorbate.name in self.additions[ads_cat], 'ads not in additions'
+        indices_to_delete = self.index_mapper.get_overlap(self.name, ads_name)
+        new_self = self.delete_atoms(indices_to_delete)
+        new_self.additions[ads_cat].remove(ads_name)
+        return new_self
+
 
     def integrate_other_zeotype(self, other: Zeotype):
         """
@@ -626,7 +673,6 @@ class ImperfectZeotype(Zeotype):
                 if self.parent_zeotype[atom_index].symbol in atom_symbol_list:
                     return atom_index
 
-
     def delete_atoms(self, indices_to_delete) -> 'ImperfectZeotype':
         """Delete atoms from imperfect zeotype by returning a copy with atoms deleted
 
@@ -644,7 +690,7 @@ class ImperfectZeotype(Zeotype):
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
         """
-        Set the attribuets of a new imperfect zeotype to that of its source
+        Set the attributes of a new imperfect zeotype to that of its source
 
         :param new_z: Newly created zeolite without attributes set
         :param source: the source from which new_z was created

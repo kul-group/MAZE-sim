@@ -5,42 +5,20 @@ from typing import Dict, List
 import numpy as np
 from ase import Atom
 
-from .zeotype import Zeotype
-class ExtraFramework(Zeotype)
-    ...
+from source.zeotype import Zeotype, ImperfectZeotype
 
+
+class ExtraFramework(ImperfectZeotype):
     def find_si_neighbor(self, cluster_index):
         inv_map = {v: k for k, v in self.zeotype_to_cluster_index_map.items()}
         zeotype_index = inv_map[cluster_index]
         for possible_index in self.parent_zeotype.neighbor_list.get_neighbors(zeotype_index)[0]:
-            print(possible_index)
-            if self.parent_zeotype[possible_index].symbol == 'Si' and possible_index not in self.zeotype_to_cluster_index_map.keys():
+            if self.parent_zeotype[possible_index].symbol == 'Si' and\
+                    possible_index not in self.zeotype_to_cluster_index_map.keys():
                 return self.parent_zeotype.get_positions()[possible_index]
 
-        #self.parent_zeotype.get_neighbors(index)
 
-    def integrate_cluster(self, cluster_index: int):
-        cluster = self.clusters[cluster_index]
-        index_map = cluster.zeotype_to_cluster_index_map
 
-        for key, value in index_map.items():
-            # same unit cell same oxygen atom positions
-            self[key].symbol = cluster[value].symbol
-            self[key].position = cluster[value].position
-            self[key].tag = cluster[value].tag
-            self[key].momentum = cluster[value].momentum
-            self[key].mass = cluster[value].mass
-            self[key].magmom = cluster[value].magmom
-            self[key].charge = cluster[value].charge
-
-        for ads in cluster.adsorbates:
-            # integrates all adsorbates, even non integrated ones in cluster
-            ads_copy = ads.copy()
-            ads_copy.host_zeotype = self
-            ads_copy.integrate_ads()
-
-    def integrate_adsorbate(self, adsorbate_index: int) -> None:
-        self.adsorbates[adsorbate_index].integrate_ads()
 
     def cap_specific_atoms(self, indices_atom_to_cap, site_index):
         cap_atoms_dict = self.build_specific_cap_atoms_dict(indices_atom_to_cap, site_index)

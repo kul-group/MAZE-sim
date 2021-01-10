@@ -56,7 +56,7 @@ if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
 
-    atoms = read('BEA.cif')
+    atoms = read('../source/BEA.cif')
     host = Zeotype(atoms)
     a = constrain_host(host, 185)
     b = constrain_ads_bonds(a)
