@@ -1,0 +1,6 @@
+Background
+====================================================================
+Zeolites are microporous materials with many industrial uses ranging from gas separation, to catalysts. Over 245 unique zeolite frameworks have been synthesized, and over a million “theoretical zeolites” crystal structures have been identified, but have yet to be synthesized. Increasing the zeolite chemical spaces further are the wide variety of chemical variation among a single zeolite framework. Zeolite can be altered by the addition of cations, metals and other non-Si components. The Al/Si ratio can also be varied, changing the distribution of T sites in the zeolite. The vastness of the zeolite chemical space makes exploring it through lab style experiments impossible. 
+
+Chemical simulation experiments, allow the rapid screening of both synthesized and theoretical zeolites for their chemical properties. The Atomic Simulation Environment (ASE) facilitates these calculations by offering an object-oriented interface to represent individual and groups of atoms, and calculators. It also supports exporting to formats that are compatable with   The Atomic Simulation Environment (ASE) is a set of tools useful for setting up atomic simulations. Many successful zeolite screening projects have been carried out with this software. 
+

@@ -482,8 +482,9 @@ class ImperfectZeotype(Zeotype):
         """
         assert cap_name in self.additions[cap_type], 'cap not in additions'
         indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
-        self.additions[cap_type].remove(cap_name)
-        return self.delete_atoms(indices_to_delete)
+        new_self = self.delete_atoms(indices_to_delete)
+        new_self.additions[cap_type].remove(cap_name)
+        return new_self
 
     def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['ImperfectZeotype', Adsorbate]:
         """

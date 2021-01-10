@@ -128,7 +128,7 @@ if __name__=='__main__':
 
     from ase.io import read
     from ase.visualize import view
-    host = read('BEA.cif')
+    host = read('../source/BEA.cif')
     best_pos = find_best_place(host, 185, 2.2, 1.9)
     viz = host + Atom('H', position=best_pos)  # visualization
     view(viz)

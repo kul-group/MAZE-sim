@@ -1,4 +1,4 @@
-source package
+ZeoSE Code
 ==============
 
 Submodules

@@ -118,7 +118,7 @@ if __name__ == '__main__':
     from ase.io import read
     from ase.visualize import view
     from ase.build import molecule
-    host = read('BEA.cif')
+    host = read('../source/BEA.cif')
     host[185].symbol = 'Sn'  # for visualization
     ads = molecule('CH3OH')
     #new_host = place_ads(ads, host, 1, 185, [5.6,8.3,15.2]) # example run with nice parameters

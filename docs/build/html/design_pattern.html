@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ZeoSE Index Mapper &mdash; Zeotype Project 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ZeoSE Code" href="source.html" />
+    <link rel="prev" title="Background" href="background.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Zeotype Project
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ZeoSE Index Mapper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wordy-solution-description">Wordy Solution Description</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Code</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Zeotype Project</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>ZeoSE Index Mapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/design_pattern.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="zeose-index-mapper">
+<h1>ZeoSE Index Mapper<a class="headerlink" href="#zeose-index-mapper" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p>The zeotype code is built off of ASE Atoms’ object. It is important to understand where this code comes from and the motivation for it.</p>
+<p>The main problem that was faced when building the Zeotype code, was that the ase.Atoms object does not store Atom objects in itself. Instead, it stores numpy arrays that contain the information needed to build Atom objects when they are needed. This “on-the-fly” Atom object creation saves memory, but also leads to some unintuitive behavior. For example, every time the brackets are used to subscript an Atoms object, a different Atom object is created.  Furthermore, even when using the less stringent double equals (==) to check equality between two Atom objects, False is returned.</p>
+<p>An example of this unintuitive behavior is shown below.</p>
+<p>Creating Atoms object</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mf">1.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span>
+<span class="go">Atoms(symbols=&#39;CO&#39;, pbc=False)</span>
+</pre></div>
+</div>
+<p>Getting one copy of the first atom</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">first_atom</span><span class="p">)</span>
+<span class="go">Atom(&#39;C&#39;, [0.0, 0.0, 0.0], index=0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span><span class="p">(</span><span class="n">first_atom</span><span class="p">)</span>
+<span class="go">140571043655264</span>
+</pre></div>
+</div>
+<p>Getting a second copy of the first atom</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom_2</span> <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">first_atom_2</span><span class="p">)</span>
+<span class="go">Atom(&#39;C&#39;, [0.0, 0.0, 0.0], index=0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span><span class="p">(</span><span class="n">first_atom_2</span><span class="p">)</span>
+<span class="go">140571043655424</span>
+</pre></div>
+</div>
+<p>checking if they have the same object id</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="ow">is</span> <span class="n">first_atom_2</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>checking if they are equal as defined in the Atom class</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="o">==</span> <span class="n">first_atom_2</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The biggest issue that this creates is that it is challenging to relate Atom objects and Atoms objects created from a “parent” Atoms object back to the “parent”.</p>
+</div>
+<div class="section" id="wordy-solution-description">
+<h2>Wordy Solution Description<a class="headerlink" href="#wordy-solution-description" title="Permalink to this headline">¶</a></h2>
+<p>Zeotype simulations workflows frequently involve extracting atoms and adding atoms. This is challenging with the atomic simulation environment because unique identities of the atoms are not stored. This can be partially solved by using the tagging feature, to assign unique tags to every atom, but utilizing the tagging feature for this purpose restricts its use to simply tracking atoms.</p>
+<p>The Zeotype project aims to solve this problem by creating an IndexMapper, which is a table that stores the mapping between the indices of a Zeolite object and all of the ImperfectZeolite objects derived from the parent Zeotype. The IndexMapper.main_index can be thought of as a table that looks like this</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 20%" />
+<col style="width: 43%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>main</p></th>
+<th class="head"><p>parent</p></th>
+<th class="head"><p>ImperfectZeotype1</p></th>
+<th class="head"><p>Cluster2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-even"><td><p>100</p></td>
+<td><p>None</p></td>
+<td><p>99</p></td>
+<td><p>None</p></td>
+</tr>
+</tbody>
+</table>
+<p>The implementation of the IndexMapper.main_index is a dictionary of dictionaries, where the key for the first dictionary is the main index, and the keys for the second dictionary is the names of the ImperfectZeolites. The values of the second dictionary are the indices of the parent. For example, the above table would be represented as the following nested dictionary</p>
+<blockquote>
+<div><p>{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
+1: {‘parent’:1, ‘ImperfectZeotype1’:1, ‘Cluster2’:None},
+2: {‘parent’:2, ‘ImperfectZeotype1’:2, ‘Cluster2’:None},
+….
+100: {‘parent’: None, ‘ImperfectZeotype1’:99, ‘Cluster2’:None}}</p>
+</div></blockquote>
+<p>To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a Zeolite object. The main idea is that when Atoms are added or removed from the Zeolite object a copy of the object being operated on is returned, rather than modifying the original object. This has several advantages, which I will not go into here, but the main consequence is that the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> and <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method of the ImperfectZeolite return a new ImperfectZeolite object with the applied modifications. These methods also take care of adding another column to the main_index corresponding to the newly created ImperfectZeolite.</p>
+<p>After no references to an object exist, Python’s garbage collected deletes it. During this deleting process, the Zeolite is deregistered from the main_index table.</p>
+<p>The additional functionality of the Zeolite code is based off of the bedrock of the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="source.html" class="btn btn-neutral float-right" title="ZeoSE Code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="background.html" class="btn btn-neutral float-left" title="Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Dexter Antonio, Sam Holton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
