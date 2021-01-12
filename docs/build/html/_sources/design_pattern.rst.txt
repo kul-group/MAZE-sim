@@ -4,21 +4,20 @@ ZeoSE Index Mapper
 *********************************************************
 Terminology
 *********************************************************
-The following documentation frequently references ase's Atoms object, Atom object and the atoms in ase's Atoms object. This can get confusing, so to make the following discussion clearer the following definitions are given here:
+The following documentation frequently references ase's Atoms object, ase's Atom object and the atoms in ase's Atoms objects. This can get confusing, so for clarity following definitions are given here:
 
-* ase: short for the atomic simulation enviorment, which is the package the ZeoSE package is based off of.
+* ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.
 * ase.Atoms class: Refers to the class definition of ``Atoms`` in the ``ase`` package.
 * ase.Atom class: Refers to the class definition of ``Atom`` in the ``ase`` package.
-* ase.Atoms object: Refers to an instance of the class defined by ase, named ``Atoms``.
-* ase.Atom object: Refers to an instance of the class defined in ase, named ``Atom``.
+* ase.Atoms object: Refers to an instance of the class ase.Atoms.
+* ase.Atom object: Refers to an instance of the class ase.Atom.
 * atoms: (lowercase) refers to the atoms represented by an ``Atoms`` object or a ``Zeotype`` object.
-
 
 *********************************************************
 Motivation
 *********************************************************
-This key class in the zeolite code, ``Zeotype``, inherits from the Atomic
-built off of atomic simulation environment (ase)'s Atoms class. (not to be confused with ase's Atom class). It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code's design decisions.
+This key class in the zeolite code, ``Zeotype``, inherits
+from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code's design decisions.
 
 One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects only when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.
 
@@ -82,6 +81,7 @@ The above example showed some unexpected behavior, but it has not yet been made 
 #. Identify T sites in that Atoms object
 #. For each unique T site:
 
+
     a. Create a new Atoms object consisting of T site and the Atoms surrounding the T site
     #. Remove a Si from the new Atoms object
     #. Optimize the structure of the new Atoms object
@@ -128,14 +128,12 @@ To keep this mapping straight, a functional programing-like interface is added f
 
 When Python's garbage collector deletes an ImperfectZeolite object, the object is deregistered from the ``main_index`` table.
 
-The additional functionality of the Zeolite code is based off of the bedrock of the ``add_atoms`` method and the ``delete_atoms`` method. The ``delete_atoms`` method is described in detail so that the
+The additional functionality of the Zeolite code is based off of the bedrock of the ``add_atoms`` method and the ``delete_atoms`` method. The ``delete_atoms`` method is described in detail in the following section.
 
 
 *********************************************************
 The ``delete_atoms`` Method
 *********************************************************
-
-The ``delete_atoms`` method is simpler than the ``add_atoms`` method so it will be described in detail.
 
 The delete_atoms method returns a copy of the original ``ImpefectZeolite`` with the specified atoms deleted. An example of the delete method is shown below:
 

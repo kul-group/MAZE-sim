@@ -159,20 +159,20 @@
 <h1>ZeoSE Index Mapper<a class="headerlink" href="#zeose-index-mapper" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
-<p>The following documentation frequently references ase’s Atoms object, Atom object and the atoms in ase’s Atoms object. This can get confusing, so to make the following discussion clearer the following definitions are given here:</p>
+<p>The following documentation frequently references ase’s Atoms object, ase’s Atom object and the atoms in ase’s Atoms objects. This can get confusing, so for clarity following definitions are given here:</p>
 <ul class="simple">
-<li><p>ase: short for the atomic simulation enviorment, which is the package the ZeoSE package is based off of.</p></li>
+<li><p>ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.</p></li>
 <li><p>ase.Atoms class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> in the <code class="docutils literal notranslate"><span class="pre">ase</span></code> package.</p></li>
 <li><p>ase.Atom class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atom</span></code> in the <code class="docutils literal notranslate"><span class="pre">ase</span></code> package.</p></li>
-<li><p>ase.Atoms object: Refers to an instance of the class defined by ase, named <code class="docutils literal notranslate"><span class="pre">Atoms</span></code>.</p></li>
-<li><p>ase.Atom object: Refers to an instance of the class defined in ase, named <code class="docutils literal notranslate"><span class="pre">Atom</span></code>.</p></li>
+<li><p>ase.Atoms object: Refers to an instance of the class ase.Atoms.</p></li>
+<li><p>ase.Atom object: Refers to an instance of the class ase.Atom.</p></li>
 <li><p>atoms: (lowercase) refers to the atoms represented by an <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> object or a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object.</p></li>
 </ul>
 </div>
 <div class="section" id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
-<p>This key class in the zeolite code, <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits from the Atomic
-built off of atomic simulation environment (ase)’s Atoms class. (not to be confused with ase’s Atom class). It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code’s design decisions.</p>
+<p>This key class in the zeolite code, <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits
+from the atomic simulation environment (ase)’s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code’s design decisions.</p>
 <p>One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects only when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.</p>
 <p>One example of this unintuitive behavior is when square brackets are used to access a specific Atom object from an Atoms object (i.e. <code class="docutils literal notranslate"><span class="pre">first_atom</span> <span class="pre">=</span> <span class="pre">co[0]</span></code>). Every time this operation is performed a new Atom object is created. A demonstration of this behavior is shown below:</p>
 <p>First we create a simple Atoms object.</p>
@@ -297,11 +297,10 @@ built off of atomic simulation environment (ase)’s Atoms class. (not to be con
 </div></blockquote>
 <p>To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object. When atoms are added or removed from the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> and <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> methods of the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> class return new <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code>.</p>
 <p>When Python’s garbage collector deletes an ImperfectZeolite object, the object is deregistered from the <code class="docutils literal notranslate"><span class="pre">main_index</span></code> table.</p>
-<p>The additional functionality of the Zeolite code is based off of the bedrock of the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method. The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is described in detail so that the</p>
+<p>The additional functionality of the Zeolite code is based off of the bedrock of the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method. The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is described in detail in the following section.</p>
 </div>
 <div class="section" id="the-delete-atoms-method">
 <h2>The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> Method<a class="headerlink" href="#the-delete-atoms-method" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is simpler than the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method so it will be described in detail.</p>
 <p>The delete_atoms method returns a copy of the original <code class="docutils literal notranslate"><span class="pre">ImpefectZeolite</span></code> with the specified atoms deleted. An example of the delete method is shown below:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import sys
 &gt;&gt;&gt; sys.path.insert<span class="o">(</span><span class="m">0</span>, <span class="s2">&quot;/Users/dda/Code&quot;</span><span class="o">)</span> <span class="c1"># folder containing zeotype folder</span>
