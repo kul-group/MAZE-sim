@@ -624,6 +624,46 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 <dt id="source.zeotype.Silanol">
 <em class="property">class </em><code class="sig-prename descclassname">source.zeotype.</code><code class="sig-name descname">Silanol</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent_zeotype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#id0" title="source.zeotype.Zeotype">source.zeotype.Zeotype</a></span></em>, <em class="sig-param"><span class="n">Si_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">O_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">H_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">Si_neighbor_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/zeotype.html#Silanol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.Silanol" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite</p>
+<dl class="py method">
+<dt id="source.zeotype.Silanol.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parent_zeotype</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#id0" title="source.zeotype.Zeotype">source.zeotype.Zeotype</a></span></em>, <em class="sig-param"><span class="n">Si_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">O_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">H_index</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">Si_neighbor_list</span><span class="p">:</span> <span class="n">List<span class="p">[</span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/zeotype.html#Silanol.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.Silanol.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Create a Silanol object</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param parent_zeotype</dt>
+<dd class="field-odd"><p>The parent zeolite, where the silanol group is located</p>
+</dd>
+<dt class="field-even">param Si_index</dt>
+<dd class="field-even"><p>the index of the Si atom</p>
+</dd>
+<dt class="field-odd">param O_index</dt>
+<dd class="field-odd"><p>the index of the O atom</p>
+</dd>
+<dt class="field-even">param H_index</dt>
+<dd class="field-even"><p>the index of the H atom</p>
+</dd>
+<dt class="field-odd">param Si_neighbor_list</dt>
+<dd class="field-odd"><p>The neighbor list of the Si atom, useful for other algos</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Silanol.__repr__">
+<code class="sig-name descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/source/zeotype.html#Silanol.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.Silanol.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes repr same as str
+:return: str rep of object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="source.zeotype.Silanol.__str__">
+<code class="sig-name descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/source/zeotype.html#Silanol.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.zeotype.Silanol.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This ensures the str rep of ta Silanol object is nice
+:return: str rep of object</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

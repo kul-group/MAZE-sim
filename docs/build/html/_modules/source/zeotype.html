@@ -175,19 +175,38 @@
 
 
 <div class="viewcode-block" id="Silanol"><a class="viewcode-back" href="../../source.html#source.zeotype.Silanol">[docs]</a><span class="k">class</span> <span class="nc">Silanol</span><span class="p">():</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_zeotype</span><span class="p">:</span> <span class="s1">&#39;Zeotype&#39;</span><span class="p">,</span> <span class="n">Si_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">O_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">H_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Silanol.__init__"><a class="viewcode-back" href="../../source.html#source.zeotype.Silanol.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_zeotype</span><span class="p">:</span> <span class="s1">&#39;Zeotype&#39;</span><span class="p">,</span> <span class="n">Si_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">O_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">H_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                  <span class="n">Si_neighbor_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">       Create a Silanol object</span>
+<span class="sd">        :param parent_zeotype: The parent zeolite, where the silanol group is located</span>
+<span class="sd">        :param Si_index: the index of the Si atom</span>
+<span class="sd">        :param O_index: the index of the O atom</span>
+<span class="sd">        :param H_index: the index of the H atom</span>
+<span class="sd">        :param Si_neighbor_list: The neighbor list of the Si atom, useful for other algos</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="n">parent_zeotype</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Si_index</span> <span class="o">=</span> <span class="n">Si_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">O_index</span> <span class="o">=</span> <span class="n">O_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H_index</span> <span class="o">=</span> <span class="n">H_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Si_neighbor_list</span> <span class="o">=</span> <span class="n">Si_neighbor_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Si_neighbor_list</span> <span class="o">=</span> <span class="n">Si_neighbor_list</span></div>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Si: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Si_index</span><span class="si">}</span><span class="s1"> O: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">O_index</span><span class="si">}</span><span class="s1"> H: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H_index</span><span class="si">}</span><span class="s1">&#39;</span>
+<div class="viewcode-block" id="Silanol.__str__"><a class="viewcode-back" href="../../source.html#source.zeotype.Silanol.__str__">[docs]</a>    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This ensures the str rep of ta Silanol object is nice</span>
+<span class="sd">        :return: str rep of object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Si: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Si_index</span><span class="si">}</span><span class="s1"> O: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">O_index</span><span class="si">}</span><span class="s1"> H: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H_index</span><span class="si">}</span><span class="s1">&#39;</span></div>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div>
+<div class="viewcode-block" id="Silanol.__repr__"><a class="viewcode-back" href="../../source.html#source.zeotype.Silanol.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes repr same as str</span>
+<span class="sd">        :return: str rep of object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div></div>
 
 
 <div class="viewcode-block" id="Zeotype"><a class="viewcode-back" href="../../source.html#source.zeotype.Zeotype">[docs]</a><span class="k">class</span> <span class="nc">Zeotype</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
@@ -492,6 +511,7 @@
 
         <span class="k">return</span> <span class="n">sites_list</span></div>
 
+
 <div class="viewcode-block" id="Zeotype.get_indices_compliment"><a class="viewcode-back" href="../../source.html#source.zeotype.Zeotype.get_indices_compliment">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_indices_compliment</span><span class="p">(</span><span class="n">zeotype</span><span class="p">:</span> <span class="s1">&#39;Zeotype&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -629,8 +649,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">],</span> <span class="s1">&#39;cap not in additions&#39;</span>
         <span class="n">indices_to_delete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cap_name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices_to_delete</span><span class="p">)</span></div>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices_to_delete</span><span class="p">)</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cap_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
 
 <div class="viewcode-block" id="ImperfectZeotype.integrate_adsorbate"><a class="viewcode-back" href="../../source.html#source.zeotype.ImperfectZeotype.integrate_adsorbate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_adsorbate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">,</span> <span class="n">Adsorbate</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
