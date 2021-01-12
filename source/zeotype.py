@@ -364,6 +364,7 @@ class Zeotype(Atoms):
 
         return sites_list
 
+
     @staticmethod
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
         """
