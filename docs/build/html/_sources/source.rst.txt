@@ -51,14 +51,6 @@ source.zeotype.ImperfectZeotype class
    :private-members:
    :special-members:
 
-source.zeotype.OpenDefect class
-----------------------------
-
-.. autoclass:: source.zeotype.OpenDefect
-   :members:
-   :private-members:
-   :special-members:
-
 source.zeotype.Cluster class
 ----------------------------
 
@@ -67,10 +59,13 @@ source.zeotype.Cluster class
    :private-members:
    :special-members:
 
-Module contents
----------------
 
-.. automodule:: source
+source.zeotype.OpenDefect class
+----------------------------
+
+.. autoclass:: source.zeotype.OpenDefect
    :members:
-   :undoc-members:
-   :show-inheritance:
+   :private-members:
+   :special-members:
+
+
