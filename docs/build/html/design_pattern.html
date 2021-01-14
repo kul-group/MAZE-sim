@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="ZeoSE Code" href="source.html" />
-    <link rel="prev" title="Background" href="background.html" /> 
+    <link rel="prev" title="Demos" href="demos.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -82,6 +82,7 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">ZeoSE Index Mapper</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
@@ -159,7 +160,7 @@
 <h1>ZeoSE Index Mapper<a class="headerlink" href="#zeose-index-mapper" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
-<p>The following documentation frequently references ase’s Atoms object, ase’s Atom object and the atoms in ase’s Atoms objects. This can get confusing, so for clarity following definitions are given here:</p>
+<p>The following documentation frequently references ase’s Atoms object, ase’s Atom object and the atoms in ase’s Atoms objects. This can get confusing, so for clarity the following definitions are provided:</p>
 <ul class="simple">
 <li><p>ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.</p></li>
 <li><p>ase.Atoms class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> in the <code class="docutils literal notranslate"><span class="pre">ase</span></code> package.</p></li>
@@ -171,9 +172,8 @@
 </div>
 <div class="section" id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
-<p>This key class in the zeolite code, <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits
-from the atomic simulation environment (ase)’s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code’s design decisions.</p>
-<p>One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects only when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.</p>
+<p>The class <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits from the atomic simulation environment (ase)’s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code’s design decisions.</p>
+<p>One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.</p>
 <p>One example of this unintuitive behavior is when square brackets are used to access a specific Atom object from an Atoms object (i.e. <code class="docutils literal notranslate"><span class="pre">first_atom</span> <span class="pre">=</span> <span class="pre">co[0]</span></code>). Every time this operation is performed a new Atom object is created. A demonstration of this behavior is shown below:</p>
 <p>First we create a simple Atoms object.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
@@ -230,7 +230,7 @@ from the atomic simulation environment (ase)’s Atoms class. It also adds addit
 <li><p>For each unique T site:</p>
 <blockquote>
 <div><ol class="loweralpha simple">
-<li><p>Create a new Atoms object consisting of T site and the Atoms surrounding the T site</p></li>
+<li><p>Create a new Atoms object consisting of a T site and the Atoms surrounding the T site</p></li>
 <li><p>Remove a Si from the new Atoms object</p></li>
 <li><p>Optimize the structure of the new Atoms object</p></li>
 <li><p>Integrate the optimized structure back into the original Zeolite Atoms object</p></li>
@@ -240,7 +240,7 @@ from the atomic simulation environment (ase)’s Atoms class. It also adds addit
 </li>
 </ol>
 <p>Steps 1 and 2 are challenging, and the ZeoSE package presents a helpful solution in the form of the <code class="docutils literal notranslate"><span class="pre">Zeolite.build_from_cif_with_labels</span></code> method, which reads a <code class="docutils literal notranslate"><span class="pre">cif</span></code> file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.</p>
-<p>In part 3’s sub-steps the problem with the “on-the-fly” object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of an custom Index Mapper.</p>
+<p>In part 3’s sub-steps the problem with the “on-the-fly” object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.</p>
 </div>
 <div class="section" id="the-index-mapper-solution">
 <h2>The Index Mapper Solution<a class="headerlink" href="#the-index-mapper-solution" title="Permalink to this headline">¶</a></h2>
@@ -288,13 +288,13 @@ from the atomic simulation environment (ase)’s Atoms class. It also adds addit
 </tbody>
 </table>
 <p>The implementation of the <code class="docutils literal notranslate"><span class="pre">IndexMapper.main_index</span></code> is a dictionary of dictionaries, where the keys for the parent dictionary are the main indices, and the keys for the sub-dictionaries are the names of the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolites</span></code>. The values of the sub-dictionaries are the indices of the parent. For example, the above table would be represented as the following nested dictionary:</p>
-<blockquote>
-<div><p>{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
 1: {‘parent’:1, ‘ImperfectZeotype1’:1, ‘Cluster2’:None},
 2: {‘parent’:2, ‘ImperfectZeotype1’:2, ‘Cluster2’:None},
 ….
-100: {‘parent’: None, ‘ImperfectZeotype1’:99, ‘Cluster2’:None}}</p>
-</div></blockquote>
+100: {‘parent’: None, ‘ImperfectZeotype1’:99, ‘Cluster2’:None}}
+</pre></div>
+</div>
 <p>To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object. When atoms are added or removed from the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> and <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> methods of the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> class return new <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code>.</p>
 <p>When Python’s garbage collector deletes an ImperfectZeolite object, the object is deregistered from the <code class="docutils literal notranslate"><span class="pre">main_index</span></code> table.</p>
 <p>The additional functionality of the Zeolite code is based off of the bedrock of the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method. The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is described in detail in the following section.</p>
@@ -369,11 +369,11 @@ parent    ImperfectZeotype_1    <span class="nv">ImperfectZeotype_2</span>
     <span class="k">return</span> <span class="n">new_self</span>
 </pre></div>
 </div>
-<p>It doesn’t appear too complicated, but we will now go through this line-by-line. The first line uses <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initilization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of <code class="docutils literal notranslate"><span class="pre">self</span></code>, with out all of the complexities added by the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> object. The <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initialization method is analogous to <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code>, so that there is no shared information between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">new_self_a</span></code>.</p>
+<p>We will now go through this line-by-line. The first line uses <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initilization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of <code class="docutils literal notranslate"><span class="pre">self</span></code>, with out all of the complexities added by the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> object. The <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initialization method is analogous to <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code>, so that there is no shared information between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">new_self_a</span></code>.</p>
 <p>The next step is to delete the atoms using the <code class="docutils literal notranslate"><span class="pre">del</span></code> operation on the new_self_a object. The side effects of this operation are contained to the <code class="docutils literal notranslate"><span class="pre">new_self_a</span> <span class="pre">object</span></code>. After the <code class="docutils literal notranslate"><span class="pre">del</span></code> operation, a <code class="docutils literal notranslate"><span class="pre">new_self</span></code> is built using the <code class="docutils literal notranslate"><span class="pre">self.__class__</span></code> method. This is used so that a subclass will return another copy of itself rather than an <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> object.</p>
 <p>After <code class="docutils literal notranslate"><span class="pre">new_self</span></code> is created its attributes are set to that of its source. It is important that <code class="docutils literal notranslate"><span class="pre">new_self</span></code> share the same <code class="docutils literal notranslate"><span class="pre">index_mapper</span></code> and <code class="docutils literal notranslate"><span class="pre">parent_zeotype</span></code> as its source. The one attribute difference will be its name, which is uniquely set during initialization.</p>
-<p>Now comes the registration part, which is a little tricky. First an <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is created which maps the indices in <code class="docutils literal notranslate"><span class="pre">self</span></code> to those in <code class="docutils literal notranslate"><span class="pre">new_self</span></code>. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is used in conjuction with the <code class="docutils literal notranslate"><span class="pre">self.index_mapper.register</span></code> method to add another column to the table corresponding to the <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object. After registration, this <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object is finally returned.</p>
-<p>This <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is used in the initilization of <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> and <code class="docutils literal notranslate"><span class="pre">OpenDefect</span></code> objects.</p>
+<p>Now comes the registration part, which is a little tricky. First an <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is created which maps the indices in <code class="docutils literal notranslate"><span class="pre">self</span></code> to those in <code class="docutils literal notranslate"><span class="pre">new_self</span></code>. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is used in conjunction with the <code class="docutils literal notranslate"><span class="pre">self.index_mapper.register</span></code> method to add another column to the table corresponding to the <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object. After registration, this <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object is finally returned.</p>
+<p>This <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is used in the initialization of <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> and <code class="docutils literal notranslate"><span class="pre">OpenDefect</span></code> objects.</p>
 </div>
 <div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
@@ -392,7 +392,7 @@ parent    ImperfectZeotype_1    <span class="nv">ImperfectZeotype_2</span>
         <a href="source.html" class="btn btn-neutral float-right" title="ZeoSE Code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="background.html" class="btn btn-neutral float-left" title="Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="demos.html" class="btn btn-neutral float-left" title="Demos" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

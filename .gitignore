@@ -5,3 +5,5 @@
 .idea
 InspectProfiles
 /demo/.ipynb_checkpoints/
+.DS*
+/docs/build/latex/
