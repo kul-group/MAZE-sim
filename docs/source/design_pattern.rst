@@ -4,7 +4,7 @@ ZeoSE Index Mapper
 *********************************************************
 Terminology
 *********************************************************
-The following documentation frequently references ase's Atoms object, ase's Atom object and the atoms in ase's Atoms objects. This can get confusing, so for clarity following definitions are given here:
+The following documentation frequently references ase's Atoms object, ase's Atom object and the atoms in ase's Atoms objects. This can get confusing, so for clarity the following definitions are provided:
 
 * ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.
 * ase.Atoms class: Refers to the class definition of ``Atoms`` in the ``ase`` package.
@@ -16,10 +16,9 @@ The following documentation frequently references ase's Atoms object, ase's Atom
 *********************************************************
 Motivation
 *********************************************************
-This key class in the zeolite code, ``Zeotype``, inherits
-from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code's design decisions.
+The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code's design decisions.
 
-One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects only when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.
+One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.
 
 One example of this unintuitive behavior is when square brackets are used to access a specific Atom object from an Atoms object (i.e. ``first_atom = co[0]``). Every time this operation is performed a new Atom object is created. A demonstration of this behavior is shown below:
 
@@ -82,7 +81,7 @@ The above example showed some unexpected behavior, but it has not yet been made 
 #. For each unique T site:
 
 
-    a. Create a new Atoms object consisting of T site and the Atoms surrounding the T site
+    a. Create a new Atoms object consisting of a T site and the Atoms surrounding the T site
     #. Remove a Si from the new Atoms object
     #. Optimize the structure of the new Atoms object
     #. Integrate the optimized structure back into the original Zeolite Atoms object
@@ -90,7 +89,7 @@ The above example showed some unexpected behavior, but it has not yet been made 
 
 Steps 1 and 2 are challenging, and the ZeoSE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
 
-In part 3's sub-steps the problem with the "on-the-fly" object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of an custom Index Mapper.
+In part 3's sub-steps the problem with the "on-the-fly" object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.
 
 *********************************************************
 The Index Mapper Solution
@@ -116,6 +115,7 @@ Zeotype simulation workflows frequently involve extracting atoms and adding atom
 
 The implementation of the ``IndexMapper.main_index`` is a dictionary of dictionaries, where the keys for the parent dictionary are the main indices, and the keys for the sub-dictionaries are the names of the ``ImperfectZeolites``. The values of the sub-dictionaries are the indices of the parent. For example, the above table would be represented as the following nested dictionary:
 
+.. code-block:: json
 
 	{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
 	1: {‘parent’:1, ‘ImperfectZeotype1’:1, ‘Cluster2’:None},
@@ -217,15 +217,15 @@ To offer further insight into how the ``delete_atoms`` method works, let us exam
            self.index_mapper.register(self.name, new_self.name, old_to_new_map)
            return new_self
 
-It doesn't appear too complicated, but we will now go through this line-by-line. The first line uses ``ase.Atoms`` initilization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of ``self``, with out all of the complexities added by the ``ImperfectZeolite`` object. The ``ase.Atoms`` initialization method is analogous to ``deepcopy``, so that there is no shared information between ``self`` and ``new_self_a``.
+We will now go through this line-by-line. The first line uses ``ase.Atoms`` initilization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of ``self``, with out all of the complexities added by the ``ImperfectZeolite`` object. The ``ase.Atoms`` initialization method is analogous to ``deepcopy``, so that there is no shared information between ``self`` and ``new_self_a``.
 
 The next step is to delete the atoms using the ``del`` operation on the new_self_a object. The side effects of this operation are contained to the ``new_self_a object``. After the ``del`` operation, a ``new_self`` is built using the ``self.__class__`` method. This is used so that a subclass will return another copy of itself rather than an ``ImperfectZeolite`` object.
 
 After ``new_self`` is created its attributes are set to that of its source. It is important that ``new_self`` share the same ``index_mapper`` and ``parent_zeotype`` as its source. The one attribute difference will be its name, which is uniquely set during initialization.
 
-Now comes the registration part, which is a little tricky. First an ``old_to_new_map`` is created which maps the indices in ``self`` to those in ``new_self``. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this ``old_to_new_map`` is used in conjuction with the ``self.index_mapper.register`` method to add another column to the table corresponding to the ``new_self`` object. After registration, this ``new_self`` object is finally returned.
+Now comes the registration part, which is a little tricky. First an ``old_to_new_map`` is created which maps the indices in ``self`` to those in ``new_self``. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this ``old_to_new_map`` is used in conjunction with the ``self.index_mapper.register`` method to add another column to the table corresponding to the ``new_self`` object. After registration, this ``new_self`` object is finally returned.
 
-This ``delete_atoms`` method is used in the initilization of ``Cluster`` and ``OpenDefect`` objects.
+This ``delete_atoms`` method is used in the initialization of ``Cluster`` and ``OpenDefect`` objects.
 
 
 *********************************************************
