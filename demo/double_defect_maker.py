@@ -33,7 +33,7 @@ def defect_maker(cif_dir, zeolite_code, output_dir, savefiles=True):
                 unique_t_site_to_od[site_name].append(new_od)
 
     # save T sites
-    if savefiles:
+    if savefiles:  #I made this change
         for site_name, od_list in unique_t_site_to_od.items():
             output_dir2 = os.path.join(output_dir, zeolite_code, site_name)
             Path(output_dir2).mkdir(parents=True, exist_ok=True)
@@ -42,11 +42,16 @@ def defect_maker(cif_dir, zeolite_code, output_dir, savefiles=True):
                 my_path = os.path.join(output_dir2, output_filename)
                 write(my_path, od)
 
-    return unique_t_site_to_od
+    return unique_t_site_to_od  # and most importantly I made this chnage
 
 
 # helper functions for second defect function
 def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
+    """
+    Finds the atoms removed from the iz by comparing it with parent zeotype
+    :param iz: imperfect zeotype to check for missing atoms
+    :return: list of indices of missing atoms (using parent indexing)
+    """
     missing_list = []
     for atom in iz.parent_zeotype:
         value = iz.index_mapper.get_index(iz.parent_zeotype.name, iz.name, atom.index)
@@ -56,6 +61,12 @@ def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
     return missing_list
 
 def find_neighbor_si(z: Zeotype, first_si_index: int):
+    """
+    Finds the first neighboring Si
+    :param z: the zeotype object
+    :param first_si_index: the first Si index to find a neighbor too
+    :return: the first neighboring si index
+    """
     z.update_nl()
     for o_index in z.neighbor_list.get_neighbors(first_si_index)[0]:
         for si_index in z.neighbor_list.get_neighbors(o_index)[0]:
@@ -83,10 +94,27 @@ def find_index_common_oxygen(iz, site_1: int, site_2: int) -> int:
     assert False, 'No middle oxygen found!!'
 
 def remove_two_T_sites(iz, site_1: int, site_2: int) -> ImperfectZeotype:
+    """
+    Removes two T sites that are adjacent to eachother
+    :param iz: Impefect zeotype with two T sites
+    :param site_1: the index of the first site to remove
+    :param site_2: the index of the second site to remove
+    :return:
+    """
     indices_to_remove = [site_1, site_2, find_index_common_oxygen(iz, site_1, site_2)]
     return iz.delete_atoms(indices_to_remove)
 
-def second_defect(od_dict, T_site_str, list_pos, cif_name, out_path, savefile=True):
+def second_defect(od_dict, T_site_str, list_pos, cif_name, out_path, savefile: bool =True):
+    """
+    Second defect creator
+    :param od_dict: dictionary of open defects (this is to allow it to integrate with the other code better)
+    :param T_site_str: The key for the open defects dictionary
+    :param list_pos: The position in the list of od_dict[T_site_str]
+    :param cif_name: the name of the cif file used to build the zeolite
+    :param out_path: the output path
+    :param savefile: bool if a file should be saved or not
+    :return: an open defect with an additional adjacent site removed
+    """
     od = od_dict[T_site_str][list_pos]  # get specific open defect
     complete_od = OpenDefect(od.parent_zeotype)  # create an opendefect object without the removed index
     removed_atom_index = find_removed_atoms(od)[0]
