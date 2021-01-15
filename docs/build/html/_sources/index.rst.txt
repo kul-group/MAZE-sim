@@ -14,6 +14,7 @@ This project aims to extend ASE to more naturally represent the properties of ze
    background
    demos
    design_pattern
+   key_classes
    source
    :caption: Contents:
 

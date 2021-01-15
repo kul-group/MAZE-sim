@@ -11,6 +11,9 @@ import warnings
 
 
 class Adsorbate(Atoms):
+    """
+    This is an adsorbate class which represents an adsorbate
+    """
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None,  host_zeotype=None, name='', description=''):

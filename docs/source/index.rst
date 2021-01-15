@@ -9,11 +9,12 @@ This project aims to extend ASE to more naturally represent the properties of ze
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    background
    demos
    design_pattern
+   key_classes
    source
    :caption: Contents:
 

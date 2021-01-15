@@ -1,23 +1,16 @@
-ZeoSE Code
+ZeoSE Modules
 ==============
 
-Submodules
-----------
-source.adsorbate module
----------------------
+
+source.cif\_download module
+---------------------------
 
 .. automodule:: source.adsorbate
    :members:
    :undoc-members:
    :show-inheritance:
-
-source.adsorbate.Adsorbate class
-----------------------------
-.. autoclass:: source.adsorbate.Adsorbate
-   :members:
    :private-members:
    :special-members:
-
 
 source.cif\_download module
 ---------------------------
@@ -35,37 +28,10 @@ source.zeotype module
    :undoc-members:
    :show-inheritance:
 
-source.zeotype.Zeotype class
-----------------------------
-
-.. autoclass:: source.zeotype.Zeotype
+source.index\_mapper module
+---------------------------
+.. automodule:: source.index_mapper
    :members:
-   :private-members:
-   :special-members:
-
-source.zeotype.ImperfectZeotype class
-----------------------------
-
-.. autoclass:: source.zeotype.ImperfectZeotype
-   :members:
-   :private-members:
-   :special-members:
-
-source.zeotype.Cluster class
-----------------------------
-
-.. autoclass:: source.zeotype.Cluster
-   :members:
-   :private-members:
-   :special-members:
-
-
-source.zeotype.OpenDefect class
-----------------------------
-
-.. autoclass:: source.zeotype.OpenDefect
-   :members:
-   :private-members:
-   :special-members:
-
+   :undoc-members:
+   :show-inheritance:
 
