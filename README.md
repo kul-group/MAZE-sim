@@ -41,8 +41,17 @@ Installation
 ------------
 Clone this github repo
 Add the cloned repo to your python path with 
-```import sys
-sys.path.insert(0, "<absolute path to zeotype folder>")
+```python
+import sys
+sys.path.insert(0, "<absolute path to parent zeotype folder>")
+sys.path.insert(0, "<absolute path to parent zeotype>")
+```
+
+For example,
+```python
+import sys
+sys.path.insert(0, "/Users/myusername/Code")
+sys.path.insert(0, "/Users/myusername/Code/zeotype")
 ```
 
 

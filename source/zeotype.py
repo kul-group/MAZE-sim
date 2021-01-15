@@ -878,7 +878,13 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         return cluster
 
     @staticmethod
-    def get_oh_cluster_multi_t_sites(zeolite, t_sites) -> List[int]:
+    def get_oh_cluster_multi_t_sites(zeolite: Zeotype, t_sites: int) -> List[int]:
+        """
+        get an OH cluster with multiple T sites
+        :param zeolite: The zeotype from which to extract the cluster
+        :param t_sites: the central t site
+        :return: A list of indices of the cluster
+        """
         all_indces = set()
         for t_site in t_sites:
             all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
@@ -886,7 +892,16 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         return list(all_indces)
 
     @staticmethod
-    def get_oh_cluster_indices(zeolite, t_site) -> List[int]:
+    def get_oh_cluster_indices(zeolite: Zeotype, t_site: int) -> List[int]:
+        """
+        Create a cluster that only includes one central T site and then Oxygen
+        and Hydrogen atoms. This is different than the other cluster selection
+        methods that take in other
+        :param zeolite: The zeolite from which the cluster indices will be drawn
+        :param t_site: The index of the T site around which the cluster will be built
+        :return: The indices of the new cluster
+        """
+
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
         nl.update(zeolite)
 
