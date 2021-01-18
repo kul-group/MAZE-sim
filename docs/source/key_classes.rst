@@ -1,4 +1,4 @@
-ZeoSE Key Classes
+MAZE Key Classes
 =================
 
 source.adsorbate.Adsorbate class

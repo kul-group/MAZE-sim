@@ -1,12 +1,12 @@
 =========================
-ZeoSE Index Mapper  
+MAZE Index Mapper
 =========================
 *********************************************************
 Terminology
 *********************************************************
 The following documentation frequently references ase's Atoms object, ase's Atom object and the atoms in ase's Atoms objects. This can get confusing, so for clarity the following definitions are provided:
 
-* ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.
+* ase: short for the atomic simulation environment, which is the package the ZASE package is based off of.
 * ase.Atoms class: Refers to the class definition of ``Atoms`` in the ``ase`` package.
 * ase.Atom class: Refers to the class definition of ``Atom`` in the ``ase`` package.
 * ase.Atoms object: Refers to an instance of the class ase.Atoms.
@@ -87,9 +87,9 @@ The above example showed some unexpected behavior, but it has not yet been made 
     #. Integrate the optimized structure back into the original Zeolite Atoms object
     #. Save the altered Zeolite object as a .traj file with a unique name
 
-Steps 1 and 2 are challenging, and the ZeoSE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
+Steps 1 and 2 are challenging, and the ZASE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
 
-In part 3's sub-steps the problem with the "on-the-fly" object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.
+In part 3's sub-steps the problem with the "on-the-fly" object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.
 
 *********************************************************
 The Index Mapper Solution
