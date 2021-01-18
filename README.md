@@ -1,5 +1,5 @@
-Zeotype
-========
+Multiscale Atomic Zeolite Simulation Environment (MAZE)
+========================================================
 
 This project aims to extend the Atomic Simulation Environment (ASE) to more naturally represent the properties of zeolites and facilitate the calculations required to determine their properties. 
 
