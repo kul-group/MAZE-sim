@@ -1,4 +1,4 @@
-ZeoSE Modules
+MAZE Modules
 ==============
 
 

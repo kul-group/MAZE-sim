@@ -229,6 +229,46 @@ the zeotype has been built. the atom idenity information is now stored in two di
 depending on the situation one dictionary might be more useful than the other.
 
 ******************************************************
+Identifying Atom Types in a Zeolite Structure
+******************************************************
+
+The Zeotype class includes methods for identifying the different types of atoms in a zeolite structure. These methods do will work on all Zeolite objects, even those where the ``atom_indices_to_site`` and ``site_to_atom_indices`` are not set.
+
+.. code-block:: python
+
+    >>> zeose_repo_location = "/Users/dda/Code"
+    >>> import sys
+    >>> import os
+    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing zeotype folder
+    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "zeotype"))  # zeotype folder
+    >>> from zeotype import Zeotype
+    >>> cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
+    >>> z = Zeotype.build_from_cif_with_labels(cif_dir)
+    >>> atom_types = z.get_atom_types()
+    >>> print('atom_types', dict(atom_types))
+
+.. code-block:: json
+
+    atom_types {'framework-O': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], 'framework-Si': [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+
+.. code-block:: python
+
+    >>> atoms_indices, count = z.count_elements()
+    >>> print('atom type count', dict(atoms_indices))
+
+.. code-block:: json
+
+    atom type count {'O': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], 'Si': [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+
+.. code-block:: python
+
+    print('atom count', dict(atoms_indices))
+
+.. code-block:: json
+
+    atom type count {'O': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], 'Si': [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+
+******************************************************
 Extracting, Adding and Capping Clusters
 ******************************************************
 
@@ -346,6 +386,7 @@ Then we remove the caps
 Here the block of code used in this tutorial.
 
     .. code-block:: python
+
     # define paths
     repo_parent_dir = "/Users/dda/Code"
     repo_dir = "/Users/dda/Code/zeotype"
@@ -391,10 +432,6 @@ Here the block of code used in this tutorial.
     # integrate cluster back into the open defect
     iz = open_framework.integrate_other_zeotype(uncapped_cluster)
     view(iz)
-
-
-
-
 
 
 
