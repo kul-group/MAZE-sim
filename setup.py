@@ -8,7 +8,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 setup(
-    name='MAZSE',
+    name='test123',
     version='0.1.0',
     description='Multiscale Zeolite Atomic simulation Environment (MAZE)',
     url='https://github.com/kul-group/MAZE',
