@@ -140,8 +140,8 @@ The delete_atoms method returns a copy of the original ``ImpefectZeolite`` with 
 .. code-block:: bash
 
    >>> import sys
-   >>> sys.path.insert(0, "/Users/dda/Code") # folder containing zeotype folder
-   >>> sys.path.insert(0, "/Users/dda/Code/zeotype")  # zeotype folder
+   >>> sys.path.insert(0, "/Users/dda/Code") # folder containing MAZE-sim folder
+   >>> sys.path.insert(0, "/Users/dda/Code/MAZE-sim")  # MAZE-sim folder
    >>> import zeotype
    >>> zeotype.download_cif('BEA', data_dir='data') # Download BEA.cif
    >>> my_zeolite = zeotype.Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
