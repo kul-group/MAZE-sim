@@ -2,7 +2,7 @@ from maze import download_cif, build_zeolite_from_code
 
 
 def main():
-    my_dir = "/Users/dda/Code/zeotype/data"
+    my_dir = "//data"
     download_cif("OFF", data_dir=my_dir)
     download_cif("GOO", data_dir=my_dir)
     zeolite = build_zeolite_from_code("BEA", data_dir=my_dir)

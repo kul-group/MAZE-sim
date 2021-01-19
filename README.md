@@ -43,15 +43,15 @@ Clone this github repo
 Add the cloned repo to your python path with 
 ```python
 import sys
-sys.path.insert(0, "<absolute path to parent zeotype folder>")
-sys.path.insert(0, "<absolute path to parent zeotype>")
+sys.path.insert(0, "<absolute path to parent maze folder>")
+sys.path.insert(0, "<absolute path to parent maze>")
 ```
 
 For example,
 ```python
 import sys
 sys.path.insert(0, "/Users/myusername/Code")
-sys.path.insert(0, "/Users/myusername/Code/zeotype")
+sys.path.insert(0, "/Users/myusername/Code/maze")
 ```
 
 

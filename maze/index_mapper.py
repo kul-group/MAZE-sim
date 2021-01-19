@@ -4,21 +4,32 @@ from typing import Iterable
 
 class IndexMapper:
     """
-    This class maps between the different atoms objects in a zeotype project.
+    This class maps between the different atoms objects in a maze project.
     It is essential for keeping track of the various
     """
+
     id = 0
 
     @staticmethod
     def get_id():
+        """
+        Get a unique id
+        :return:
+        """
         IndexMapper.id += 1
         return str(IndexMapper.id)
 
     @staticmethod
     def get_unique_name(name: str):
+        """
+        Get a unique name
+        :param name: name
+        :return: name + _ + unique id number
+        """
+
         return name + '_' + IndexMapper.get_id()
 
-    def __init__(self, atom_indices: Iterable):
+    def __init__(self, atom_indices: Iterable) -> None:
         """
         :param atom_indices: A list of atom indices from a Zeotype
         """
@@ -31,17 +42,22 @@ class IndexMapper:
             self.i_max = main_index
 
     def get_reverse_main_index(self, name):
+        """
+        Reverses an index so that the name indices are used as a key for the main index
+        :param name: name of the item to make the key
+        :return: a reverse index map where the indices of name are the key
+        """
         return self._reverse_main_index(name)
 
     def _reverse_main_index(self, name):
         """
-
-        :param name:
-        :return:
+        Internal function for making a reverse index map
+        :param name: name of the item to make the key
+        :return:a reverse index map where the indices of name are the key
         """
+
         name_to_main_dict = {}
         for main_index, value in self.main_index.items():
-            #TODO: Find source of this bug where not all names are registered
             try:
                 name_index = value[name]
             except KeyError:
@@ -55,6 +71,13 @@ class IndexMapper:
         return name_to_main_dict
 
     def get_name1_to_name2_map(self, name1, name2):
+        """
+        Gets a map between the indices of name1 and the indices of name2
+        :param name1: name whose indices are the key in the map
+        :param name2: name whose indices are the value in the map
+        :return: name1.index -> name2.index map
+        """
+
         name1_to_name2_map = {}
         for row in self.main_index.values():
             if row[name1] is not None:
@@ -63,6 +86,13 @@ class IndexMapper:
         return name1_to_name2_map
 
     def register_with_main(self, new_name, main_to_new_map):
+        """
+        Register a new object with the main
+        :param new_name: name of the new object being registered
+        :param main_to_new_map:
+        :return:
+        """
+
         self.names.append(new_name)
         for main_i in self.main_index.keys():
             self.main_index[main_i][new_name] = main_to_new_map.get(main_i, None)

@@ -3,7 +3,7 @@ from ase.visualize import view
 
 
 def main():
-    cif_dir = "/Users/dda/Code/zeotype/data/BEA.cif"
+    cif_dir = "//data/BEA.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     view(zeolite)
     c_in = Cluster.get_oh_cluster_indices(zeolite, 185)

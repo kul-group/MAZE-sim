@@ -1,7 +1,8 @@
-import urllib.request
 import os
-from urllib.error import HTTPError
+import urllib.request
 from pathlib import Path
+from urllib.error import HTTPError
+
 
 def download_cif(code: str, data_dir='data'):
     """
@@ -22,14 +23,3 @@ def download_cif(code: str, data_dir='data'):
         else:
             raise
 
-
-def build_zeolite_from_code(code, data_dir='data'):
-    """
-    Args:
-        code:
-        data_dir:
-    """
-    output_path = os.path.join(data_dir, code + '.cif')
-    if not os.path.exists(output_path):
-        download_cif(code, data_dir)  # will throw error if not successful
-    return Zeotype.build_from_cif_with_labels(output_path)

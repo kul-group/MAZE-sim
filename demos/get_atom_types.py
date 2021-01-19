@@ -1,7 +1,7 @@
 from maze import Zeotype
 
 def main():
-    cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
+    cif_dir = "//data/GOO.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     print('t_site_to_atom_indices', zeolite.site_to_atom_indices)
     print('atom_indices_to_t_site', zeolite.atom_indices_to_site)

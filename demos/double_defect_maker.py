@@ -45,8 +45,8 @@ def defect_maker(cif_dir, zeolite_code, output_dir, savefiles=True):
 # helper functions for second defect function
 def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
     """
-    Finds the atoms removed from the iz by comparing it with parent zeotype
-    :param iz: imperfect zeotype to check for missing atoms
+    Finds the atoms removed from the iz by comparing it with parent maze
+    :param iz: imperfect maze to check for missing atoms
     :return: list of indices of missing atoms (using parent indexing)
     """
     missing_list = []
@@ -60,7 +60,7 @@ def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
 def find_neighbor_si(z: Zeotype, first_si_index: int):
     """
     Finds the first neighboring Si
-    :param z: the zeotype object
+    :param z: the maze object
     :param first_si_index: the first Si index to find a neighbor too
     :return: the first neighboring si index
     """
@@ -74,7 +74,7 @@ def find_neighbor_si(z: Zeotype, first_si_index: int):
 def find_index_common_oxygen(iz, site_1: int, site_2: int) -> int:
     """
     Finds a common oxygen, if it exists, between two T sites
-    :param iz: imperfect zeotype (or subclass) containing T sites
+    :param iz: imperfect maze (or subclass) containing T sites
     :param site_1: index of T site 1
     :param site_2: index of T site 2
     :return:
@@ -93,7 +93,7 @@ def find_index_common_oxygen(iz, site_1: int, site_2: int) -> int:
 def remove_two_T_sites(iz, site_1: int, site_2: int) -> ImperfectZeotype:
     """
     Removes two T sites that are adjacent to eachother
-    :param iz: Impefect zeotype with two T sites
+    :param iz: Impefect maze with two T sites
     :param site_1: the index of the first site to remove
     :param site_2: the index of the second site to remove
     :return:
@@ -177,9 +177,9 @@ def insert_HM_2(open_defect, si_index):
 
 if __name__ == "__main__":
     #defect_maker('/Users/jiaweiguo/Desktop/0125Proposal/BEA.cif', 'BEA', '/Users/jiaweiguo/Desktop/0125Proposal')
-    od_dict = defect_maker('/data/BEA.cif', 'BEA', '/Users/dda/Code/zeotype/data/test_output',
+    od_dict = defect_maker('/data/BEA.cif', 'BEA', '//data/test_output',
                            savefiles=False)
-    my_od = second_defect(od_dict, 'T3', 3, 'BEA', '/Users/dda/Code/zeotype/data/test_output', savefile=False)
+    my_od = second_defect(od_dict, 'T3', 3, 'BEA', '//data/test_output', savefile=False)
     view(my_od)
     # second_defect(cif_dir, out_path, 'BEA_T1_3', 189)
     # second_defect(cif_dir, out_path, 'BEA_T1_3', 141)

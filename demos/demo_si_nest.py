@@ -3,7 +3,7 @@ from ase.visualize import view
 
 
 def main():
-    cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
+    cif_dir = "//data/GOO.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     view(zeolite)
     iz = zeolite.get_imperfect_zeolite()

@@ -1,10 +1,11 @@
+import warnings
+
 import numpy as np
+from ase import Atom, Atoms
+from ase.data import atomic_numbers, covalent_radii
+from ase.neighborlist import NeighborList, natural_cutoffs
 from scipy.optimize import minimize
 from sklearn.cluster import MeanShift
-from ase import Atom, Atoms
-from ase.neighborlist import NeighborList, natural_cutoffs
-from ase.data import atomic_numbers, covalent_radii
-import warnings
 
 
 class Adsorbate(Atoms):
@@ -34,12 +35,12 @@ class Adsorbate(Atoms):
     def min_distance(self, ads_position) -> float:
         """minimum distance from atom in a host to adsorbate :param
         ads_position: np.array x,y,z of adsorbate position :return: float,
-        minimum distance between an atom in host zeotype and adsorbate position
+        minimum distance between an atom in host maze and adsorbate position
 
         Args:
             ads_position:
         """
-        assert self.host_zeotype is not None, "Cannot find min distance when host zeotype is None"
+        assert self.host_zeotype is not None, "Cannot find min distance when host maze is None"
 
         dummy_atom = Atom('H', position=ads_position)
         dummy_host = self.host_zeotype + dummy_atom
@@ -49,12 +50,12 @@ class Adsorbate(Atoms):
     def avg_distance(self, ads_position):
         """average distance from position to all host atoms :param ads_position:
         np.array x,y,z of adsorbate position :return: float, average distance of
-        host zeotype atoms to adsorbate position
+        host maze atoms to adsorbate position
 
         Args:
             ads_position:
         """
-        assert self.host_zeotype is not None, "Cannot find average distance when host zeotype is None"
+        assert self.host_zeotype is not None, "Cannot find average distance when host maze is None"
 
         dummy_atom = Atom('H', position=ads_position)
         dummy_host = self.host_zeotype + dummy_atom
@@ -62,7 +63,7 @@ class Adsorbate(Atoms):
         return avg_distance
 
     def find_void(self, void_position_guess):
-        """finds nearest empty region in host zeotype :param
+        """finds nearest empty region in host maze :param
         void_position_guess: An initial guess for the center of the void as a
         np.array with x,y,z position :return: np.array position of center of
         empty void
@@ -73,7 +74,7 @@ class Adsorbate(Atoms):
 
         # TODO: Find a way to speed this up
 
-        assert self.host_zeotype is not None, "Cannot find void position when host zeotype is None"
+        assert self.host_zeotype is not None, "Cannot find void position when host maze is None"
 
         fun_to_min = lambda pos: -1 * self.min_distance(pos)  # 1 param function for scipy.minimize
         ans = minimize(fun_to_min, void_position_guess)
@@ -106,8 +107,8 @@ class Adsorbate(Atoms):
     def get_viable_positions(self, index, radius, cutoff, num_pts=None):
         """finds positions near host atom far enough from other framework atoms.
         :param index: index of host atom at center :param radius: radius around
-        host atom to test points :param cutoff: minimum distance from other host
-        atoms allowed for test points :param num_pts: number of points to try
+        host atom to tests points :param cutoff: minimum distance from other host
+        atoms allowed for tests points :param num_pts: number of points to try
         :return: list. positions of points which meet cutoff criteria
 
         Args:
@@ -117,7 +118,7 @@ class Adsorbate(Atoms):
             num_pts:
         """
         assert (radius > cutoff), "radius larger than cutoff distance"
-        assert self.host_zeotype is not None, "host zeotype cannot be none"
+        assert self.host_zeotype is not None, "host maze cannot be none"
 
         guess_positions = self.sphere_sample(radius, num_pts)
         host_pos = self.host_zeotype.get_positions()[index]
@@ -135,8 +136,8 @@ class Adsorbate(Atoms):
         clusters these viable positions and returns the centers of these
         clusters. If number of points is too small will return error :param
         index: index of host atom at center :param radius: radius around host
-        atom to test points :param cutoff: minimum distance from other host
-        atoms allowed for test points :param num_pts: number of points to try
+        atom to tests points :param cutoff: minimum distance from other host
+        atoms allowed for tests points :param num_pts: number of points to try
         :return: list. center positions of clusters of points which meet
         criteria
 
@@ -156,8 +157,8 @@ class Adsorbate(Atoms):
     def find_best_place(self, index, radius, cutoff, num_pts=500):
         """picks the best location to place an adsorbate around the host atom
         :param index: index of host atom at center :param radius: radius around
-        host atom to test points :param cutoff: minimum distance from other host
-        atoms allowed for test points :param num_pts: number of points to try
+        host atom to tests points :param cutoff: minimum distance from other host
+        atoms allowed for tests points :param num_pts: number of points to try
         :return: array. x,y,z position of best location
 
         Args:
@@ -215,7 +216,7 @@ class Adsorbate(Atoms):
             try:
                 return sym_index_map['Al'][0]
             except KeyError:
-                print("No Al in host zeotype")
+                print("No Al in host maze")
                 raise
 
     def pick_ads_position(self, donor_ind, host_ind, radius=None, cutoff=None):

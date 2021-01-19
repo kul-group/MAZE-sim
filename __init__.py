@@ -1,6 +1,3 @@
-from . import source
-from .source.zeotype import *
-from .source.cif_download import download_cif
-from .source.adsorbate import Adsorbate
-
-
+from .maze.zeotypes import *
+from .maze.index_mapper import *
+from .maze.adsorbate import *

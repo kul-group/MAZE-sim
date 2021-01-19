@@ -4,7 +4,7 @@ from ase.visualize import view
 from collections import defaultdict
 
 def main():
-    cif_dir = "/Users/dda/Code/zeotype/data/BEA.cif"
+    cif_dir = "//data/BEA.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     open_defect = OpenDefect(zeolite)
 
