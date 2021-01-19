@@ -69,8 +69,8 @@ first import the MAZE package.
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys
     >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing maze folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "maze"))  # maze folder
+    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing MAZSE folder
+    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "MAZSE"))  # MAZSE folder
     >>> import zeotype
     >>> import glob
 
@@ -197,8 +197,8 @@ first import the zeotype pacakage
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys
     >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing maze folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "maze"))  # maze folder
+    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing MAZSE folder
+    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "MAZSE"))  # MAZSE folder
     >>> import zeotype
 
 download a cif file
