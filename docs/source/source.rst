@@ -10,9 +10,9 @@ cif\_download module
    :private-members:
    :special-members:
 
-zeotype module
+zeotypes module
 ---------------------
-.. automodule:: zeotype
+.. automodule:: zeotypes
    :members:
    :undoc-members:
    :show-inheritance:

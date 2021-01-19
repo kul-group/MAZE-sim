@@ -18,6 +18,7 @@ class Silanol():
     """
     This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite
     """
+
     def __init__(self, parent_zeotype: 'Zeotype', Si_index: int, O_index: int, H_index: int,
                  Si_neighbor_list: List[int]):
         """
@@ -165,7 +166,8 @@ class Zeotype(Atoms):
         # replace elements with replacement symbol
         element_to_T_site = {}
         sym_to_original_element = {}
-        possible_syms = Zeotype.get_available_symbols(b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
+        possible_syms = Zeotype.get_available_symbols(
+            b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
         for i in range(len(b_dict["_atom_site_label"])):  # label all atoms
             sym = possible_syms.pop()
             sym_to_original_element[sym] = b_dict["_atom_site_type_symbol"][i]
@@ -365,7 +367,6 @@ class Zeotype(Atoms):
 
         return sites_list
 
-
     @staticmethod
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
         """
@@ -538,7 +539,6 @@ class ImperfectZeotype(Zeotype):
         new_self = self.delete_atoms(indices_to_delete)
         new_self.additions[ads_cat].remove(ads_name)
         return new_self
-
 
     def integrate_other_zeotype(self, other: Zeotype):
         """

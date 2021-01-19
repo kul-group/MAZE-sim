@@ -84,6 +84,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">source</a></li>
 </ul>
 
             
@@ -147,13 +148,14 @@
            <div itemprop="articleBody">
             
   <h1>Source code for adsorbate</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Atoms</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">covalent_radii</span>
+<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">NeighborList</span><span class="p">,</span> <span class="n">natural_cutoffs</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
 <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">MeanShift</span>
-<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Atoms</span>
-<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">NeighborList</span><span class="p">,</span> <span class="n">natural_cutoffs</span>
-<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">covalent_radii</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 
 <div class="viewcode-block" id="Adsorbate"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate">[docs]</a><span class="k">class</span> <span class="nc">Adsorbate</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
@@ -183,12 +185,12 @@
 <div class="viewcode-block" id="Adsorbate.min_distance"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.min_distance">[docs]</a>    <span class="k">def</span> <span class="nf">min_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;minimum distance from atom in a host to adsorbate :param</span>
 <span class="sd">        ads_position: np.array x,y,z of adsorbate position :return: float,</span>
-<span class="sd">        minimum distance between an atom in host zeotype and adsorbate position</span>
+<span class="sd">        minimum distance between an atom in host maze and adsorbate position</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            ads_position:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find min distance when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find min distance when host maze is None&quot;</span>
 
         <span class="n">dummy_atom</span> <span class="o">=</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">ads_position</span><span class="p">)</span>
         <span class="n">dummy_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="o">+</span> <span class="n">dummy_atom</span>
@@ -198,12 +200,12 @@
 <div class="viewcode-block" id="Adsorbate.avg_distance"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.avg_distance">[docs]</a>    <span class="k">def</span> <span class="nf">avg_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;average distance from position to all host atoms :param ads_position:</span>
 <span class="sd">        np.array x,y,z of adsorbate position :return: float, average distance of</span>
-<span class="sd">        host zeotype atoms to adsorbate position</span>
+<span class="sd">        host maze atoms to adsorbate position</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            ads_position:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find average distance when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find average distance when host maze is None&quot;</span>
 
         <span class="n">dummy_atom</span> <span class="o">=</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">ads_position</span><span class="p">)</span>
         <span class="n">dummy_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="o">+</span> <span class="n">dummy_atom</span>
@@ -211,7 +213,7 @@
         <span class="k">return</span> <span class="n">avg_distance</span></div>
 
 <div class="viewcode-block" id="Adsorbate.find_void"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.find_void">[docs]</a>    <span class="k">def</span> <span class="nf">find_void</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">void_position_guess</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;finds nearest empty region in host zeotype :param</span>
+        <span class="sd">&quot;&quot;&quot;finds nearest empty region in host maze :param</span>
 <span class="sd">        void_position_guess: An initial guess for the center of the void as a</span>
 <span class="sd">        np.array with x,y,z position :return: np.array position of center of</span>
 <span class="sd">        empty void</span>
@@ -222,7 +224,7 @@
 
         <span class="c1"># TODO: Find a way to speed this up</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find void position when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find void position when host maze is None&quot;</span>
 
         <span class="n">fun_to_min</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">pos</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_distance</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># 1 param function for scipy.minimize</span>
         <span class="n">ans</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun_to_min</span><span class="p">,</span> <span class="n">void_position_guess</span><span class="p">)</span>
@@ -255,8 +257,8 @@
 <div class="viewcode-block" id="Adsorbate.get_viable_positions"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.get_viable_positions">[docs]</a>    <span class="k">def</span> <span class="nf">get_viable_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;finds positions near host atom far enough from other framework atoms.</span>
 <span class="sd">        :param index: index of host atom at center :param radius: radius around</span>
-<span class="sd">        host atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        host atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: list. positions of points which meet cutoff criteria</span>
 
 <span class="sd">        Args:</span>
@@ -266,7 +268,7 @@
 <span class="sd">            num_pts:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">radius</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">),</span> <span class="s2">&quot;radius larger than cutoff distance&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;host zeotype cannot be none&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;host maze cannot be none&quot;</span>
 
         <span class="n">guess_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sphere_sample</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">num_pts</span><span class="p">)</span>
         <span class="n">host_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span>
@@ -284,8 +286,8 @@
 <span class="sd">        clusters these viable positions and returns the centers of these</span>
 <span class="sd">        clusters. If number of points is too small will return error :param</span>
 <span class="sd">        index: index of host atom at center :param radius: radius around host</span>
-<span class="sd">        atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: list. center positions of clusters of points which meet</span>
 <span class="sd">        criteria</span>
 
@@ -305,8 +307,8 @@
 <div class="viewcode-block" id="Adsorbate.find_best_place"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.find_best_place">[docs]</a>    <span class="k">def</span> <span class="nf">find_best_place</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;picks the best location to place an adsorbate around the host atom</span>
 <span class="sd">        :param index: index of host atom at center :param radius: radius around</span>
-<span class="sd">        host atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        host atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: array. x,y,z position of best location</span>
 
 <span class="sd">        Args:</span>
@@ -364,7 +366,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">sym_index_map</span><span class="p">[</span><span class="s1">&#39;Al&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Al in host zeotype&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Al in host maze&quot;</span><span class="p">)</span>
                 <span class="k">raise</span></div>
 
 <div class="viewcode-block" id="Adsorbate.pick_ads_position"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.pick_ads_position">[docs]</a>    <span class="k">def</span> <span class="nf">pick_ads_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_ind</span><span class="p">,</span> <span class="n">host_ind</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

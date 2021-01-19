@@ -3,28 +3,28 @@ MAZE Key Classes
 
 Zeotype class
 ----------------------------
-.. autoclass:: zeotype.Zeotype
+.. autoclass:: zeotypes.Zeotype
    :members:
    :private-members:
    :special-members:
 
 ImperfectZeotype class
 ----------------------------
-.. autoclass:: zeotype.ImperfectZeotype
+.. autoclass:: zeotypes.ImperfectZeotype
    :members:
    :private-members:
    :special-members:
 
 Cluster class
 ----------------------------
-.. autoclass:: zeotype.Cluster
+.. autoclass:: zeotypes.Cluster
    :members:
    :private-members:
    :special-members:
 
 OpenDefect class
 ----------------------------
-.. autoclass:: zeotype.OpenDefect
+.. autoclass:: zeotypes.OpenDefect
    :members:
    :private-members:
    :special-members:

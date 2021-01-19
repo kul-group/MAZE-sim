@@ -1,4 +1,4 @@
-.. Zeotype Project documentation master file, created by
+.. MAZE Project documentation master file, created by
    sphinx-quickstart on Fri Oct  9 10:52:14 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -16,6 +16,7 @@ This project aims to extend ASE to more naturally represent the properties of ze
    design_pattern
    key_classes
    source
+   modules
    :caption: Contents:
 
 

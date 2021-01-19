@@ -93,6 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">source</a></li>
 </ul>
 
             
@@ -159,10 +160,10 @@
             
   <div class="section" id="demos">
 <h1>Demos<a class="headerlink" href="#demos" title="Permalink to this headline">¶</a></h1>
-<p>to showcase the capabilities of the zeose code various demos will be presented, along with comments describing how to use the functions shown in the demos.</p>
+<p>To showcase the capabilities of the MAZE code various demos will be presented, along with comments describing how to use the functions shown in the demos.</p>
 <div class="section" id="installing">
 <h2>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h2>
-<p>as of writing this, the zeose code cannot be installed via pip or conda. thus, to use the zeose code you must clone the zeose repo and then manually add the location of the cloned repo to python’s path so that it can be imported.</p>
+<p>As of writing this, the MAZE code cannot be installed via pip or conda. thus, to use the MAZE code you must clone the MAZE repo and then manually add the location of the cloned repo to python’s path so that it can be imported.</p>
 <p>first, pick a folder to clone the repo into. in this tutorial i will use the <code class="docutils literal notranslate"><span class="pre">code</span></code> folder in my home directory. then clone the zeose the repo with the git clone command.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> ~/code
 $ git clone https://github.com/kul-group/zeotype.git
@@ -203,12 +204,12 @@ print<span class="o">(</span>zeotype<span class="o">)</span>
 <div class="section" id="cif-fetching-from-database-of-zeolite-structures">
 <h2>Cif Fetching from Database of Zeolite Structures<a class="headerlink" href="#cif-fetching-from-database-of-zeolite-structures" title="Permalink to this headline">¶</a></h2>
 <p>the <a class="reference external" href="http://www.iza-structure.org/databases/">database of zeolite structures</a> is a useful resource for zeolite simulation experiments. it contains cif files for all of the synthesized zeolites, organized by their three letter zeolite code. downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. to facilitate smoother workflows, a simple python function which downloads cif files from the database was created. an example of using this to download a few different cif files is shown below. try it out!</p>
-<p>first import the zeose package.</p>
+<p>first import the MAZE package.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeose_repo_location</span> <span class="o">=</span> <span class="s2">&quot;/users/dda/code&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zeose_repo_location</span><span class="p">)</span>                          <span class="c1"># folder containing zeotype folder</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zeose_repo_location</span><span class="p">,</span> <span class="s2">&quot;zeotype&quot;</span><span class="p">))</span>  <span class="c1"># zeotype folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zeose_repo_location</span><span class="p">)</span>                          <span class="c1"># folder containing maze folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zeose_repo_location</span><span class="p">,</span> <span class="s2">&quot;maze&quot;</span><span class="p">))</span>  <span class="c1"># maze folder</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">zeotype</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">glob</span>
 </pre></div>
@@ -224,16 +225,14 @@ print<span class="o">(</span>zeotype<span class="o">)</span>
 <span class="go">dirs in cwd []</span>
 </pre></div>
 </div>
-<dl>
-<dt>now let us try downloading a cif file, with the zeotype.download_cif function. we will pick the zeolite <cite>goo</cite>. by default the directory that the cif file is downloded to is <cite>data</cite>. if this ‘data’ directory doesn’t exist, it is created.</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeotype</span><span class="o">.</span><span class="n">download_cif</span><span class="p">(</span><span class="s2">&quot;goo&quot;</span><span class="p">)</span> <span class="c1"># downloads &quot;goo.cif&quot; to data/goo.cif</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">print_dirs</span><span class="p">()</span>
-<span class="go">dirs in cwd [&#39;data/&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;files in data dir&#39;</span><span class="p">,</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;data/*&quot;</span><span class="p">))</span>
-<span class="go">files in data dir [&#39;data/goo.cif&#39;]</span>
+<p>now let us try downloading a cif file, with the zeotype.download_cif function. we will pick the zeolite <cite>goo</cite>. by default the directory that the cif file is downloded to is <cite>data</cite>. if this ‘data’ directory doesn’t exist, it is created.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeotype</span><span class="o">.</span><span class="n">download_cif</span><span class="p">(</span><span class="s2">&quot;goo&quot;</span><span class="p">)</span> <span class="c1"># downloads &quot;goo.cif&quot; to data/goo.cif</span>
+<span class="go">    &gt;&gt;&gt; print_dirs()</span>
+<span class="go">    dirs in cwd [&#39;data/&#39;]</span>
+<span class="go">    &gt;&gt;&gt; print(&#39;files in data dir&#39;, glob.glob(&quot;data/*&quot;))</span>
+<span class="go">    files in data dir [&#39;data/goo.cif&#39;]</span>
 </pre></div>
 </div>
-</dd>
-</dl>
 <p>the function worked, and now the cif file is just where we want it. if we want to download it to a custom location, we can do that as well</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeotype</span><span class="o">.</span><span class="n">download_cif</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;my_other_data&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">print_dirs</span><span class="p">()</span>
@@ -323,25 +322,23 @@ _atom_site_fract_z
 </div>
 <p>an important piece of information in this file is the _atom_site_label (01, 02, … t1, t2.. ect.) that is located in the first column of the cif file near the atom position information. this information about the atoms identities is lost when <code class="docutils literal notranslate"><span class="pre">ase.io.read</span></code> function is used to build an atoms object form a cif file. knowing the identity of the t sites is critical for zeolite simulation experiments. this issue inspired the creation of a custom cif reading function for the zeotype object, <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code> which creates a zeolite object and labels the unique atoms, by tagging them, and storing the mapping between the <code class="docutils literal notranslate"><span class="pre">atom_site_label</span></code> and the atom indices in the dictionaries <code class="docutils literal notranslate"><span class="pre">self.site_to_atom_indices</span></code> and <code class="docutils literal notranslate"><span class="pre">self.atom_indices_to_site</span></code>.</p>
 <p>to demonstrate this feature, let us try building a zeotype object from a cif file.</p>
-<dl>
-<dt>first import the zeotype pacakage</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeose_repo_location</span> <span class="o">=</span> <span class="s2">&quot;/users/dda/code&quot;</span>
+<p>first import the zeotype pacakage</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeose_repo_location</span> <span class="o">=</span> <span class="s2">&quot;/users/dda/code&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zeose_repo_location</span><span class="p">)</span>                          <span class="c1"># folder containing zeotype folder</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zeose_repo_location</span><span class="p">,</span> <span class="s2">&quot;zeotype&quot;</span><span class="p">))</span>  <span class="c1"># zeotype folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zeose_repo_location</span><span class="p">)</span>                          <span class="c1"># folder containing maze folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zeose_repo_location</span><span class="p">,</span> <span class="s2">&quot;maze&quot;</span><span class="p">))</span>  <span class="c1"># maze folder</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">zeotype</span>
 </pre></div>
 </div>
-</dd>
-<dt>download a cif file</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeotype</span><span class="o">.</span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;cha&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># download cha.cif</span>
+<p>download a cif file</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeotype</span><span class="o">.</span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;cha&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># download cha.cif</span>
 </pre></div>
 </div>
-</dd>
-<dt>then use the static method <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code></dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">zeotype</span><span class="o">.</span><span class="n">zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/cha.cif&#39;</span><span class="p">)</span>  <span class="c1"># build from code</span>
+<p>then use the static method <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">zeotype</span><span class="o">.</span><span class="n">zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/cha.cif&#39;</span><span class="p">)</span>  <span class="c1"># build from code</span>
 </pre></div>
 </div>
-</dd>
-</dl>
 <p>the zeotype has been built. the atom idenity information is now stored in two dictionaries. let’s take a look at them:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;site_to_atom_indices map&#39;</span><span class="p">,</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="go">site_to_atom_indices map</span>
@@ -466,51 +463,53 @@ _atom_site_fract_z
 </pre></div>
 </div>
 <p>Here the block of code used in this tutorial.</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define paths</span>
+<span class="n">repo_parent_dir</span> <span class="o">=</span> <span class="s2">&quot;/Users/dda/Code&quot;</span>
+<span class="n">repo_dir</span> <span class="o">=</span> <span class="s2">&quot;/Users/dda/Code/zeotype&quot;</span>
+<span class="n">cif_dir</span> <span class="o">=</span> <span class="s2">&quot;/Users/dda/Code/zeotype/data/BEA.cif&quot;</span>
+
+<span class="c1"># import zeotype script</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">repo_parent_dir</span><span class="p">)</span>   <span class="c1"># folder containing zeotype folder</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">repo_dir</span><span class="p">)</span>          <span class="c1"># zeotype folder</span>
+<span class="kn">import</span> <span class="nn">zeotype</span>
+
+<span class="c1"># make zeotype from cif file</span>
+<span class="n">zeolite</span> <span class="o">=</span> <span class="n">zeotype</span><span class="o">.</span><span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">cif_dir</span><span class="p">)</span>
+
+<span class="c1">#view the zeolite</span>
+<span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
+<span class="n">view</span><span class="p">(</span><span class="n">zeolite</span><span class="p">)</span>
+
+<span class="c1"># get cluster indices</span>
+<span class="n">site_index</span> <span class="o">=</span> <span class="mi">154</span>
+<span class="n">c_in</span> <span class="o">=</span> <span class="n">zeotype</span><span class="o">.</span><span class="n">Cluster</span><span class="o">.</span><span class="n">get_oh_cluster_indices</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">site_index</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">c_in</span><span class="p">)</span>
+
+<span class="c1"># make the cluster</span>
+<span class="n">cluster</span><span class="p">,</span> <span class="n">open_framework</span> <span class="o">=</span> <span class="n">zeolite</span><span class="o">.</span><span class="n">get_cluster</span><span class="p">(</span><span class="n">cluster_indices</span><span class="o">=</span><span class="n">c_in</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="n">open_framework</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+
+<span class="n">capped_cluster</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">cap_atoms</span><span class="p">()</span>
+<span class="n">view</span><span class="p">(</span><span class="n">capped_cluster</span><span class="p">)</span>
+<span class="c1"># change all of the oxygens in the cluster to Polonium</span>
+<span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">capped_cluster</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span>
+        <span class="n">capped_cluster</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Po&#39;</span>
+<span class="n">view</span><span class="p">(</span><span class="n">capped_cluster</span><span class="p">)</span>
+
+<span class="c1"># removing the capped cluster (this might be changed in new versions)</span>
+<span class="n">capped_cluster</span><span class="o">.</span><span class="n">additions</span>
+<span class="n">uncapped_cluster</span> <span class="o">=</span> <span class="n">capped_cluster</span><span class="o">.</span><span class="n">remove_caps</span><span class="p">(</span><span class="n">cap_type</span><span class="o">=</span><span class="s1">&#39;h_caps&#39;</span><span class="p">,</span> <span class="n">cap_name</span><span class="o">=</span><span class="s1">&#39;h_caps_6&#39;</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="n">uncapped_cluster</span><span class="p">)</span>
+
+
+<span class="c1"># integrate cluster back into the open defect</span>
+<span class="n">iz</span> <span class="o">=</span> <span class="n">open_framework</span><span class="o">.</span><span class="n">integrate_other_zeotype</span><span class="p">(</span><span class="n">uncapped_cluster</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span>
 </pre></div>
 </div>
-<p># define paths
-repo_parent_dir = “/Users/dda/Code”
-repo_dir = “/Users/dda/Code/zeotype”
-cif_dir = “/Users/dda/Code/zeotype/data/BEA.cif”</p>
-<p># import zeotype script
-import sys
-sys.path.insert(0, repo_parent_dir)   # folder containing zeotype folder
-sys.path.insert(0, repo_dir)          # zeotype folder
-import zeotype</p>
-<p># make zeotype from cif file
-zeolite = zeotype.Zeotype.build_from_cif_with_labels(cif_dir)</p>
-<p>#view the zeolite
-from ase.visualize import view
-view(zeolite)</p>
-<p># get cluster indices
-site_index = 154
-c_in = zeotype.Cluster.get_oh_cluster_indices(zeolite, site_index)
-print(c_in)</p>
-<p># make the cluster
-cluster, open_framework = zeolite.get_cluster(cluster_indices=c_in)
-view(open_framework)
-view(cluster)</p>
-<p>capped_cluster = cluster.cap_atoms()
-view(capped_cluster)
-# change all of the oxygens in the cluster to Polonium
-for atom in capped_cluster:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>if atom.symbol == ‘O’:</dt><dd><p>capped_cluster[atom.index].symbol = ‘Po’</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>view(capped_cluster)</p>
-<p># removing the capped cluster (this might be changed in new versions)
-capped_cluster.additions
-uncapped_cluster = capped_cluster.remove_caps(cap_type=’h_caps’, cap_name=’h_caps_6’)
-view(uncapped_cluster)</p>
-<p># integrate cluster back into the open defect
-iz = open_framework.integrate_other_zeotype(uncapped_cluster)
-view(iz)</p>
-</div></blockquote>
 </div>
 </div>
 

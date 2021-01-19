@@ -2,13 +2,13 @@
 Demos
 ===============
 
-to showcase the capabilities of the zeose code various demos will be presented, along with comments describing how to use the functions shown in the demos.
+To showcase the capabilities of the MAZE code various demos will be presented, along with comments describing how to use the functions shown in the demos.
 
 ******************************************************
 Installing
 ******************************************************
 
-as of writing this, the zeose code cannot be installed via pip or conda. thus, to use the zeose code you must clone the zeose repo and then manually add the location of the cloned repo to python's path so that it can be imported.
+As of writing this, the MAZE code cannot be installed via pip or conda. thus, to use the MAZE code you must clone the MAZE repo and then manually add the location of the cloned repo to python's path so that it can be imported.
 
 first, pick a folder to clone the repo into. in this tutorial i will use the ``code`` folder in my home directory. then clone the zeose the repo with the git clone command.
 
@@ -64,13 +64,13 @@ Cif Fetching from Database of Zeolite Structures
 
 the `database of zeolite structures <http://www.iza-structure.org/databases/>`_ is a useful resource for zeolite simulation experiments. it contains cif files for all of the synthesized zeolites, organized by their three letter zeolite code. downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. to facilitate smoother workflows, a simple python function which downloads cif files from the database was created. an example of using this to download a few different cif files is shown below. try it out!
 
-first import the zeose package.
+first import the MAZE package.
 
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys
     >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing zeotype folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "zeotype"))  # zeotype folder
+    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing maze folder
+    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "maze"))  # maze folder
     >>> import zeotype
     >>> import glob
 
@@ -87,7 +87,8 @@ now we print the directories in our current directory using our newly created he
     dirs in cwd []
 
 now let us try downloading a cif file, with the zeotype.download_cif function. we will pick the zeolite `goo`. by default the directory that the cif file is downloded to is `data`. if this 'data' directory doesn't exist, it is created.
-    >>> zeotype.download_cif("goo") # downloads "goo.cif" to data/goo.cif
+
+>>> zeotype.download_cif("goo") # downloads "goo.cif" to data/goo.cif
     >>> print_dirs()
     dirs in cwd ['data/']
     >>> print('files in data dir', glob.glob("data/*"))
@@ -192,17 +193,21 @@ an important piece of information in this file is the _atom_site_label (01, 02, 
 to demonstrate this feature, let us try building a zeotype object from a cif file.
 
 first import the zeotype pacakage
+
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys
     >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing zeotype folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "zeotype"))  # zeotype folder
+    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing maze folder
+    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "maze"))  # maze folder
     >>> import zeotype
 
 download a cif file
+
     >>> zeotype.download_cif('cha', data_dir='data') # download cha.cif
+
 then use the static method ``build_from_cif_with_labels``
-    >>> my_zeolite = zeotype.zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
+
+>>> my_zeolite = zeotype.zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
 
 the zeotype has been built. the atom idenity information is now stored in two dictionaries. let's take a look at them:
 
@@ -385,7 +390,7 @@ Then we remove the caps
 
 Here the block of code used in this tutorial.
 
-    .. code-block:: python
+.. code-block:: python
 
     # define paths
     repo_parent_dir = "/Users/dda/Code"

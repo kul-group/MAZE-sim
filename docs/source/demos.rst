@@ -87,7 +87,8 @@ now we print the directories in our current directory using our newly created he
     dirs in cwd []
 
 now let us try downloading a cif file, with the zeotype.download_cif function. we will pick the zeolite `goo`. by default the directory that the cif file is downloded to is `data`. if this 'data' directory doesn't exist, it is created.
-    >>> zeotype.download_cif("goo") # downloads "goo.cif" to data/goo.cif
+
+>>> zeotype.download_cif("goo") # downloads "goo.cif" to data/goo.cif
     >>> print_dirs()
     dirs in cwd ['data/']
     >>> print('files in data dir', glob.glob("data/*"))
@@ -192,6 +193,7 @@ an important piece of information in this file is the _atom_site_label (01, 02, 
 to demonstrate this feature, let us try building a zeotype object from a cif file.
 
 first import the zeotype pacakage
+
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys
     >>> import os
@@ -200,9 +202,12 @@ first import the zeotype pacakage
     >>> import zeotype
 
 download a cif file
+
     >>> zeotype.download_cif('cha', data_dir='data') # download cha.cif
+
 then use the static method ``build_from_cif_with_labels``
-    >>> my_zeolite = zeotype.zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
+
+>>> my_zeolite = zeotype.zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
 
 the zeotype has been built. the atom idenity information is now stored in two dictionaries. let's take a look at them:
 
@@ -385,7 +390,7 @@ Then we remove the caps
 
 Here the block of code used in this tutorial.
 
-    .. code-block:: python
+.. code-block:: python
 
     # define paths
     repo_parent_dir = "/Users/dda/Code"

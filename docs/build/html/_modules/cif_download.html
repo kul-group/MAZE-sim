@@ -84,6 +84,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">source</a></li>
 </ul>
 
             
@@ -147,10 +148,11 @@
            <div itemprop="articleBody">
             
   <h1>Source code for cif_download</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">urllib.request</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">urllib.request</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
+
 
 <div class="viewcode-block" id="download_cif"><a class="viewcode-back" href="../source.html#cif_download.download_cif">[docs]</a><span class="k">def</span> <span class="nf">download_cif</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -171,17 +173,6 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span></div>
 
-
-<div class="viewcode-block" id="build_zeolite_from_code"><a class="viewcode-back" href="../source.html#cif_download.build_zeolite_from_code">[docs]</a><span class="k">def</span> <span class="nf">build_zeolite_from_code</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Args:</span>
-<span class="sd">        code:</span>
-<span class="sd">        data_dir:</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">code</span> <span class="o">+</span> <span class="s1">&#39;.cif&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_path</span><span class="p">):</span>
-        <span class="n">download_cif</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>  <span class="c1"># will throw error if not successful</span>
-    <span class="k">return</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
