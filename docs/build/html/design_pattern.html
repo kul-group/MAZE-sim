@@ -93,7 +93,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">source</a></li>
 </ul>
 
             
@@ -305,8 +304,8 @@
 <h2>The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> Method<a class="headerlink" href="#the-delete-atoms-method" title="Permalink to this headline">¶</a></h2>
 <p>The delete_atoms method returns a copy of the original <code class="docutils literal notranslate"><span class="pre">ImpefectZeolite</span></code> with the specified atoms deleted. An example of the delete method is shown below:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import sys
-&gt;&gt;&gt; sys.path.insert<span class="o">(</span><span class="m">0</span>, <span class="s2">&quot;/Users/dda/Code&quot;</span><span class="o">)</span> <span class="c1"># folder containing maze folder</span>
-&gt;&gt;&gt; sys.path.insert<span class="o">(</span><span class="m">0</span>, <span class="s2">&quot;/Users/dda/Code/maze&quot;</span><span class="o">)</span>  <span class="c1"># maze folder</span>
+&gt;&gt;&gt; sys.path.insert<span class="o">(</span><span class="m">0</span>, <span class="s2">&quot;/Users/dda/Code&quot;</span><span class="o">)</span> <span class="c1"># folder containing MAZE-sim folder</span>
+&gt;&gt;&gt; sys.path.insert<span class="o">(</span><span class="m">0</span>, <span class="s2">&quot;/Users/dda/Code/MAZE-sim&quot;</span><span class="o">)</span>  <span class="c1"># MAZE-sim folder</span>
 &gt;&gt;&gt; import zeotype
 &gt;&gt;&gt; zeotype.download_cif<span class="o">(</span><span class="s1">&#39;BEA&#39;</span>, <span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="o">)</span> <span class="c1"># Download BEA.cif</span>
 &gt;&gt;&gt; <span class="nv">my_zeolite</span> <span class="o">=</span> zeotype.Zeotype.build_from_cif_with_labels<span class="o">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="o">)</span>  <span class="c1"># build zeolite code</span>

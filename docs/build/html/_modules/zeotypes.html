@@ -84,7 +84,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">source</a></li>
 </ul>
 
             
@@ -202,12 +201,12 @@
 
 <div class="viewcode-block" id="Zeotype"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype">[docs]</a><span class="k">class</span> <span class="nc">Zeotype</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class that inherits from ase.Atoms, which represents an unmodified maze. If a maze is built from a cif</span>
+<span class="sd">    A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif</span>
 <span class="sd">    file from the zeolite structure database, then the atoms are tagged according to their unique site and the</span>
 <span class="sd">    dictionaries site_to_atom_indices and atom_indices_to_site are filled. If not these dictionaries are set to none.</span>
 <span class="sd">    This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as</span>
-<span class="sd">    as methods to build an imperfect maze from a parent Zeotype class. Imperfect zeotypes have additional</span>
-<span class="sd">    functionality and are dependent on a parent maze class.</span>
+<span class="sd">    as methods to build an imperfect MAZE-sim from a parent Zeotype class. Imperfect zeotypes have additional</span>
+<span class="sd">    functionality and are dependent on a parent MAZE-sim class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Zeotype.__init__"><a class="viewcode-back" href="../key_classes.html#zeotypes.Zeotype.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momenta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">magmoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -221,18 +220,18 @@
         <span class="c1"># To Be compatible with ASE&#39;s atoms object, this code has to have the functionality to build from</span>
         <span class="c1"># an atom&#39;s object, a Zeotype object, or a sub class of a Zeotype object</span>
         <span class="c1"># The following if statements take care of this functionality depending on</span>
-        <span class="c1"># if the object being built is a maze or if symbols is a maze (there are four unique paths)</span>
+        <span class="c1"># if the object being built is a MAZE-sim or if symbols is a MAZE-sim (there are four unique paths)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">Zeotype</span><span class="p">):</span>  <span class="c1"># if symbols is a maze or maze subclass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">Zeotype</span><span class="p">):</span>  <span class="c1"># if symbols is a MAZE-sim or MAZE-sim subclass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">additions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">symbols</span><span class="o">.</span><span class="n">additions</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>  <span class="c1"># if the object being built is a maze</span>
+            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>  <span class="c1"># if the object being built is a MAZE-sim</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">site_to_atom_indices</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">atom_indices_to_site</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;parent&#39;</span>  <span class="c1"># must be parent to agree with index mapper</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="n">IndexMapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="bp">self</span>
 
-            <span class="k">else</span><span class="p">:</span>  <span class="c1"># if the object being built is a subtype of maze</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># if the object being built is a subtype of MAZE-sim</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">parent_zeotype</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="o">=</span> <span class="kc">None</span>
@@ -240,7 +239,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_unique_name</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>  <span class="c1"># use name</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">add_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">symbols</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
 
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># if symbols is not a maze or maze child class</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># if symbols is not a MAZE-sim or MAZE-sim child class</span>
             <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;parent&#39;</span>  <span class="c1"># must be parent for code to work properly</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="n">IndexMapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
@@ -363,7 +362,7 @@
 
 <div class="viewcode-block" id="Zeotype.get_hetero_atoms"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_hetero_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">get_hetero_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hetero_atoms_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :return: Returns a list of all of the hetero-atoms in the maze</span>
+<span class="sd">        :return: Returns a list of all of the hetero-atoms in the MAZE-sim</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">hetero_atoms_list</span><span class="p">:</span>
             <span class="n">hetero_atoms_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Hf&#39;</span><span class="p">,</span> <span class="s1">&#39;Zr&#39;</span><span class="p">,</span> <span class="s1">&#39;Ge&#39;</span><span class="p">,</span> <span class="s1">&#39;Ti&#39;</span><span class="p">]</span>
@@ -387,7 +386,7 @@
         <span class="n">type_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># default dict sets the default value of dict to []</span>
 
         <span class="n">nl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span>
-        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>  <span class="c1"># iterate through atom objects in maze</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>  <span class="c1"># iterate through atom objects in MAZE-sim</span>
             <span class="c1"># labels framework atoms</span>
             <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Sn&#39;</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
                 <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;framework-</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span>
@@ -421,7 +420,7 @@
 
 <div class="viewcode-block" id="Zeotype.count_elements"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.count_elements">[docs]</a>    <span class="k">def</span> <span class="nf">count_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :return: a dictionary where the key is the element symbol and the value is the number in the maze</span>
+<span class="sd">        :return: a dictionary where the key is the element symbol and the value is the number in the MAZE-sim</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indices</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;int&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>  <span class="c1"># indices of the elements grouped by type</span>
         <span class="n">count</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># number of elements of each type</span>
@@ -457,7 +456,7 @@
 <span class="sd">        :param max_size: max size of cluster</span>
 <span class="sd">        :param index: index of the central atom in the cluster</span>
 <span class="sd">        :param max_neighbors: number of neighbors from the host atom in the final cluster</span>
-<span class="sd">        :return: index of the cluster in the maze cluster array</span>
+<span class="sd">        :return: index of the cluster in the MAZE-sim cluster array</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">cluster_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cluster_indices</span> <span class="o">=</span> <span class="n">Cluster</span><span class="o">.</span><span class="n">get_cluster_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">max_size</span><span class="p">,</span> <span class="n">max_neighbors</span><span class="p">)</span>
@@ -583,8 +582,8 @@
 
 <div class="viewcode-block" id="ImperfectZeotype"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype">[docs]</a><span class="k">class</span> <span class="nc">ImperfectZeotype</span><span class="p">(</span><span class="n">Zeotype</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This imperfect maze inherits from Zeotype and requires a parent maze to function properly.</span>
-<span class="sd">    This represents an imperfect Zeotype such as maze with some modification like an adsorbate addition</span>
+<span class="sd">    This imperfect MAZE-sim inherits from Zeotype and requires a parent MAZE-sim to function properly.</span>
+<span class="sd">    This represents an imperfect Zeotype such as MAZE-sim with some modification like an adsorbate addition</span>
 <span class="sd">    or the removal a cluster.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -646,7 +645,7 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.remove_caps"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.remove_caps">[docs]</a>    <span class="k">def</span> <span class="nf">remove_caps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cap_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;h_cap&#39;</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cap&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove caps from an imperfect maze</span>
+<span class="sd">        Remove caps from an imperfect MAZE-sim</span>
 
 <span class="sd">        :param cap_type: The type of cap (h_cap, o_cap)</span>
 <span class="sd">        :param cap_name: The name of the cap</span>
@@ -660,11 +659,11 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.integrate_adsorbate"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.integrate_adsorbate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_adsorbate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">,</span> <span class="n">Adsorbate</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add an adsorbate into the imperfect maze</span>
+<span class="sd">        Add an adsorbate into the imperfect MAZE-sim</span>
 
 <span class="sd">        :param adsorbate: Adsorbate object</span>
 <span class="sd">        :param ads_name: name of the adsorbate</span>
-<span class="sd">        :return: a copy of imperfect maze with the adsorabte added</span>
+<span class="sd">        :return: a copy of imperfect MAZE-sim with the adsorabte added</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ads_name</span> <span class="o">=</span> <span class="s1">&#39;adsorbate&#39;</span>
         <span class="n">ads</span> <span class="o">=</span> <span class="n">Adsorbate</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)</span>
@@ -676,7 +675,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Removes an existing adsorbate from the ImperfectZeotype</span>
 <span class="sd">        :param adsorbate: adsorbate object or str</span>
-<span class="sd">        :return: new imperfect maze with item removed</span>
+<span class="sd">        :return: new imperfect MAZE-sim with item removed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ads_cat</span> <span class="o">=</span> <span class="s1">&#39;adsorbate&#39;</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">):</span>
@@ -692,10 +691,10 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.integrate_other_zeotype"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.integrate_other_zeotype">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_other_zeotype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Zeotype</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Integrate another maze into the current maze</span>
+<span class="sd">        Integrate another MAZE-sim into the current MAZE-sim</span>
 
-<span class="sd">        :param other: the other maze to integrate</span>
-<span class="sd">        :return: a new imperfect maze with the other maze integrated</span>
+<span class="sd">        :param other: the other MAZE-sim to integrate</span>
+<span class="sd">        :return: a new imperfect MAZE-sim with the other MAZE-sim integrated</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">atoms_to_add</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">()</span>
@@ -801,7 +800,7 @@
         <span class="n">atom_to_cap_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">atom_to_cap_self_i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">atom_to_cap_pi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">site_pi</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;atom_to_cap_self_i </span><span class="si">{</span><span class="n">atom_to_cap_self_i</span><span class="si">}</span><span class="s1"> does not map to parent maze&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;atom_to_cap_self_i </span><span class="si">{</span><span class="n">atom_to_cap_self_i</span><span class="si">}</span><span class="s1"> does not map to parent MAZE-sim&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">site_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_missing_atom</span><span class="p">(</span><span class="n">atom_to_cap_pi</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">])</span>
 
@@ -815,7 +814,7 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.find_missing_atom"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.find_missing_atom">[docs]</a>    <span class="k">def</span> <span class="nf">find_missing_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oxygen_atom_to_cap_pi</span><span class="p">,</span> <span class="n">atom_symbol_list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param atom_symbol_list: The symbols to look for in the parent maze</span>
+<span class="sd">        :param atom_symbol_list: The symbols to look for in the parent MAZE-sim</span>
 <span class="sd">        :param oxygen_atom_to_cap_pi:</span>
 <span class="sd">        :return: parent atom Si index or H index</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -826,9 +825,9 @@
                     <span class="k">return</span> <span class="n">atom_index</span></div>
 
 <div class="viewcode-block" id="ImperfectZeotype.delete_atoms"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.delete_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">delete_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices_to_delete</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Delete atoms from imperfect maze by returning a copy with atoms deleted</span>
+        <span class="sd">&quot;&quot;&quot;Delete atoms from imperfect MAZE-sim by returning a copy with atoms deleted</span>
 
-<span class="sd">        :param indices_to_delete: Indices of atoms in current maze to delete</span>
+<span class="sd">        :param indices_to_delete: Indices of atoms in current MAZE-sim to delete</span>
 <span class="sd">        :return: a copy of self with atoms deleted</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -842,7 +841,7 @@
 <div class="viewcode-block" id="ImperfectZeotype.set_attrs_source"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.set_attrs_source">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">set_attrs_source</span><span class="p">(</span><span class="n">new_z</span><span class="p">:</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Zeotype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set the attributes of a new imperfect maze to that of its source</span>
+<span class="sd">        Set the attributes of a new imperfect MAZE-sim to that of its source</span>
 
 <span class="sd">        :param new_z: Newly created zeolite without attributes set</span>
 <span class="sd">        :param source: the source from which new_z was created</span>
@@ -870,12 +869,12 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.add_atoms"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.add_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">add_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms_to_add</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">,</span> <span class="n">atom_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">short_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Adds additional atoms to current imperfect maze</span>
+<span class="sd">        Adds additional atoms to current imperfect MAZE-sim</span>
 
 <span class="sd">        :param atoms_to_add: The new atoms to add</span>
 <span class="sd">        :param atom_type: A str describing the type of atoms that are being added</span>
 <span class="sd">        :param short_description: A short description of the atoms that are being added (optional)</span>
-<span class="sd">        :return: A new imperfect maze with the atoms added</span>
+<span class="sd">        :return: A new imperfect MAZE-sim with the atoms added</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># add atoms to indexer</span>
         <span class="c1"># register atoms_to_add with index mapper</span>
@@ -917,11 +916,11 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.remove_addition"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.remove_addition">[docs]</a>    <span class="k">def</span> <span class="nf">remove_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addition_name</span><span class="p">,</span> <span class="n">addition_type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Removes an addition to the maze</span>
+<span class="sd">        Removes an addition to the MAZE-sim</span>
 
 <span class="sd">        :param addition_name: name of the addition</span>
 <span class="sd">        :param addition_type: the type of additon (h_cap, o_cap, ect.)</span>
-<span class="sd">        :return: A new maze with the additional atoms remvoed</span>
+<span class="sd">        :return: A new MAZE-sim with the additional atoms remvoed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">addition_to_self_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_name1_to_name2_map</span><span class="p">(</span><span class="n">addition_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">to_delete</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">addition_to_self_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
@@ -931,10 +930,10 @@
 
 <div class="viewcode-block" id="ImperfectZeotype.create_silanol_defect"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.create_silanol_defect">[docs]</a>    <span class="k">def</span> <span class="nf">create_silanol_defect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Creates a silanol defect by deleting an atom and capping the resulting imperfect maze</span>
+<span class="sd">        Creates a silanol defect by deleting an atom and capping the resulting imperfect MAZE-sim</span>
 
 <span class="sd">        :param site_index:</span>
-<span class="sd">        :return: An imperfect maze with a silanol defect</span>
+<span class="sd">        :return: An imperfect MAZE-sim with a silanol defect</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">([</span><span class="n">site_index</span><span class="p">])</span><span class="o">.</span><span class="n">cap_atoms</span><span class="p">()</span></div>
 
@@ -1032,7 +1031,7 @@
     <span class="k">def</span> <span class="nf">get_oh_cluster_multi_t_sites</span><span class="p">(</span><span class="n">zeolite</span><span class="p">:</span> <span class="n">Zeotype</span><span class="p">,</span> <span class="n">t_sites</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        get an OH cluster with multiple T sites</span>
-<span class="sd">        :param zeolite: The maze from which to extract the cluster</span>
+<span class="sd">        :param zeolite: The MAZE-sim from which to extract the cluster</span>
 <span class="sd">        :param t_sites: the central t site</span>
 <span class="sd">        :return: A list of indices of the cluster</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1147,25 +1146,6 @@
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span></div></div>
 
 
-<span class="c1"># testing</span>
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
-
-    <span class="n">b</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;/data/sam/sn_ti-periodic.traj&#39;</span><span class="p">)</span>
-    <span class="n">z</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-    <span class="n">view</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-    <span class="n">si_list</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">find_silanol_groups</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">si_list</span><span class="p">)</span>
-    <span class="n">sites_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">sil</span> <span class="ow">in</span> <span class="n">si_list</span><span class="p">:</span>
-        <span class="c1"># if &#39;T&#39; in z.atom_indices_to_site(sil.Si_index):</span>
-        <span class="c1"># sites_list.append(sil.Si_index)</span>
-        <span class="c1"># else:</span>
-        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">sil</span><span class="o">.</span><span class="n">Si_neighbor_list</span><span class="p">:</span>
-            <span class="c1"># if &#39;T&#39; in z.atom_indices_to_site(index):</span>
-            <span class="k">if</span> <span class="s1">&#39;Sn&#39;</span> <span class="o">==</span> <span class="n">z</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span>
-                <span class="n">sites_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">sites_list</span><span class="p">)))</span>
 </pre></div>
 
            </div>

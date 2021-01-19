@@ -93,7 +93,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">source</a></li>
 </ul>
 
             
@@ -165,12 +164,12 @@
 <dl class="py class">
 <dt id="zeotypes.Zeotype">
 <em class="property">class </em><code class="sig-prename descclassname">zeotypes.</code><code class="sig-name descname">Zeotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_to_atom_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">atom_indices_to_site</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_is_zeotype</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zeotypes.html#Zeotype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.Zeotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class that inherits from ase.Atoms, which represents an unmodified maze. If a maze is built from a cif
+<dd><p>A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif
 file from the zeolite structure database, then the atoms are tagged according to their unique site and the
 dictionaries site_to_atom_indices and atom_indices_to_site are filled. If not these dictionaries are set to none.
 This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as
-as methods to build an imperfect maze from a parent Zeotype class. Imperfect zeotypes have additional
-functionality and are dependent on a parent maze class.</p>
+as methods to build an imperfect MAZE-sim from a parent Zeotype class. Imperfect zeotypes have additional
+functionality and are dependent on a parent MAZE-sim class.</p>
 <dl class="py method">
 <dt id="zeotypes.Zeotype.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_to_atom_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">atom_indices_to_site</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_is_zeotype</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zeotypes.html#Zeotype.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.Zeotype.__init__" title="Permalink to this definition">¶</a></dt>
@@ -255,7 +254,7 @@ chemical symbol and the number of symbols of that type in the input list</p>
 <code class="sig-name descname">count_elements</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>Dict<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>int<span class="p">]</span><span class="p">]</span><span class="p">, </span>Dict<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span><span class="p">]</span><a class="reference internal" href="_modules/zeotypes.html#Zeotype.count_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.Zeotype.count_elements" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a dictionary where the key is the element symbol and the value is the number in the maze</p>
+<dd class="field-odd"><p>a dictionary where the key is the element symbol and the value is the number in the MAZE-sim</p>
 </dd>
 </dl>
 </dd></dl>
@@ -325,7 +324,7 @@ is given by the size parameter.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>index of the cluster in the maze cluster array</p>
+<dd class="field-even"><p>index of the cluster in the MAZE-sim cluster array</p>
 </dd>
 </dl>
 </dd></dl>
@@ -335,7 +334,7 @@ is given by the size parameter.</p>
 <code class="sig-name descname">get_hetero_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hetero_atoms_list</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">[</span>str<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="reference internal" href="_modules/zeotypes.html#Zeotype.get_hetero_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.Zeotype.get_hetero_atoms" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Returns a list of all of the hetero-atoms in the maze</p>
+<dd class="field-odd"><p>Returns a list of all of the hetero-atoms in the MAZE-sim</p>
 </dd>
 </dl>
 </dd></dl>
@@ -411,8 +410,8 @@ is given by the size parameter.</p>
 <dl class="py class">
 <dt id="zeotypes.ImperfectZeotype">
 <em class="property">class </em><code class="sig-prename descclassname">zeotypes.</code><code class="sig-name descname">ImperfectZeotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">symbols</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">numbers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tags</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">momenta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">masses</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">magmoms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">charges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scaled_positions</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cell</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pbc</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">celldisp</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">constraint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">info</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">velocities</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">site_to_atom_indices</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">atom_indices_to_site</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">additions</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>This imperfect maze inherits from Zeotype and requires a parent maze to function properly.
-This represents an imperfect Zeotype such as maze with some modification like an adsorbate addition
+<dd><p>This imperfect MAZE-sim inherits from Zeotype and requires a parent MAZE-sim to function properly.
+This represents an imperfect Zeotype such as MAZE-sim with some modification like an adsorbate addition
 or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.__init__">
@@ -441,7 +440,7 @@ or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.add_atoms">
 <code class="sig-name descname">add_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">atoms_to_add</span><span class="p">:</span> <span class="n">ase.atoms.Atoms</span></em>, <em class="sig-param"><span class="n">atom_type</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">short_description</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.add_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.add_atoms" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds additional atoms to current imperfect maze</p>
+<dd><p>Adds additional atoms to current imperfect MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -451,7 +450,7 @@ or the removal a cluster.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new imperfect maze with the atoms added</p>
+<dd class="field-even"><p>A new imperfect MAZE-sim with the atoms added</p>
 </dd>
 </dl>
 </dd></dl>
@@ -533,13 +532,13 @@ or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.create_silanol_defect">
 <code class="sig-name descname">create_silanol_defect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">site_index</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.create_silanol_defect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.create_silanol_defect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a silanol defect by deleting an atom and capping the resulting imperfect maze</p>
+<dd><p>Creates a silanol defect by deleting an atom and capping the resulting imperfect MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>site_index</strong> – </p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An imperfect maze with a silanol defect</p>
+<dd class="field-even"><p>An imperfect MAZE-sim with a silanol defect</p>
 </dd>
 </dl>
 </dd></dl>
@@ -547,10 +546,10 @@ or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.delete_atoms">
 <code class="sig-name descname">delete_atoms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices_to_delete</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.delete_atoms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.delete_atoms" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete atoms from imperfect maze by returning a copy with atoms deleted</p>
+<dd><p>Delete atoms from imperfect MAZE-sim by returning a copy with atoms deleted</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>indices_to_delete</strong> – Indices of atoms in current maze to delete</p>
+<dd class="field-odd"><p><strong>indices_to_delete</strong> – Indices of atoms in current MAZE-sim to delete</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a copy of self with atoms deleted</p>
@@ -564,7 +563,7 @@ or the removal a cluster.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>atom_symbol_list</strong> – The symbols to look for in the parent maze</p></li>
+<li><p><strong>atom_symbol_list</strong> – The symbols to look for in the parent MAZE-sim</p></li>
 <li><p><strong>oxygen_atom_to_cap_pi</strong> – </p></li>
 </ul>
 </dd>
@@ -618,7 +617,7 @@ or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.integrate_adsorbate">
 <code class="sig-name descname">integrate_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span><span class="p">:</span> <span class="n">ase.atoms.Atoms</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span><a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><span class="p">, </span>maze.adsorbate.Adsorbate<span class="p">]</span><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.integrate_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.integrate_adsorbate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add an adsorbate into the imperfect maze</p>
+<dd><p>Add an adsorbate into the imperfect MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -627,7 +626,7 @@ or the removal a cluster.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a copy of imperfect maze with the adsorabte added</p>
+<dd class="field-even"><p>a copy of imperfect MAZE-sim with the adsorabte added</p>
 </dd>
 </dl>
 </dd></dl>
@@ -635,13 +634,13 @@ or the removal a cluster.</p>
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.integrate_other_zeotype">
 <code class="sig-name descname">integrate_other_zeotype</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source.html#zeotypes.Zeotype" title="zeotypes.Zeotype">zeotypes.Zeotype</a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.integrate_other_zeotype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.integrate_other_zeotype" title="Permalink to this definition">¶</a></dt>
-<dd><p>Integrate another maze into the current maze</p>
+<dd><p>Integrate another MAZE-sim into the current MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>other</strong> – the other maze to integrate</p>
+<dd class="field-odd"><p><strong>other</strong> – the other MAZE-sim to integrate</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a new imperfect maze with the other maze integrated</p>
+<dd class="field-even"><p>a new imperfect MAZE-sim with the other MAZE-sim integrated</p>
 </dd>
 </dl>
 </dd></dl>
@@ -682,7 +681,7 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.remove_addition">
 <code class="sig-name descname">remove_addition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">addition_name</span></em>, <em class="sig-param"><span class="n">addition_type</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.remove_addition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.remove_addition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes an addition to the maze</p>
+<dd><p>Removes an addition to the MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -691,7 +690,7 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A new maze with the additional atoms remvoed</p>
+<dd class="field-even"><p>A new MAZE-sim with the additional atoms remvoed</p>
 </dd>
 </dl>
 </dd></dl>
@@ -701,13 +700,13 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 <code class="sig-name descname">remove_adsorbate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">adsorbate</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>maze.adsorbate.Adsorbate<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.remove_adsorbate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.remove_adsorbate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes an existing adsorbate from the ImperfectZeotype
 :param adsorbate: adsorbate object or str
-:return: new imperfect maze with item removed</p>
+:return: new imperfect MAZE-sim with item removed</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.remove_caps">
 <code class="sig-name descname">remove_caps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cap_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'h_cap'</span></em>, <em class="sig-param"><span class="n">cap_name</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'cap'</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a><a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.remove_caps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.remove_caps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove caps from an imperfect maze</p>
+<dd><p>Remove caps from an imperfect MAZE-sim</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -724,7 +723,7 @@ for the mapping to work correctly, the atom positions must be identical. This</p
 <dl class="py method">
 <dt id="zeotypes.ImperfectZeotype.set_attrs_source">
 <em class="property">static </em><code class="sig-name descname">set_attrs_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_z</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source.html#zeotypes.ImperfectZeotype" title="zeotypes.ImperfectZeotype">zeotypes.ImperfectZeotype</a></span></em>, <em class="sig-param"><span class="n">source</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source.html#zeotypes.Zeotype" title="zeotypes.Zeotype">zeotypes.Zeotype</a></span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/zeotypes.html#ImperfectZeotype.set_attrs_source"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.ImperfectZeotype.set_attrs_source" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the attributes of a new imperfect maze to that of its source</p>
+<dd><p>Set the attributes of a new imperfect MAZE-sim to that of its source</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -807,7 +806,7 @@ methods that take in other
 <dt id="zeotypes.Cluster.get_oh_cluster_multi_t_sites">
 <em class="property">static </em><code class="sig-name descname">get_oh_cluster_multi_t_sites</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zeolite</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source.html#zeotypes.Zeotype" title="zeotypes.Zeotype">zeotypes.Zeotype</a></span></em>, <em class="sig-param"><span class="n">t_sites</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="reference internal" href="_modules/zeotypes.html#Cluster.get_oh_cluster_multi_t_sites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zeotypes.Cluster.get_oh_cluster_multi_t_sites" title="Permalink to this definition">¶</a></dt>
 <dd><p>get an OH cluster with multiple T sites
-:param zeolite: The maze from which to extract the cluster
+:param zeolite: The MAZE-sim from which to extract the cluster
 :param t_sites: the central t site
 :return: A list of indices of the cluster</p>
 </dd></dl>
@@ -846,7 +845,7 @@ methods that take in other
 <code class="sig-name descname">avg_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ads_position</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adsorbate.html#Adsorbate.avg_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorbate.Adsorbate.avg_distance" title="Permalink to this definition">¶</a></dt>
 <dd><p>average distance from position to all host atoms :param ads_position:
 np.array x,y,z of adsorbate position :return: float, average distance of
-host maze atoms to adsorbate position</p>
+host MAZE-sim atoms to adsorbate position</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>ads_position:</p>
 </dd>
@@ -873,7 +872,7 @@ num_pts:</p>
 <dl class="py method">
 <dt id="adsorbate.Adsorbate.find_void">
 <code class="sig-name descname">find_void</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">void_position_guess</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/adsorbate.html#Adsorbate.find_void"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorbate.Adsorbate.find_void" title="Permalink to this definition">¶</a></dt>
-<dd><p>finds nearest empty region in host maze :param
+<dd><p>finds nearest empty region in host MAZE-sim :param
 void_position_guess: An initial guess for the center of the void as a
 np.array with x,y,z position :return: np.array position of center of
 empty void</p>
@@ -936,7 +935,7 @@ num_pts:</p>
 <code class="sig-name descname">min_distance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ads_position</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/adsorbate.html#Adsorbate.min_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#adsorbate.Adsorbate.min_distance" title="Permalink to this definition">¶</a></dt>
 <dd><p>minimum distance from atom in a host to adsorbate :param
 ads_position: np.array x,y,z of adsorbate position :return: float,
-minimum distance between an atom in host maze and adsorbate position</p>
+minimum distance between an atom in host MAZE-sim and adsorbate position</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>ads_position:</p>
 </dd>
