@@ -52,12 +52,12 @@ class Silanol():
 
 class Zeotype(Atoms):
     """
-    A class that inherits from ase.Atoms, which represents an unmodified maze. If a maze is built from a cif
+    A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif
     file from the zeolite structure database, then the atoms are tagged according to their unique site and the
     dictionaries site_to_atom_indices and atom_indices_to_site are filled. If not these dictionaries are set to none.
     This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as
-    as methods to build an imperfect maze from a parent Zeotype class. Imperfect zeotypes have additional
-    functionality and are dependent on a parent maze class.
+    as methods to build an imperfect MAZE-sim from a parent Zeotype class. Imperfect zeotypes have additional
+    functionality and are dependent on a parent MAZE-sim class.
     """
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
@@ -71,18 +71,18 @@ class Zeotype(Atoms):
         # To Be compatible with ASE's atoms object, this code has to have the functionality to build from
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
         # The following if statements take care of this functionality depending on
-        # if the object being built is a maze or if symbols is a maze (there are four unique paths)
+        # if the object being built is a MAZE-sim or if symbols is a MAZE-sim (there are four unique paths)
 
-        if isinstance(symbols, Zeotype):  # if symbols is a maze or maze subclass
+        if isinstance(symbols, Zeotype):  # if symbols is a MAZE-sim or MAZE-sim subclass
             self.additions = copy.deepcopy(symbols.additions)
-            if _is_zeotype:  # if the object being built is a maze
+            if _is_zeotype:  # if the object being built is a MAZE-sim
                 self.site_to_atom_indices = symbols.site_to_atom_indices
                 self.atom_indices_to_site = symbols.atom_indices_to_site
                 self.name = 'parent'  # must be parent to agree with index mapper
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
 
-            else:  # if the object being built is a subtype of maze
+            else:  # if the object being built is a subtype of MAZE-sim
                 self.parent_zeotype = symbols.parent_zeotype
                 self.site_to_atom_indices = None
                 self.atom_indices_to_site = None
@@ -90,7 +90,7 @@ class Zeotype(Atoms):
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
 
-        else:  # if symbols is not a maze or maze child class
+        else:  # if symbols is not a MAZE-sim or MAZE-sim child class
             if _is_zeotype:
                 self.name = 'parent'  # must be parent for code to work properly
                 self.index_mapper = IndexMapper(self.get_indices(self))
@@ -213,7 +213,7 @@ class Zeotype(Atoms):
 
     def get_hetero_atoms(self, hetero_atoms_list: Optional[List[str]] = None) -> List[int]:
         """
-        :return: Returns a list of all of the hetero-atoms in the maze
+        :return: Returns a list of all of the hetero-atoms in the MAZE-sim
         """
         if not hetero_atoms_list:
             hetero_atoms_list = ['Sn', 'Hf', 'Zr', 'Ge', 'Ti']
@@ -237,7 +237,7 @@ class Zeotype(Atoms):
         type_dict: Dict[str, List[int]] = defaultdict(list)  # default dict sets the default value of dict to []
 
         nl = self.neighbor_list
-        for atom in self:  # iterate through atom objects in maze
+        for atom in self:  # iterate through atom objects in MAZE-sim
             # labels framework atoms
             if atom.symbol in ['Sn', 'Al', 'Si']:
                 label = 'framework-%s' % atom.symbol
@@ -271,7 +271,7 @@ class Zeotype(Atoms):
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
         """
-        :return: a dictionary where the key is the element symbol and the value is the number in the maze
+        :return: a dictionary where the key is the element symbol and the value is the number in the MAZE-sim
         """
         indices: Dict['str', List['int']] = defaultdict(list)  # indices of the elements grouped by type
         count: Dict['str', int] = defaultdict(lambda: 0)  # number of elements of each type
@@ -307,7 +307,7 @@ class Zeotype(Atoms):
         :param max_size: max size of cluster
         :param index: index of the central atom in the cluster
         :param max_neighbors: number of neighbors from the host atom in the final cluster
-        :return: index of the cluster in the maze cluster array
+        :return: index of the cluster in the MAZE-sim cluster array
         """
         if cluster_indices is None:
             cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
@@ -433,8 +433,8 @@ class Zeotype(Atoms):
 
 class ImperfectZeotype(Zeotype):
     """
-    This imperfect maze inherits from Zeotype and requires a parent maze to function properly.
-    This represents an imperfect Zeotype such as maze with some modification like an adsorbate addition
+    This imperfect MAZE-sim inherits from Zeotype and requires a parent MAZE-sim to function properly.
+    This represents an imperfect Zeotype such as MAZE-sim with some modification like an adsorbate addition
     or the removal a cluster.
     """
 
@@ -496,7 +496,7 @@ class ImperfectZeotype(Zeotype):
 
     def remove_caps(self, cap_type: str = 'h_cap', cap_name: str = "cap") -> 'ImperfectZeotype':
         """
-        Remove caps from an imperfect maze
+        Remove caps from an imperfect MAZE-sim
 
         :param cap_type: The type of cap (h_cap, o_cap)
         :param cap_name: The name of the cap
@@ -510,11 +510,11 @@ class ImperfectZeotype(Zeotype):
 
     def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['ImperfectZeotype', Adsorbate]:
         """
-        Add an adsorbate into the imperfect maze
+        Add an adsorbate into the imperfect MAZE-sim
 
         :param adsorbate: Adsorbate object
         :param ads_name: name of the adsorbate
-        :return: a copy of imperfect maze with the adsorabte added
+        :return: a copy of imperfect MAZE-sim with the adsorabte added
         """
         ads_name = 'adsorbate'
         ads = Adsorbate(adsorbate)
@@ -526,7 +526,7 @@ class ImperfectZeotype(Zeotype):
         """
         Removes an existing adsorbate from the ImperfectZeotype
         :param adsorbate: adsorbate object or str
-        :return: new imperfect maze with item removed
+        :return: new imperfect MAZE-sim with item removed
         """
         ads_cat = 'adsorbate'
         if hasattr(adsorbate, "name"):
@@ -542,10 +542,10 @@ class ImperfectZeotype(Zeotype):
 
     def integrate_other_zeotype(self, other: Zeotype):
         """
-        Integrate another maze into the current maze
+        Integrate another MAZE-sim into the current MAZE-sim
 
-        :param other: the other maze to integrate
-        :return: a new imperfect maze with the other maze integrated
+        :param other: the other MAZE-sim to integrate
+        :return: a new imperfect MAZE-sim with the other MAZE-sim integrated
         """
         new_self = self.__class__(self)
         atoms_to_add = ase.Atoms()
@@ -651,7 +651,7 @@ class ImperfectZeotype(Zeotype):
         atom_to_cap_pi = self.index_mapper.get_index(self.name, self.parent_zeotype.name, atom_to_cap_self_i)
         if atom_to_cap_pi is None:
             site_pi = None
-            print(f'atom_to_cap_self_i {atom_to_cap_self_i} does not map to parent maze')
+            print(f'atom_to_cap_self_i {atom_to_cap_self_i} does not map to parent MAZE-sim')
         else:
             site_pi = self.find_missing_atom(atom_to_cap_pi, ['H', 'Si'])
 
@@ -665,7 +665,7 @@ class ImperfectZeotype(Zeotype):
 
     def find_missing_atom(self, oxygen_atom_to_cap_pi, atom_symbol_list) -> int:
         """
-        :param atom_symbol_list: The symbols to look for in the parent maze
+        :param atom_symbol_list: The symbols to look for in the parent MAZE-sim
         :param oxygen_atom_to_cap_pi:
         :return: parent atom Si index or H index
         """
@@ -676,9 +676,9 @@ class ImperfectZeotype(Zeotype):
                     return atom_index
 
     def delete_atoms(self, indices_to_delete) -> 'ImperfectZeotype':
-        """Delete atoms from imperfect maze by returning a copy with atoms deleted
+        """Delete atoms from imperfect MAZE-sim by returning a copy with atoms deleted
 
-        :param indices_to_delete: Indices of atoms in current maze to delete
+        :param indices_to_delete: Indices of atoms in current MAZE-sim to delete
         :return: a copy of self with atoms deleted
         """
         new_self_a = ase.Atoms(self)
@@ -692,7 +692,7 @@ class ImperfectZeotype(Zeotype):
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
         """
-        Set the attributes of a new imperfect maze to that of its source
+        Set the attributes of a new imperfect MAZE-sim to that of its source
 
         :param new_z: Newly created zeolite without attributes set
         :param source: the source from which new_z was created
@@ -720,12 +720,12 @@ class ImperfectZeotype(Zeotype):
 
     def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'ImperfectZeotype':
         """
-        Adds additional atoms to current imperfect maze
+        Adds additional atoms to current imperfect MAZE-sim
 
         :param atoms_to_add: The new atoms to add
         :param atom_type: A str describing the type of atoms that are being added
         :param short_description: A short description of the atoms that are being added (optional)
-        :return: A new imperfect maze with the atoms added
+        :return: A new imperfect MAZE-sim with the atoms added
         """
         # add atoms to indexer
         # register atoms_to_add with index mapper
@@ -767,11 +767,11 @@ class ImperfectZeotype(Zeotype):
 
     def remove_addition(self, addition_name, addition_type) -> 'ImperfectZeotype':
         """
-        Removes an addition to the maze
+        Removes an addition to the MAZE-sim
 
         :param addition_name: name of the addition
         :param addition_type: the type of additon (h_cap, o_cap, ect.)
-        :return: A new maze with the additional atoms remvoed
+        :return: A new MAZE-sim with the additional atoms remvoed
         """
         addition_to_self_map = self.index_mapper.get_name1_to_name2_map(addition_name, self.name)
         to_delete = list(addition_to_self_map.values())
@@ -781,10 +781,10 @@ class ImperfectZeotype(Zeotype):
 
     def create_silanol_defect(self, site_index) -> 'ImperfectZeotype':
         """
-        Creates a silanol defect by deleting an atom and capping the resulting imperfect maze
+        Creates a silanol defect by deleting an atom and capping the resulting imperfect MAZE-sim
 
         :param site_index:
-        :return: An imperfect maze with a silanol defect
+        :return: An imperfect MAZE-sim with a silanol defect
         """
         return self.delete_atoms([site_index]).cap_atoms()
 
@@ -882,7 +882,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
     def get_oh_cluster_multi_t_sites(zeolite: Zeotype, t_sites: int) -> List[int]:
         """
         get an OH cluster with multiple T sites
-        :param zeolite: The maze from which to extract the cluster
+        :param zeolite: The MAZE-sim from which to extract the cluster
         :param t_sites: the central t site
         :return: A list of indices of the cluster
         """

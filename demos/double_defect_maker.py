@@ -45,8 +45,8 @@ def defect_maker(cif_dir, zeolite_code, output_dir, savefiles=True):
 # helper functions for second defect function
 def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
     """
-    Finds the atoms removed from the iz by comparing it with parent maze
-    :param iz: imperfect maze to check for missing atoms
+    Finds the atoms removed from the iz by comparing it with parent MAZE-sim
+    :param iz: imperfect MAZE-sim to check for missing atoms
     :return: list of indices of missing atoms (using parent indexing)
     """
     missing_list = []
@@ -60,7 +60,7 @@ def find_removed_atoms(iz: ImperfectZeotype) -> List[int]:
 def find_neighbor_si(z: Zeotype, first_si_index: int):
     """
     Finds the first neighboring Si
-    :param z: the maze object
+    :param z: the MAZE-sim object
     :param first_si_index: the first Si index to find a neighbor too
     :return: the first neighboring si index
     """
@@ -74,7 +74,7 @@ def find_neighbor_si(z: Zeotype, first_si_index: int):
 def find_index_common_oxygen(iz, site_1: int, site_2: int) -> int:
     """
     Finds a common oxygen, if it exists, between two T sites
-    :param iz: imperfect maze (or subclass) containing T sites
+    :param iz: imperfect MAZE-sim (or subclass) containing T sites
     :param site_1: index of T site 1
     :param site_2: index of T site 2
     :return:
@@ -93,7 +93,7 @@ def find_index_common_oxygen(iz, site_1: int, site_2: int) -> int:
 def remove_two_T_sites(iz, site_1: int, site_2: int) -> ImperfectZeotype:
     """
     Removes two T sites that are adjacent to eachother
-    :param iz: Impefect maze with two T sites
+    :param iz: Impefect MAZE-sim with two T sites
     :param site_1: the index of the first site to remove
     :param site_2: the index of the second site to remove
     :return:

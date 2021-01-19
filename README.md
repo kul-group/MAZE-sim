@@ -43,15 +43,15 @@ Clone this github repo
 Add the cloned repo to your python path with 
 ```python
 import sys
-sys.path.insert(0, "<absolute path to parent maze folder>")
-sys.path.insert(0, "<absolute path to parent maze>")
+sys.path.insert(0, "<absolute path to parent MAZE-sim folder>")
+sys.path.insert(0, "<absolute path to parent MAZE-sim>")
 ```
 
 For example,
 ```python
 import sys
 sys.path.insert(0, "/Users/myusername/Code")
-sys.path.insert(0, "/Users/myusername/Code/maze")
+sys.path.insert(0, "/Users/myusername/Code/MAZE-sim")
 ```
 
 

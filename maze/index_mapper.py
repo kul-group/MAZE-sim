@@ -4,7 +4,7 @@ from typing import Iterable, Dict, List
 
 class IndexMapper:
     """
-    This class maps between the different atoms objects in a maze project.
+    This class maps between the different atoms objects in a MAZE-sim project.
     It is essential for keeping track of the various
     """
 

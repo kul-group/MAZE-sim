@@ -35,12 +35,12 @@ class Adsorbate(Atoms):
     def min_distance(self, ads_position) -> float:
         """minimum distance from atom in a host to adsorbate :param
         ads_position: np.array x,y,z of adsorbate position :return: float,
-        minimum distance between an atom in host maze and adsorbate position
+        minimum distance between an atom in host MAZE-sim and adsorbate position
 
         Args:
             ads_position:
         """
-        assert self.host_zeotype is not None, "Cannot find min distance when host maze is None"
+        assert self.host_zeotype is not None, "Cannot find min distance when host MAZE-sim is None"
 
         dummy_atom = Atom('H', position=ads_position)
         dummy_host = self.host_zeotype + dummy_atom
@@ -50,12 +50,12 @@ class Adsorbate(Atoms):
     def avg_distance(self, ads_position):
         """average distance from position to all host atoms :param ads_position:
         np.array x,y,z of adsorbate position :return: float, average distance of
-        host maze atoms to adsorbate position
+        host MAZE-sim atoms to adsorbate position
 
         Args:
             ads_position:
         """
-        assert self.host_zeotype is not None, "Cannot find average distance when host maze is None"
+        assert self.host_zeotype is not None, "Cannot find average distance when host MAZE-sim is None"
 
         dummy_atom = Atom('H', position=ads_position)
         dummy_host = self.host_zeotype + dummy_atom
@@ -63,7 +63,7 @@ class Adsorbate(Atoms):
         return avg_distance
 
     def find_void(self, void_position_guess):
-        """finds nearest empty region in host maze :param
+        """finds nearest empty region in host MAZE-sim :param
         void_position_guess: An initial guess for the center of the void as a
         np.array with x,y,z position :return: np.array position of center of
         empty void
@@ -74,7 +74,7 @@ class Adsorbate(Atoms):
 
         # TODO: Find a way to speed this up
 
-        assert self.host_zeotype is not None, "Cannot find void position when host maze is None"
+        assert self.host_zeotype is not None, "Cannot find void position when host MAZE-sim is None"
 
         fun_to_min = lambda pos: -1 * self.min_distance(pos)  # 1 param function for scipy.minimize
         ans = minimize(fun_to_min, void_position_guess)
@@ -118,7 +118,7 @@ class Adsorbate(Atoms):
             num_pts:
         """
         assert (radius > cutoff), "radius larger than cutoff distance"
-        assert self.host_zeotype is not None, "host maze cannot be none"
+        assert self.host_zeotype is not None, "host MAZE-sim cannot be none"
 
         guess_positions = self.sphere_sample(radius, num_pts)
         host_pos = self.host_zeotype.get_positions()[index]
@@ -216,7 +216,7 @@ class Adsorbate(Atoms):
             try:
                 return sym_index_map['Al'][0]
             except KeyError:
-                print("No Al in host maze")
+                print("No Al in host MAZE-sim")
                 raise
 
     def pick_ads_position(self, donor_ind, host_ind, radius=None, cutoff=None):
