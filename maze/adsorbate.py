@@ -299,25 +299,3 @@ class Adsorbate(Atoms):
         return new_self
 
 
-if __name__ == '__main__':
-    from ase.visualize import view
-    from ase.build import molecule
-
-    zeotype = maze.source.zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
-    iz = zeotype.get_imperfect_zeolite()
-    iz[174].symbol = 'Sn'
-
-    iz = iz.delete_atoms([185, 113, 118, 63, 78, 92, 112, 150])
-    mol = molecule('CH3OH')
-    ads = Adsorbate(mol, host_zeotype=iz)
-    ads = ads.position_ads(0, 167, pos=[6.660, 6.660, 9.820])
-    iz, ads = iz.integrate_adsorbate(ads)
-    print(type(iz))
-    print(ads.name)
-    view(iz)
-    iz = iz.remove_adsorbate(ads)
-    view(iz)
-    # for p in ads.get_positions():
-    #     print(p)
-    # view(ads)
-    # ads.integrate_ads()

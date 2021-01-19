@@ -997,22 +997,3 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         return list(cluster_indices)
 
 
-# testing
-if __name__ == '__main__':
-    from ase.io import read
-
-    b = read('/data/sam/sn_ti-periodic.traj')
-    z = Zeotype(b)
-    view(b)
-    si_list = z.find_silanol_groups()
-    print(si_list)
-    sites_list = []
-    for sil in si_list:
-        # if 'T' in z.atom_indices_to_site(sil.Si_index):
-        # sites_list.append(sil.Si_index)
-        # else:
-        for index in sil.Si_neighbor_list:
-            # if 'T' in z.atom_indices_to_site(index):
-            if 'Sn' == z[index].symbol:
-                sites_list.append(index)
-    print(list(set(sites_list)))
