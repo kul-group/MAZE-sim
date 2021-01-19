@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Background &mdash; Zeotype Project 0.1 documentation</title>
+  <title>Background &mdash; Multiscale Atomistic Zeolite simulation Environment (MAZE) 0.1 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Demos" href="demos.html" />
-    <link rel="prev" title="Welcome to Zeotype Project’s documentation!" href="index.html" /> 
+    <link rel="prev" title="Welcome to MAZE Project’s documentation!" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Zeotype Project
+            <a href="index.html" class="icon icon-home"> Multiscale Atomistic Zeolite simulation Environment (MAZE)
           
 
           
@@ -83,9 +83,9 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">ZeoSE Index Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -100,7 +100,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Zeotype Project</a>
+          <a href="index.html">Multiscale Atomistic Zeolite simulation Environment (MAZE)</a>
         
       </nav>
 
@@ -152,8 +152,10 @@
             
   <div class="section" id="background">
 <h1>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h1>
-<p>Zeolites are microporous materials integral to the modern world. Their roles include (but are not limited to) gas separators and catalysts. The structure of a zeolite determines its viability for industrial applications, and searching for optimal zeolite structures for specific applications is complicated by the vastness of the zeolite chemical space. [maybe insert something about what the chemical space is, how to change a structure, etc] Currently, over 245 unique zeolites have been synthesized, which is  minor compared to the one million theoretical zeolites that have been identified. Synthesizing zeolites is time consuming, challenging and not always reproducible indicating synthesis of millions of zeolites is not feasible. Thus, it is essential for zeolite structures to be computationally screened for their industrial potentials before attempts at their syntheses in labs are made.</p>
-<p>The Atomic Simulation Environment (ASE) is a set of tools that facilitates calculations to determine zeolite potentials. It offers an object-oriented interface to represent individual and groups of atoms and calculators. Additionally, ASE supports exporting to formats that are compatible with [need to do more work to figure out!!]…  Many successful zeolite screening projects have been carried out with this software to date.</p>
+<p>Zeolites are microporous materials integral to the modern world. Their roles include (but are not limited to) gas separators and catalysts. The structure of a zeolite determines its viability for industrial applications. Searching for optimal zeolite structures for specific applications is complicated by the vastness of the zeolite chemical space. Currently, over 245 unique zeolites have been synthesized, which is  minor compared to the one million theoretical zeolites that have been identified. Exploring this expansive space can be achieved by chemical simulation experiments, which can predict the properties of both synthesized and theoretical zeolites and identify promising targets for laboratory experiments.</p>
+<p>The Atomic Simulation Environment (ASE) is a set of tools that facilitates molecular simulation experiments. ASE offers an object-oriented interface to represent individual and groups of atoms and calculators. Many successful zeolite screening projects have been carried out with this software to date. Nevertheless,As the currently available general-purpose python codes are not ideally-suited for zeolite-specific tasks.</p>
+<p>The Multiscale Atomistic Zeotype Simulation Environment (MAZE) aims to streamline zeolite experiment workflows. MAZE utilizes an object-oriented programming approach built around an “ImperfectZeolite” class that (1) overcomes the cumbersome indexing issues associated with adding and removing atoms (e.g., creating defects, inserting TMs), (2) simplifies multiscale calculations through custom-built wrappers for different codes and (3) maintains the provenance of each calculation. The latter aspect is especially important for modern computational studies, as every calculation step (e.g. DFT, AIMD, force field etc.) can be easily traced back to the IZA CIF file.</p>
+<p>For examples on the MAZE package please see the Demos section.</p>
 </div>
 
 
@@ -167,7 +169,7 @@
         <a href="demos.html" class="btn btn-neutral float-right" title="Demos" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Zeotype Project’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MAZE Project’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

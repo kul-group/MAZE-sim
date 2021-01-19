@@ -2,13 +2,13 @@
 Demos
 ===============
 
-to showcase the capabilities of the zeose code various demos will be presented, along with comments describing how to use the functions shown in the demos.
+To showcase the capabilities of the MAZE code various demos will be presented, along with comments describing how to use the functions shown in the demos.
 
 ******************************************************
 Installing
 ******************************************************
 
-as of writing this, the zeose code cannot be installed via pip or conda. thus, to use the zeose code you must clone the zeose repo and then manually add the location of the cloned repo to python's path so that it can be imported.
+As of writing this, the MAZE code cannot be installed via pip or conda. thus, to use the MAZE code you must clone the MAZE repo and then manually add the location of the cloned repo to python's path so that it can be imported.
 
 first, pick a folder to clone the repo into. in this tutorial i will use the ``code`` folder in my home directory. then clone the zeose the repo with the git clone command.
 
@@ -64,7 +64,7 @@ Cif Fetching from Database of Zeolite Structures
 
 the `database of zeolite structures <http://www.iza-structure.org/databases/>`_ is a useful resource for zeolite simulation experiments. it contains cif files for all of the synthesized zeolites, organized by their three letter zeolite code. downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. to facilitate smoother workflows, a simple python function which downloads cif files from the database was created. an example of using this to download a few different cif files is shown below. try it out!
 
-first import the zeose package.
+first import the MAZE package.
 
     >>> zeose_repo_location = "/users/dda/code"
     >>> import sys

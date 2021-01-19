@@ -1,44 +1,38 @@
-ZeoSE Key Classes
+MAZE Key Classes
 =================
 
-source.adsorbate.Adsorbate class
+Zeotype class
 ----------------------------
-.. autoclass:: source.adsorbate.Adsorbate
+.. autoclass:: zeotype.Zeotype
+   :members:
+   :private-members:
+   :special-members:
+
+ImperfectZeotype class
+----------------------------
+.. autoclass:: zeotype.ImperfectZeotype
+   :members:
+   :private-members:
+   :special-members:
+
+Cluster class
+----------------------------
+.. autoclass:: zeotype.Cluster
    :members:
    :private-members:
    :special-members:
 
 
-source.zeotype.Zeotype class
+OpenDefect class
 ----------------------------
-
-.. autoclass:: source.zeotype.Zeotype
+.. autoclass:: zeotype.OpenDefect
    :members:
    :private-members:
    :special-members:
 
-source.zeotype.ImperfectZeotype class
+Adsorbate class
 ----------------------------
-
-.. autoclass:: source.zeotype.ImperfectZeotype
+.. autoclass:: adsorbate.Adsorbate
    :members:
    :private-members:
    :special-members:
-
-source.zeotype.Cluster class
-----------------------------
-
-.. autoclass:: source.zeotype.Cluster
-   :members:
-   :private-members:
-   :special-members:
-
-
-source.zeotype.OpenDefect class
-----------------------------
-
-.. autoclass:: source.zeotype.OpenDefect
-   :members:
-   :private-members:
-   :special-members:
-

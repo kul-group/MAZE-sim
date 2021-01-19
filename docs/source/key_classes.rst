@@ -1,44 +1,37 @@
 MAZE Key Classes
 =================
 
-source.adsorbate.Adsorbate class
+Zeotype class
 ----------------------------
-.. autoclass:: source.adsorbate.Adsorbate
+.. autoclass:: zeotype.Zeotype
    :members:
    :private-members:
    :special-members:
 
-
-source.zeotype.Zeotype class
+ImperfectZeotype class
 ----------------------------
-
-.. autoclass:: source.zeotype.Zeotype
+.. autoclass:: zeotype.ImperfectZeotype
    :members:
    :private-members:
    :special-members:
 
-source.zeotype.ImperfectZeotype class
+Cluster class
 ----------------------------
-
-.. autoclass:: source.zeotype.ImperfectZeotype
+.. autoclass:: zeotype.Cluster
    :members:
    :private-members:
    :special-members:
 
-source.zeotype.Cluster class
+OpenDefect class
 ----------------------------
-
-.. autoclass:: source.zeotype.Cluster
+.. autoclass:: zeotype.OpenDefect
    :members:
    :private-members:
    :special-members:
 
-
-source.zeotype.OpenDefect class
+Adsorbate class
 ----------------------------
-
-.. autoclass:: source.zeotype.OpenDefect
+.. autoclass:: adsorbate.Adsorbate
    :members:
    :private-members:
    :special-members:
-

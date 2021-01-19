@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ZeoSE Index Mapper &mdash; Zeotype Project 0.1 documentation</title>
+  <title>MAZE Index Mapper &mdash; Multiscale Atomistic Zeolite simulation Environment (MAZE) 0.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ZeoSE Key Classes" href="key_classes.html" />
+    <link rel="next" title="MAZE Key Classes" href="key_classes.html" />
     <link rel="prev" title="Demos" href="demos.html" /> 
 </head>
 
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Zeotype Project
+            <a href="index.html" class="icon icon-home"> Multiscale Atomistic Zeolite simulation Environment (MAZE)
           
 
           
@@ -83,7 +83,7 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ZeoSE Index Mapper</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MAZE Index Mapper</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-index-mapper-solution">The Index Mapper Solution</a></li>
@@ -91,8 +91,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -107,7 +107,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Zeotype Project</a>
+          <a href="index.html">Multiscale Atomistic Zeolite simulation Environment (MAZE)</a>
         
       </nav>
 
@@ -138,7 +138,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>ZeoSE Index Mapper</li>
+      <li>MAZE Index Mapper</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -157,13 +157,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="zeose-index-mapper">
-<h1>ZeoSE Index Mapper<a class="headerlink" href="#zeose-index-mapper" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="maze-index-mapper">
+<h1>MAZE Index Mapper<a class="headerlink" href="#maze-index-mapper" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
 <p>The following documentation frequently references ase’s Atoms object, ase’s Atom object and the atoms in ase’s Atoms objects. This can get confusing, so for clarity the following definitions are provided:</p>
 <ul class="simple">
-<li><p>ase: short for the atomic simulation environment, which is the package the ZeoSE package is based off of.</p></li>
+<li><p>ase: short for the atomic simulation environment, which is the package the ZASE package is based off of.</p></li>
 <li><p>ase.Atoms class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> in the <code class="docutils literal notranslate"><span class="pre">ase</span></code> package.</p></li>
 <li><p>ase.Atom class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atom</span></code> in the <code class="docutils literal notranslate"><span class="pre">ase</span></code> package.</p></li>
 <li><p>ase.Atoms object: Refers to an instance of the class ase.Atoms.</p></li>
@@ -240,8 +240,8 @@
 </div></blockquote>
 </li>
 </ol>
-<p>Steps 1 and 2 are challenging, and the ZeoSE package presents a helpful solution in the form of the <code class="docutils literal notranslate"><span class="pre">Zeolite.build_from_cif_with_labels</span></code> method, which reads a <code class="docutils literal notranslate"><span class="pre">cif</span></code> file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.</p>
-<p>In part 3’s sub-steps the problem with the “on-the-fly” object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The ZeoSE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.</p>
+<p>Steps 1 and 2 are challenging, and the ZASE package presents a helpful solution in the form of the <code class="docutils literal notranslate"><span class="pre">Zeolite.build_from_cif_with_labels</span></code> method, which reads a <code class="docutils literal notranslate"><span class="pre">cif</span></code> file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.</p>
+<p>In part 3’s sub-steps the problem with the “on-the-fly” object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.</p>
 </div>
 <div class="section" id="the-index-mapper-solution">
 <h2>The Index Mapper Solution<a class="headerlink" href="#the-index-mapper-solution" title="Permalink to this headline">¶</a></h2>
@@ -390,7 +390,7 @@ parent    ImperfectZeotype_1    <span class="nv">ImperfectZeotype_2</span>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="key_classes.html" class="btn btn-neutral float-right" title="ZeoSE Key Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="key_classes.html" class="btn btn-neutral float-right" title="MAZE Key Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="demos.html" class="btn btn-neutral float-left" title="Demos" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

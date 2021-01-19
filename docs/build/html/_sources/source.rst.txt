@@ -1,36 +1,25 @@
-ZeoSE Modules
+MAZE Modules
 ==============
 
-
-source.cif\_download module
+cif\_download module
 ---------------------------
-
-.. automodule:: source.adsorbate
+.. automodule:: cif_download
    :members:
    :undoc-members:
    :show-inheritance:
    :private-members:
    :special-members:
 
-source.cif\_download module
----------------------------
-
-.. automodule:: source.cif_download
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.zeotype module
+zeotype module
 ---------------------
-
-.. automodule:: source.zeotype
+.. automodule:: zeotype
    :members:
    :undoc-members:
    :show-inheritance:
 
-source.index\_mapper module
+index\_mapper module
 ---------------------------
-.. automodule:: source.index_mapper
+.. automodule:: index_mapper
    :members:
    :undoc-members:
    :show-inheritance:

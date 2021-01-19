@@ -1,5 +1,5 @@
 from unittest import TestCase
-from source.zeotype import Zeotype, ImperfectZeotype
+from maze import Zeotype, ImperfectZeotype
 from ase import Atoms
 from ase.io import read
 import os

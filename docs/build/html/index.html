@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to Zeotype Project’s documentation! &mdash; Zeotype Project 0.1 documentation</title>
+  <title>Welcome to MAZE Project’s documentation! &mdash; Multiscale Atomistic Zeolite simulation Environment (MAZE) 0.1 documentation</title>
   
 
   
@@ -49,7 +49,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> Zeotype Project
+            <a href="#" class="icon icon-home"> Multiscale Atomistic Zeolite simulation Environment (MAZE)
           
 
           
@@ -82,9 +82,9 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demos.html">Demos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">ZeoSE Index Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -99,7 +99,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">Zeotype Project</a>
+          <a href="#">Multiscale Atomistic Zeolite simulation Environment (MAZE)</a>
         
       </nav>
 
@@ -130,7 +130,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Welcome to Zeotype Project’s documentation!</li>
+      <li>Welcome to MAZE Project’s documentation!</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -149,8 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-zeotype-project-s-documentation">
-<h1>Welcome to Zeotype Project’s documentation!<a class="headerlink" href="#welcome-to-zeotype-project-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="welcome-to-maze-project-s-documentation">
+<h1>Welcome to MAZE Project’s documentation!<a class="headerlink" href="#welcome-to-maze-project-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p>This project aims to extend ASE to more naturally represent the properties of zeolites and facilitate the calculations required to determine their properties. The main functionality of this code comes about by creating classes which represent zeolites. These zeolite classes inherit from the ASE Atoms object, and can be treated as one. They also include additional functionality such as tagging the unique sites when building from a properly labeled cif file. For a complete description of the code see the docs. If you would prefer to learn from example please see the demo section of the docs. For more information on the importance of zeolite and the motivation for writing this code see the background section.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -159,10 +159,11 @@
 <li class="toctree-l2"><a class="reference internal" href="demos.html#installing">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demos.html#cif-fetching-from-database-of-zeolite-structures">Cif Fetching from Database of Zeolite Structures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demos.html#building-a-zeolite-from-a-cif-file">Building a Zeolite from a Cif File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demos.html#identifying-atom-types-in-a-zeolite-structure">Identifying Atom Types in a Zeolite Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demos.html#extracting-adding-and-capping-clusters">Extracting, Adding and Capping Clusters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">ZeoSE Index Mapper</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="design_pattern.html#terminology">Terminology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="design_pattern.html#motivation">Motivation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="design_pattern.html#the-index-mapper-solution">The Index Mapper Solution</a></li>
@@ -170,19 +171,18 @@
 <li class="toctree-l2"><a class="reference internal" href="design_pattern.html#conclusion">Conclusion</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="key_classes.html">ZeoSE Key Classes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="key_classes.html#source-adsorbate-adsorbate-class">source.adsorbate.Adsorbate class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="key_classes.html#source-zeotype-zeotype-class">source.zeotype.Zeotype class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="key_classes.html#source-zeotype-imperfectzeotype-class">source.zeotype.ImperfectZeotype class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="key_classes.html#source-zeotype-cluster-class">source.zeotype.Cluster class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="key_classes.html#source-zeotype-opendefect-class">source.zeotype.OpenDefect class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="key_classes.html#zeotype-class">Zeotype class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="key_classes.html#imperfectzeotype-class">ImperfectZeotype class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="key_classes.html#cluster-class">Cluster class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="key_classes.html#opendefect-class">OpenDefect class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="key_classes.html#adsorbate-class">Adsorbate class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source.html#module-source.adsorbate">source.cif_download module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source.html#id1">source.cif_download module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source.html#module-source.zeotype">source.zeotype module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source.html#module-source.index_mapper">source.index_mapper module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source.html#module-cif_download">cif_download module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html#module-zeotype">zeotype module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source.html#module-index_mapper">index_mapper module</a></li>
 </ul>
 </li>
 </ul>

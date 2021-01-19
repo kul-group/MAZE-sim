@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Demos &mdash; Zeotype Project 0.1 documentation</title>
+  <title>Demos &mdash; Multiscale Atomistic Zeolite simulation Environment (MAZE) 0.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ZeoSE Index Mapper" href="design_pattern.html" />
+    <link rel="next" title="MAZE Index Mapper" href="design_pattern.html" />
     <link rel="prev" title="Background" href="background.html" /> 
 </head>
 
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Zeotype Project
+            <a href="index.html" class="icon icon-home"> Multiscale Atomistic Zeolite simulation Environment (MAZE)
           
 
           
@@ -86,12 +86,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#installing">Installing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cif-fetching-from-database-of-zeolite-structures">Cif Fetching from Database of Zeolite Structures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-a-zeolite-from-a-cif-file">Building a Zeolite from a Cif File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifying-atom-types-in-a-zeolite-structure">Identifying Atom Types in a Zeolite Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extracting-adding-and-capping-clusters">Extracting, Adding and Capping Clusters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">ZeoSE Index Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -106,7 +107,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Zeotype Project</a>
+          <a href="index.html">Multiscale Atomistic Zeolite simulation Environment (MAZE)</a>
         
       </nav>
 
@@ -362,6 +363,38 @@ _atom_site_fract_z
 </div>
 <p>depending on the situation one dictionary might be more useful than the other.</p>
 </div>
+<div class="section" id="identifying-atom-types-in-a-zeolite-structure">
+<h2>Identifying Atom Types in a Zeolite Structure<a class="headerlink" href="#identifying-atom-types-in-a-zeolite-structure" title="Permalink to this headline">¶</a></h2>
+<p>The Zeotype class includes methods for identifying the different types of atoms in a zeolite structure. These methods do will work on all Zeolite objects, even those where the <code class="docutils literal notranslate"><span class="pre">atom_indices_to_site</span></code> and <code class="docutils literal notranslate"><span class="pre">site_to_atom_indices</span></code> are not set.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeose_repo_location</span> <span class="o">=</span> <span class="s2">&quot;/Users/dda/Code&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">zeose_repo_location</span><span class="p">)</span>                          <span class="c1"># folder containing zeotype folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zeose_repo_location</span><span class="p">,</span> <span class="s2">&quot;zeotype&quot;</span><span class="p">))</span>  <span class="c1"># zeotype folder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">zeotype</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cif_dir</span> <span class="o">=</span> <span class="s2">&quot;/Users/dda/Code/zeotype/data/GOO.cif&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">cif_dir</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atom_types</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">get_atom_types</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;atom_types&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">atom_types</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>atom_types {&#39;framework-O&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], &#39;framework-Si&#39;: [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">atoms_indices</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">count_elements</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;atom type count&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">atoms_indices</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>atom type count {&#39;O&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], &#39;Si&#39;: [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;atom count&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">atoms_indices</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>atom type count {&#39;O&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], &#39;Si&#39;: [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
+</pre></div>
+</div>
+</div>
 <div class="section" id="extracting-adding-and-capping-clusters">
 <h2>Extracting, Adding and Capping Clusters<a class="headerlink" href="#extracting-adding-and-capping-clusters" title="Permalink to this headline">¶</a></h2>
 <p>One of the most useful features of the ZeoSE package is the ability to add and remove atoms from a zeotype object. to demonstrate this we will extract a cluster from a zeotype object, change some of the atoms, then integrate it back into the main zeotype.</p>
@@ -489,7 +522,7 @@ view(iz)</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="design_pattern.html" class="btn btn-neutral float-right" title="ZeoSE Index Mapper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="design_pattern.html" class="btn btn-neutral float-right" title="MAZE Index Mapper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="background.html" class="btn btn-neutral float-left" title="Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -13,39 +13,15 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('.'))
+# i needed to add the following lines to get the modules imported
+sys.path.insert(0,os.path.abspath('../../maze'))
 sys.path.insert(0, os.path.abspath('../../'))
-# i needed to add the following lines to get the adsorbate imported
-sys.path.insert(0, os.path.abspath('../../../'))
-import zeotype
 
-# def add_to_path():
-#     """
-#     From https://stackoverflow.com/questions/23892143/sphinx-does-not-document-all-classes
-#     :return:
-#     """
-#
-#     partial_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../')
-#     workspace_path = os.path.abspath(partial_path)
-#     assert os.path.exists(workspace_path)
-#
-#     projects = []
-#
-#     for current, dirs, c in os.walk(str(workspace_path)):
-#         for dir in dirs:
-#
-#             project_path = os.path.join(workspace_path, dir, 'src')
-#
-#             if os.path.exists(project_path):
-#                 projects.append(project_path)
-#
-#     for project_str in projects:
-#         sys.path.append(project_str)
+import maze
 
-# add_to_path()
 # -- Project information -----------------------------------------------------
 
-project = 'Zeotype Project'
+project = 'Multiscale Atomistic Zeolite simulation Environment (MAZE)'
 copyright = '2020, Dexter Antonio, Sam Holton'
 author = 'Dexter Antonio, Sam Holton'
 
