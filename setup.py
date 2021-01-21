@@ -17,7 +17,7 @@ setup(
     license="MIT",
     packages=['maze'],
     include_package_data=True,
-    install_requires=['ase', 'numpy', 'typing'],
+    install_requires=['ase', 'numpy', 'typing', 'packaging'],
 
     classifiers=[
         'Development Status :: 1 - Planning',

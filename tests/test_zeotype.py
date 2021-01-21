@@ -1,5 +1,5 @@
 from unittest import TestCase
-from maze import Zeotype, ImperfectZeotype
+from maze.zeotypes import Zeotype, ImperfectZeotype
 from ase import Atoms
 from ase.io import read
 import os
@@ -141,3 +141,8 @@ class TestZeotype(TestCase):
         """
         self.assertIsInstance(my_list, list)
         self.assertEqual(len(my_list), 0)
+
+    def test_build_from_cif(self):
+        abs_path = '/Users/dda/Code/MAZE-sim/data/BEA.cif'
+        Zeotype.build_from_cif_with_labels(abs_path)
+        self.assertEqual(True, True)

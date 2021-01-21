@@ -8,20 +8,18 @@ To showcase the capabilities of the MAZE code various demos will be presented, a
 Installing
 ******************************************************
 
-As of writing this, the MAZE code cannot be installed via pip or conda. thus, to use the MAZE code you must clone the MAZE repo and then manually add the location of the cloned repo to python's path so that it can be imported.
-
-first, pick a folder to clone the repo into. in this tutorial i will use the ``code`` folder in my home directory. then clone the zeose the repo with the git clone command.
+First, pick a folder to clone the repo into. in this tutorial i will use the ``code`` folder in my home directory. then clone the MAZE-sim the repo with the git clone command.
 
 .. code-block:: bash
 
     $ cd ~/code
-    $ git clone https://github.com/kul-group/zeotype.git
+    $ git clone https://github.com/kul-group/MAZE-sim.git
 
-if cloned corectly, you should receive similar output
+if cloned correctly, you should receive similar output
 
 .. code-block:: bash
 
-    cloning into 'zeotype'...
+    cloning into 'MAZE-sim'...
     remote: enumerating objects: 196, done.
     remote: counting objects: 100% (196/196), done.
     remote: compressing objects: 100% (129/129), done.
@@ -29,33 +27,30 @@ if cloned corectly, you should receive similar output
     receiving objects: 100% (1061/1061), 5.88 mib | 7.17 mib/s, done.
     resolving deltas: 100% (631/631), done.
 
-now perform the following bash commands to get the directory of the folder containing the zeose repo, and the path of the cloned repo.
+now perform the following bash commands to get the directory of the folder containing the MAZE repo, and the path of the cloned repo.
 
 .. code-block:: bash
 
     $ pwd
     /users/dda/code
-    $ cd zeotype
+    $ cd MAZE-sim
     $ pwd
-    /users/dda/code/zeotype
+    /users/dda/code/MAZE-sim
 
-now create a new python script in a different directory and append both of those paths to your python.
-
-you should now be able to import the zeolite modules.
-
+Now you can install the package using pip, by typing the following command.
 
 .. code-block:: bash
 
-    import sys
-    repo_parent_dir = "/users/dda/code"
-    repo_dir = "/users/dda/code/zeotype"
-    sys.path.insert(0, repo_parent_dir)   # folder containing zeotype folder
-    sys.path.insert(0, repo_dir)          # zeotype folder
+    pip install .
 
-    import zeotype
-    print(zeotype)
+Finally, verify that the install was successful running python in and importing maze.
 
-my output is  ``<module 'zeotype' from '/users/dda/code/zeotype/__init__.py'>`` . your output should be something similar.
+.. code-block:: bash
+
+    python
+    >>> import maze
+    >>> maze.zeotypes.Zeotype()
+    Zeotype(symbols='', pbc=False)
 
 
 ******************************************************
@@ -64,14 +59,10 @@ Cif Fetching from Database of Zeolite Structures
 
 the `database of zeolite structures <http://www.iza-structure.org/databases/>`_ is a useful resource for zeolite simulation experiments. it contains cif files for all of the synthesized zeolites, organized by their three letter zeolite code. downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. to facilitate smoother workflows, a simple python function which downloads cif files from the database was created. an example of using this to download a few different cif files is shown below. try it out!
 
-first import the MAZE package.
+first import the MAZE package and the glob package.
 
-    >>> zeose_repo_location = "/users/dda/code"
-    >>> import sys
-    >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing MAZE-sim folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "MAZE-sim"))  # MAZE-sim folder
-    >>> import zeotype
+    >>> import maze
+    >>> from maze.cif_download import download_cif
     >>> import glob
 
 next we define a helper function which prints out all of the directories in the current working directory. this will help us to visualize what the function is doing.
@@ -88,7 +79,7 @@ now we print the directories in our current directory using our newly created he
 
 now let us try downloading a cif file, with the zeotype.download_cif function. we will pick the zeolite `goo`. by default the directory that the cif file is downloded to is `data`. if this 'data' directory doesn't exist, it is created.
 
->>> zeotype.download_cif("goo") # downloads "goo.cif" to data/goo.cif
+    >>> download_cif("goo") # downloads "goo.cif" to data/goo.cif
     >>> print_dirs()
     dirs in cwd ['data/']
     >>> print('files in data dir', glob.glob("data/*"))
@@ -96,7 +87,7 @@ now let us try downloading a cif file, with the zeotype.download_cif function. w
 
 the function worked, and now the cif file is just where we want it. if we want to download it to a custom location, we can do that as well
 
-    >>> zeotype.download_cif("off", data_dir="my_other_data")
+    >>> download_cif("off", data_dir="my_other_data")
     >>> print_dirs()
     dirs in cwd ['my_other_data/', 'data/']
     >>> print('files in my_other_data dir', glob.glob("my_other_data/*"))
@@ -192,22 +183,19 @@ an important piece of information in this file is the _atom_site_label (01, 02, 
 
 to demonstrate this feature, let us try building a zeotype object from a cif file.
 
-first import the zeotype pacakage
+first import the MAZE pacakage
 
-    >>> zeose_repo_location = "/users/dda/code"
-    >>> import sys
-    >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing MAZE-sim folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "MAZE-sim"))  # MAZE-sim folder
-    >>> import zeotype
+    >>> import maze
+    >>> from maze.cif_download import download_cif
+    >>> from maze.zeotypes import Zeotype
 
 download a cif file
 
-    >>> zeotype.download_cif('cha', data_dir='data') # download cha.cif
+    >>> download_cif('cha', data_dir='data') # download cha.cif
 
 then use the static method ``build_from_cif_with_labels``
 
->>> my_zeolite = zeotype.zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
+>>> my_zeolite = Zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
 
 the zeotype has been built. the atom idenity information is now stored in two dictionaries. let's take a look at them:
 
@@ -241,12 +229,7 @@ The Zeotype class includes methods for identifying the different types of atoms 
 
 .. code-block:: python
 
-    >>> zeose_repo_location = "/Users/dda/Code"
-    >>> import sys
-    >>> import os
-    >>> sys.path.insert(0, zeose_repo_location)                          # folder containing zeotype folder
-    >>> sys.path.insert(0, os.path.join(zeose_repo_location, "zeotype"))  # zeotype folder
-    >>> from zeotype import Zeotype
+    >>> from maze.zeotypes import Zeotype
     >>> cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
     >>> z = Zeotype.build_from_cif_with_labels(cif_dir)
     >>> atom_types = z.get_atom_types()
@@ -283,24 +266,19 @@ The first step is setting some paths and then importing the zeotype package. Cha
 
 .. code-block:: python
 
-    >>> repo_parent_dir = "/users/dda/code"
-    >>> repo_dir = "/users/dda/code/zeotype"
     >>> cif_dir = "/users/dda/code/zeotype/data/bea.cif"
 
 Now load in the ZeoSE package
 
 .. code-block:: python
 
-    >>> import sys
-    >>> sys.path.insert(0, repo_parent_dir)   # folder containing zeotype folder
-    >>> sys.path.insert(0, repo_dir)          # zeotype folder
-    >>> import zeotype
+    >>> import maze
 
 Next we build a zeolite object from a cif file
 
 .. code-block:: python
 
-    >>> zeolite = zeotype.Zeotype.build_from_cif_with_labels(cif_dir)
+    >>> zeolite = maze.zeotypes.Zeotype.build_from_cif_with_labels(cif_dir)
 
 To view the zeolite structure we use the ``ase.visualize.view`` function.
 
@@ -322,7 +300,7 @@ There are a few different cluster index finder functions to choose from. A simpl
 .. code-block:: python
 
     >>> site = 154
-    >>> cluster_indices = zeotype.Cluster.get_oh_cluster_indices(zeolite, site)
+    >>> cluster_indices = maze.zeotypes.Cluster.get_oh_cluster_indices(zeolite, site)
     >>> cluster_indices
     [2, 66, 74, 138, 77, 82, 146, 22, 154, 30, 38, 102, 186, 42, 174, 50, 114, 117, 118, 58, 126]
 
@@ -393,18 +371,10 @@ Here the block of code used in this tutorial.
 .. code-block:: python
 
     # define paths
-    repo_parent_dir = "/Users/dda/Code"
-    repo_dir = "/Users/dda/Code/zeotype"
-    cif_dir = "/Users/dda/Code/zeotype/data/BEA.cif"
-
-    # import zeotype script
-    import sys
-    sys.path.insert(0, repo_parent_dir)   # folder containing zeotype folder
-    sys.path.insert(0, repo_dir)          # zeotype folder
-    import zeotype
+    import maze
 
     # make zeotype from cif file
-    zeolite = zeotype.Zeotype.build_from_cif_with_labels(cif_dir)
+    zeolite = maze.zeotypes.Zeotype.build_from_cif_with_labels(cif_dir)
 
     #view the zeolite
     from ase.visualize import view
@@ -412,7 +382,7 @@ Here the block of code used in this tutorial.
 
     # get cluster indices
     site_index = 154
-    c_in = zeotype.Cluster.get_oh_cluster_indices(zeolite, site_index)
+    c_in = maze.zeotypes.Cluster.get_oh_cluster_indices(zeolite, site_index)
     print(c_in)
 
     # make the cluster

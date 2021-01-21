@@ -9,7 +9,8 @@ from ase import Atoms
 from ase.io import cif
 from ase.neighborlist import natural_cutoffs, NeighborList
 from ase.visualize import view
-
+from packaging.version import parse as parse_version
+import pkg_resources
 from maze.adsorbate import Adsorbate
 from maze.index_mapper import IndexMapper
 
@@ -121,7 +122,7 @@ class Zeotype(Atoms):
         return available_chem_symbols
 
     @classmethod
-    def build_from_cif_with_labels(cls, filepath: str) -> "Zeotype":
+    def build_from_cif_with_labels(cls, filepath: str, **kwargs) -> "Zeotype":
         """
         Takes a filepath/fileobject of a cif file and returns a Zeotype or child class with T-sites
         labeled as specified in the cif file. The dictionaries for T site labels are also filled in
@@ -131,11 +132,78 @@ class Zeotype(Atoms):
         :param filepath: Filepath of the cif file
         :return: Zeotype with labeled sites
         """
-        atoms, site_to_atom_indices, atom_indices_to_site = cls._read_cif_note_sites(filepath)
+        if parse_version(pkg_resources.get_distribution('ase').version) < parse_version('3.21.0'):
+            # if using an older versino of ase
+            cif_reader = cls._read_cif_note_sites
+        else:
+            # if using a newer version of ase
+            cif_reader = cls._read_cif_note_siteJan2021Update
+
+        atoms, site_to_atom_indices, atom_indices_to_site = cif_reader(filepath, **kwargs)
         zeotype = cls(atoms)
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
         return zeotype
+
+    @staticmethod
+    def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
+                             subtrans_included=True, fractional_occupancies=True,
+                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
+
+        """
+        The helper function used by build_from_cif_with_labels when using an ASE version
+        3.21.0 or higher. This loads a CIF file using ase.io.cif.parse_cif and then
+        finds the T-site information. After finding the T-site information it then replaces
+        each atom in the T-site with another  atom type not found in the cif file. The
+        crystal is then generated and then the resulting atoms object atoms are replaced
+        by the original atoms. The mapping between the T-site names and the atom objects
+        in the final atoms object are recored in two dictionaries.
+
+        A note about capability:
+        ASE Version 3.21.0 released Jan 18, 2021 refactored the cif reading functions on
+        on which the older function relies. The major change (from this function's perspective)
+        is that ase.io.cif.parse_cif now returns a generator rather than a list, which contains
+        a CIFBlock object.
+
+
+        :param fileobj: CIF file location
+        :param store_tags: store the tags in resulting atoms object
+        :param primitive_cell: An option for the reader
+        :param subtrans_included: An option for the reader
+        :param fractional_occupancies: an option for the final crystal
+        :param reader: the reader used (ase works others have not been tested)
+        :return: atoms, site_to_atom_indices, atom_indices_to_site
+
+        """
+
+        blocks = ase.io.cif.parse_cif(fileobj, reader)  # get blocks generator
+        cif = list(blocks)[0]  # get cif object
+
+        # replace elements with replacement symbol
+        element_to_T_site = {}
+        sym_to_original_element = {}
+        possible_syms = Zeotype.get_available_symbols(
+            cif._tags["_atom_site_type_symbol"])  # only get symbols not in CIF file
+        for i in range(len(cif._tags["_atom_site_label"])):  # label all atoms
+            sym = possible_syms.pop()
+            sym_to_original_element[sym] = cif._tags["_atom_site_type_symbol"][i]
+            cif._tags["_atom_site_type_symbol"][i] = sym
+            element_to_T_site[sym] = cif._tags["_atom_site_label"][i]
+
+        site_to_atom_indices = defaultdict(list)
+        atom_indices_to_site = {}
+        atoms = cif.get_atoms(store_tags, primitive_cell, subtrans_included, fractional_occupancies)
+
+        for i in range(len(atoms)):  # replace substitute atoms with original Si and get indices of replaced atoms
+            if atoms[i].symbol in element_to_T_site.keys():
+                sym = atoms[i].symbol
+                key = element_to_T_site[sym]
+                site_to_atom_indices[key].append(i)
+                atom_indices_to_site[i] = key
+                atoms[i].tag = ase.data.atomic_numbers[sym]
+                atoms[i].symbol = sym_to_original_element[sym]
+
+        return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
     @staticmethod
     def _read_cif_note_sites(fileobj, store_tags=False, primitive_cell=False,
