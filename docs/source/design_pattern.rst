@@ -139,12 +139,11 @@ The delete_atoms method returns a copy of the original ``ImpefectZeolite`` with 
 
 .. code-block:: bash
 
-   >>> import sys
-   >>> sys.path.insert(0, "/Users/dda/Code") # folder containing MAZE-sim folder
-   >>> sys.path.insert(0, "/Users/dda/Code/MAZE-sim")  # MAZE-sim folder
-   >>> import zeotype
-   >>> zeotype.download_cif('BEA', data_dir='data') # Download BEA.cif
-   >>> my_zeolite = zeotype.Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
+   >>> import maze
+   >>> from maze.zeotypes import Zeotype
+   >>> from maze.cif_download import download_cif
+   >>> download_cif('BEA', data_dir='data') # Download BEA.cif
+   >>> my_zeolite = Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
    >>> my_iz = my_zeolite.get_imperfect_zeolite()  # get an imperfect zeolite that you can add and remove atoms from
    >>> atom_indices_to_delete = [i for i in range(0, 50)]  # make a list from 0 to 49
    >>> my_new_iz = my_iz.delete_atoms(atom_indices_to_delete)  # make a new iz with the first 50 atoms deleted
