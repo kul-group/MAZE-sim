@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>source.cif_download &mdash; Zeotype Project 0.1 documentation</title>
+  <title>cif_download &mdash; MAZE 0.1 documentation</title>
   
 
   
@@ -17,24 +17,24 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> Zeotype Project
+            <a href="../index.html" class="icon icon-home"> MAZE
           
 
           
@@ -61,7 +61,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -79,11 +79,11 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../demos.html">Demos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../design_pattern.html">ZeoSE Index Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -98,7 +98,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Zeotype Project</a>
+          <a href="../index.html">MAZE</a>
         
       </nav>
 
@@ -127,11 +127,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
         
-      <li>source.cif_download</li>
+      <li>cif_download</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -146,14 +146,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for source.cif_download</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">urllib.request</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
+  <h1>Source code for cif_download</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">urllib.request</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">.zeotype</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="kn">from</span> <span class="nn">urllib.error</span> <span class="kn">import</span> <span class="n">HTTPError</span>
 
-<div class="viewcode-block" id="download_cif"><a class="viewcode-back" href="../../source.html#source.cif_download.download_cif">[docs]</a><span class="k">def</span> <span class="nf">download_cif</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="download_cif"><a class="viewcode-back" href="../source.html#cif_download.download_cif">[docs]</a><span class="k">def</span> <span class="nf">download_cif</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Args:</span>
 <span class="sd">        code (str):</span>
@@ -172,17 +172,6 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span></div>
 
-
-<div class="viewcode-block" id="build_zeolite_from_code"><a class="viewcode-back" href="../../source.html#source.cif_download.build_zeolite_from_code">[docs]</a><span class="k">def</span> <span class="nf">build_zeolite_from_code</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Args:</span>
-<span class="sd">        code:</span>
-<span class="sd">        data_dir:</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">code</span> <span class="o">+</span> <span class="s1">&#39;.cif&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_path</span><span class="p">):</span>
-        <span class="n">download_cif</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>  <span class="c1"># will throw error if not successful</span>
-    <span class="k">return</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

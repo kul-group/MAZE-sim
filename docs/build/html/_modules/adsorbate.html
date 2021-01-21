@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>source.adsorbate &mdash; Zeotype Project 0.1 documentation</title>
+  <title>adsorbate &mdash; MAZE 0.1 documentation</title>
   
 
   
@@ -17,24 +17,24 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> Zeotype Project
+            <a href="../index.html" class="icon icon-home"> MAZE
           
 
           
@@ -61,7 +61,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -79,11 +79,11 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../demos.html">Demos</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../design_pattern.html">ZeoSE Index Mapper</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../key_classes.html">ZeoSE Key Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../source.html">ZeoSE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demos.html">Demos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
 </ul>
 
             
@@ -98,7 +98,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">Zeotype Project</a>
+          <a href="../index.html">MAZE</a>
         
       </nav>
 
@@ -127,11 +127,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
         
-      <li>source.adsorbate</li>
+      <li>adsorbate</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -146,24 +146,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for source.adsorbate</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span>
+  <h1>Source code for adsorbate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Atoms</span>
+<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">covalent_radii</span>
+<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">NeighborList</span><span class="p">,</span> <span class="n">natural_cutoffs</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
 <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">MeanShift</span>
-<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Atoms</span>
-<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">NeighborList</span><span class="p">,</span> <span class="n">natural_cutoffs</span>
-<span class="kn">from</span> <span class="nn">ase.data</span> <span class="kn">import</span> <span class="n">atomic_numbers</span><span class="p">,</span> <span class="n">covalent_radii</span>
-<span class="kn">import</span> <span class="nn">source.zeotype</span>
-<span class="kn">import</span> <span class="nn">ase</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 
-<div class="viewcode-block" id="Adsorbate"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate">[docs]</a><span class="k">class</span> <span class="nc">Adsorbate</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate">[docs]</a><span class="k">class</span> <span class="nc">Adsorbate</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is an adsorbate class which represents an adsorbate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="Adsorbate.__init__"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momenta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">magmoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="Adsorbate.__init__"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momenta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">magmoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">charges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">celldisp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">velocities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">host_zeotype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
 
@@ -183,38 +181,38 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span></div>
 
-<div class="viewcode-block" id="Adsorbate.min_distance"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.min_distance">[docs]</a>    <span class="k">def</span> <span class="nf">min_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<div class="viewcode-block" id="Adsorbate.min_distance"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.min_distance">[docs]</a>    <span class="k">def</span> <span class="nf">min_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;minimum distance from atom in a host to adsorbate :param</span>
 <span class="sd">        ads_position: np.array x,y,z of adsorbate position :return: float,</span>
-<span class="sd">        minimum distance between an atom in host zeotype and adsorbate position</span>
+<span class="sd">        minimum distance between an atom in host MAZE-sim and adsorbate position</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            ads_position:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find min distance when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find min distance when host MAZE-sim is None&quot;</span>
 
         <span class="n">dummy_atom</span> <span class="o">=</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">ads_position</span><span class="p">)</span>
         <span class="n">dummy_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="o">+</span> <span class="n">dummy_atom</span>
         <span class="n">min_distance</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dummy_host</span><span class="o">.</span><span class="n">get_distances</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span><span class="p">))],</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">min_distance</span></div>
 
-<div class="viewcode-block" id="Adsorbate.avg_distance"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.avg_distance">[docs]</a>    <span class="k">def</span> <span class="nf">avg_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.avg_distance"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.avg_distance">[docs]</a>    <span class="k">def</span> <span class="nf">avg_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ads_position</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;average distance from position to all host atoms :param ads_position:</span>
 <span class="sd">        np.array x,y,z of adsorbate position :return: float, average distance of</span>
-<span class="sd">        host zeotype atoms to adsorbate position</span>
+<span class="sd">        host MAZE-sim atoms to adsorbate position</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            ads_position:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find average distance when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find average distance when host MAZE-sim is None&quot;</span>
 
         <span class="n">dummy_atom</span> <span class="o">=</span> <span class="n">Atom</span><span class="p">(</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">ads_position</span><span class="p">)</span>
         <span class="n">dummy_host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="o">+</span> <span class="n">dummy_atom</span>
         <span class="n">avg_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">dummy_host</span><span class="o">.</span><span class="n">get_distances</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span><span class="p">))],</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">avg_distance</span></div>
 
-<div class="viewcode-block" id="Adsorbate.find_void"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.find_void">[docs]</a>    <span class="k">def</span> <span class="nf">find_void</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">void_position_guess</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;finds nearest empty region in host zeotype :param</span>
+<div class="viewcode-block" id="Adsorbate.find_void"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.find_void">[docs]</a>    <span class="k">def</span> <span class="nf">find_void</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">void_position_guess</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;finds nearest empty region in host MAZE-sim :param</span>
 <span class="sd">        void_position_guess: An initial guess for the center of the void as a</span>
 <span class="sd">        np.array with x,y,z position :return: np.array position of center of</span>
 <span class="sd">        empty void</span>
@@ -225,13 +223,13 @@
 
         <span class="c1"># TODO: Find a way to speed this up</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find void position when host zeotype is None&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot find void position when host MAZE-sim is None&quot;</span>
 
         <span class="n">fun_to_min</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">pos</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_distance</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>  <span class="c1"># 1 param function for scipy.minimize</span>
         <span class="n">ans</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">fun_to_min</span><span class="p">,</span> <span class="n">void_position_guess</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ans</span><span class="o">.</span><span class="n">x</span></div>
 
-<div class="viewcode-block" id="Adsorbate.sphere_sample"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.sphere_sample">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Adsorbate.sphere_sample"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.sphere_sample">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">sphere_sample</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;generates random positions on the surface of a sphere of certain</span>
 <span class="sd">        radius :param radius: radius of sphere surface to sample :param num_pts:</span>
@@ -255,11 +253,11 @@
 
         <span class="k">return</span> <span class="n">position_list</span></div>
 
-<div class="viewcode-block" id="Adsorbate.get_viable_positions"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.get_viable_positions">[docs]</a>    <span class="k">def</span> <span class="nf">get_viable_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.get_viable_positions"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.get_viable_positions">[docs]</a>    <span class="k">def</span> <span class="nf">get_viable_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;finds positions near host atom far enough from other framework atoms.</span>
 <span class="sd">        :param index: index of host atom at center :param radius: radius around</span>
-<span class="sd">        host atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        host atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: list. positions of points which meet cutoff criteria</span>
 
 <span class="sd">        Args:</span>
@@ -269,7 +267,7 @@
 <span class="sd">            num_pts:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">radius</span> <span class="o">&gt;</span> <span class="n">cutoff</span><span class="p">),</span> <span class="s2">&quot;radius larger than cutoff distance&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;host zeotype cannot be none&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;host MAZE-sim cannot be none&quot;</span>
 
         <span class="n">guess_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sphere_sample</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">num_pts</span><span class="p">)</span>
         <span class="n">host_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">host_zeotype</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span>
@@ -282,13 +280,13 @@
 
         <span class="k">return</span> <span class="n">viable_positions</span></div>
 
-<div class="viewcode-block" id="Adsorbate.get_viable_pos_cluster_centers"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.get_viable_pos_cluster_centers">[docs]</a>    <span class="k">def</span> <span class="nf">get_viable_pos_cluster_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.get_viable_pos_cluster_centers"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.get_viable_pos_cluster_centers">[docs]</a>    <span class="k">def</span> <span class="nf">get_viable_pos_cluster_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;finds positions near host atom far enough from other framework atoms,</span>
 <span class="sd">        clusters these viable positions and returns the centers of these</span>
 <span class="sd">        clusters. If number of points is too small will return error :param</span>
 <span class="sd">        index: index of host atom at center :param radius: radius around host</span>
-<span class="sd">        atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: list. center positions of clusters of points which meet</span>
 <span class="sd">        criteria</span>
 
@@ -305,11 +303,11 @@
         <span class="n">cluster_centers</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">cluster_centers_</span>
         <span class="k">return</span> <span class="n">cluster_centers</span></div>
 
-<div class="viewcode-block" id="Adsorbate.find_best_place"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.find_best_place">[docs]</a>    <span class="k">def</span> <span class="nf">find_best_place</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.find_best_place"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.find_best_place">[docs]</a>    <span class="k">def</span> <span class="nf">find_best_place</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">num_pts</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;picks the best location to place an adsorbate around the host atom</span>
 <span class="sd">        :param index: index of host atom at center :param radius: radius around</span>
-<span class="sd">        host atom to test points :param cutoff: minimum distance from other host</span>
-<span class="sd">        atoms allowed for test points :param num_pts: number of points to try</span>
+<span class="sd">        host atom to tests points :param cutoff: minimum distance from other host</span>
+<span class="sd">        atoms allowed for tests points :param num_pts: number of points to try</span>
 <span class="sd">        :return: array. x,y,z position of best location</span>
 
 <span class="sd">        Args:</span>
@@ -333,7 +331,7 @@
             <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;No good positions at specified index&#39;</span>
         <span class="k">return</span> <span class="n">best_pos</span></div>
 
-<div class="viewcode-block" id="Adsorbate.pick_donor"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.pick_donor">[docs]</a>    <span class="k">def</span> <span class="nf">pick_donor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.pick_donor"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.pick_donor">[docs]</a>    <span class="k">def</span> <span class="nf">pick_donor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;finds atom in adsorbate most likely to bind to metal Heuristic: N &gt; O</span>
 <span class="sd">        &gt; P &gt; S &gt; X &gt; C &gt; H :param ads: adsorbate atoms object :return: index of</span>
 <span class="sd">        donor atom in adsorbate</span>
@@ -352,7 +350,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find viable donor atom in adsorbate&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Adsorbate.pick_host_atom"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.pick_host_atom">[docs]</a>    <span class="k">def</span> <span class="nf">pick_host_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="Adsorbate.pick_host_atom"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.pick_host_atom">[docs]</a>    <span class="k">def</span> <span class="nf">pick_host_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;picks element with largest atomic number higher than 14 (Si) if one exists. If none exist,</span>
 <span class="sd">            pick Al as a donor atom.</span>
 
@@ -367,10 +365,10 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">sym_index_map</span><span class="p">[</span><span class="s1">&#39;Al&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Al in host zeotype&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No Al in host MAZE-sim&quot;</span><span class="p">)</span>
                 <span class="k">raise</span></div>
 
-<div class="viewcode-block" id="Adsorbate.pick_ads_position"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.pick_ads_position">[docs]</a>    <span class="k">def</span> <span class="nf">pick_ads_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_ind</span><span class="p">,</span> <span class="n">host_ind</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.pick_ads_position"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.pick_ads_position">[docs]</a>    <span class="k">def</span> <span class="nf">pick_ads_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_ind</span><span class="p">,</span> <span class="n">host_ind</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Finds a good position to add adsorbate to host :param donor_ind:</span>
 <span class="sd">        index of donor atom on adsorbate :param host_ind: index of host binding</span>
 <span class="sd">        site :param radius: distance between host atom and donor atom :param</span>
@@ -395,7 +393,7 @@
         <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_place</span><span class="p">(</span><span class="n">host_ind</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pos</span></div>
 
-<div class="viewcode-block" id="Adsorbate.get_donor_vec"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.get_donor_vec">[docs]</a>    <span class="k">def</span> <span class="nf">get_donor_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_index</span><span class="p">):</span>
+<div class="viewcode-block" id="Adsorbate.get_donor_vec"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.get_donor_vec">[docs]</a>    <span class="k">def</span> <span class="nf">get_donor_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_index</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;finds direction of lone pair electrons on an adsorbate donor atom</span>
 <span class="sd">        :return: vector direction of donor atoms</span>
 
@@ -418,7 +416,7 @@
         <span class="n">donor_vec</span> <span class="o">=</span> <span class="n">donor_vec</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">donor_vec</span><span class="p">)</span>  <span class="c1"># normalizes donor vec</span>
         <span class="k">return</span> <span class="n">donor_vec</span></div>
 
-<div class="viewcode-block" id="Adsorbate.position_ads"><a class="viewcode-back" href="../../source.html#source.adsorbate.Adsorbate.position_ads">[docs]</a>    <span class="k">def</span> <span class="nf">position_ads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">host_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Adsorbate&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="Adsorbate.position_ads"><a class="viewcode-back" href="../key_classes.html#adsorbate.Adsorbate.position_ads">[docs]</a>    <span class="k">def</span> <span class="nf">position_ads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">donor_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">host_ind</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Adsorbate&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Rotates and positions adsorbate according to specified parameters if</span>
 <span class="sd">        no parameters are provided, a reasonable position is found :param pos:</span>
 <span class="sd">        vector, the position to place adsorbate&#39;s donor atom :param host_ind:</span>
@@ -450,29 +448,6 @@
         <span class="k">return</span> <span class="n">new_self</span></div></div>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">read</span>
-    <span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
-    <span class="kn">from</span> <span class="nn">ase.build</span> <span class="kn">import</span> <span class="n">molecule</span>
-
-    <span class="n">zeotype</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">zeotype</span><span class="o">.</span><span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;BEA.cif&#39;</span><span class="p">)</span>
-    <span class="n">iz</span> <span class="o">=</span> <span class="n">zeotype</span><span class="o">.</span><span class="n">get_imperfect_zeolite</span><span class="p">()</span>
-    <span class="n">iz</span><span class="p">[</span><span class="mi">174</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Sn&#39;</span>
-
-    <span class="n">iz</span> <span class="o">=</span> <span class="n">iz</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">([</span><span class="mi">185</span><span class="p">,</span> <span class="mi">113</span><span class="p">,</span> <span class="mi">118</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">78</span><span class="p">,</span> <span class="mi">92</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">150</span><span class="p">])</span>
-    <span class="n">mol</span> <span class="o">=</span> <span class="n">molecule</span><span class="p">(</span><span class="s1">&#39;CH3OH&#39;</span><span class="p">)</span>
-    <span class="n">ads</span> <span class="o">=</span> <span class="n">Adsorbate</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">host_zeotype</span><span class="o">=</span><span class="n">iz</span><span class="p">)</span>
-    <span class="n">ads</span> <span class="o">=</span> <span class="n">ads</span><span class="o">.</span><span class="n">position_ads</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">167</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="mf">6.660</span><span class="p">,</span> <span class="mf">6.660</span><span class="p">,</span> <span class="mf">9.820</span><span class="p">])</span>
-    <span class="n">iz</span><span class="p">,</span> <span class="n">ads</span> <span class="o">=</span> <span class="n">iz</span><span class="o">.</span><span class="n">integrate_adsorbate</span><span class="p">(</span><span class="n">ads</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">iz</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">ads</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">view</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span>
-    <span class="n">iz</span> <span class="o">=</span> <span class="n">iz</span><span class="o">.</span><span class="n">remove_adsorbate</span><span class="p">(</span><span class="n">ads</span><span class="p">)</span>
-    <span class="n">view</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span>
-    <span class="c1"># for p in ads.get_positions():</span>
-    <span class="c1">#     print(p)</span>
-    <span class="c1"># view(ads)</span>
-    <span class="c1"># ads.integrate_ads()</span>
 </pre></div>
 
            </div>
