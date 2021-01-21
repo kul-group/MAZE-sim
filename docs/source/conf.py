@@ -21,7 +21,7 @@ import maze
 
 # -- Project information -----------------------------------------------------
 
-project = 'Multiscale Atomistic Zeolite simulation Environment (MAZE)'
+project = 'MAZE'
 copyright = '2020, Dexter Antonio, Sam Holton'
 author = 'Dexter Antonio, Sam Holton'
 
