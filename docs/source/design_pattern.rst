@@ -16,7 +16,7 @@ The following documentation frequently references ase's Atoms object, ase's Atom
 *********************************************************
 Motivation
 *********************************************************
-The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  It is important to understand the motivation behind the code's design decisions.
+The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code's design decisions.
 
 One feature of the ase.Atoms class is that an instance stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.
 
@@ -87,7 +87,7 @@ The above example showed some unexpected behavior, but it has not yet been made 
     #. Integrate the optimized structure back into the original Zeolite Atoms object
     #. Save the altered Zeolite object as a .traj file with a unique name
 
-Steps 1 and 2 are challenging, and the ZASE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
+Steps 1 and 2 are challenging, and the MAZE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
 
 In part 3's sub-steps the problem with the "on-the-fly" object creation emerges. Part a,b c are doable with the base ASE package.  Part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping issue through the use of a custom Index Mapper.
 
@@ -95,7 +95,7 @@ In part 3's sub-steps the problem with the "on-the-fly" object creation emerges.
 The Index Mapper Solution
 *********************************************************
 
-Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. This code solves the identity storage problem by creating an ``IndexMapper`` object, which is a table that stores the mapping between indices of a ``Zeolite`` object and all ``ImperfectZeolite`` objects derived from the parent ``Zeotype``. The IndexMapper.main_index can be thought of as a table that looks like this:
+Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. MAZE solves the identity storage problem by creating an ``IndexMapper`` object, which is a table that stores the mapping between indices of a ``Zeolite`` object and all ``ImperfectZeolite`` objects derived from the parent ``Zeotype``. The IndexMapper.main_index can be thought of as a table that looks like this:
 
 
 +------+---------+-------------------+----------+
@@ -154,7 +154,7 @@ The delete_atoms method returns a copy of the original ``ImpefectZeolite`` with 
 
 
 
-This isn't too surprising. The ``my_new_iz`` object has 50 less atoms than the original ``my_iz`` object. This doesn't appear any different than using the ``del`` operator.
+The ``my_new_iz`` object has 50 less atoms than the original ``my_iz`` object. At first, this does not appear any different than using the ``del`` operator on an ase.Atoms object.
 
 
 What is unique is that there is now a new ``index_mapper`` object, which shows the relationship between all of the zeolite objects in the program.
@@ -216,7 +216,7 @@ To offer further insight into how the ``delete_atoms`` method works, let us exam
            self.index_mapper.register(self.name, new_self.name, old_to_new_map)
            return new_self
 
-We will now go through this line-by-line. The first line uses ``ase.Atoms`` initilization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of ``self``, with out all of the complexities added by the ``ImperfectZeolite`` object. The ``ase.Atoms`` initialization method is analogous to ``deepcopy``, so that there is no shared information between ``self`` and ``new_self_a``.
+We will now go through this line-by-line. The first line uses ``ase.Atoms`` initialization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of ``self``, without all of the complexities added by the ``ImperfectZeolite`` object. The ``ase.Atoms`` initialization method is analogous to ``deepcopy`` in that there is no shared information between ``self`` and ``new_self_a``.
 
 The next step is to delete the atoms using the ``del`` operation on the new_self_a object. The side effects of this operation are contained to the ``new_self_a object``. After the ``del`` operation, a ``new_self`` is built using the ``self.__class__`` method. This is used so that a subclass will return another copy of itself rather than an ``ImperfectZeolite`` object.
 
