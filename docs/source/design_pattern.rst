@@ -6,11 +6,11 @@ Terminology
 *********************************************************
 The following documentation frequently references ase's Atoms object, ase's Atom object and the atoms in ase's Atoms objects. This can get confusing, so for clarity the following definitions are provided:
 
-* ase: short for the atomic simulation environment, which is the package the ZASE package is based off of.
-* ase.Atoms class: Refers to the class definition of ``Atoms`` in the ``ase`` package.
-* ase.Atom class: Refers to the class definition of ``Atom`` in the ``ase`` package.
-* ase.Atoms object: Refers to an instance of the class ase.Atoms.
-* ase.Atom object: Refers to an instance of the class ase.Atom.
+* ase: short for the atomic simulation environment, which is what the MAZE package is based off of.
+* ase.Atoms class: Refers to the class definition of ``Atoms`` in the ase package.
+* ase.Atom class: Refers to the class definition of ``Atom`` in the ase package.
+* ase.Atoms object: Refers to an instance of the class ``ase.Atoms``.
+* ase.Atom object: Refers to an instance of the class ``ase.Atom``.
 * atoms: (lowercase) refers to the atoms represented by an ``Atoms`` object or a ``Zeotype`` object.
 
 *********************************************************
