@@ -17,7 +17,7 @@ Now install the package using pip, by typing the following commands:
     cd MAZE-sim
     pip install .
 
-Finally, verify that the install was successful by running a python shell in your terminal and importing maze package.
+Finally, verify that the install was successful by running a python shell in your terminal and importing the MAZE package.
 
 .. code-block:: bash
 
