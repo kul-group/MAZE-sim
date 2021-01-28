@@ -159,17 +159,17 @@
             
   <div class="section" id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
-<p>To showcase the capabilities of the MAZE code various tutorials will be presented, along with comments describing how to use the functions shown in the demos.</p>
+<p>These tutorials showcase the capabilities of the MAZE code, along with comments describing how to use the functions shown in the demos.</p>
 <div class="section" id="cif-fetching-from-the-database-of-zeolite-structures">
 <h2>Cif Fetching from the Database of Zeolite Structures<a class="headerlink" href="#cif-fetching-from-the-database-of-zeolite-structures" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="http://www.iza-structure.org/databases/">database of zeolite structures</a> is a useful resource for zeolite simulation experiments. It contains cif files for all of the synthesized zeolites, organized by their three letter zeolite code. Downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. To facilitate smoother workflows, a simple python function which downloads cif files from the database was created. An example of using this to download a few different cif files is shown below.</p>
-<p>First we import the MAZE package, the glob package, and the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function from the <code class="docutils literal notranslate"><span class="pre">maze.cif_download</span></code> module.</p>
+<p>The <a class="reference external" href="http://www.iza-structure.org/databases/">database of zeolite structures</a> is a useful resource for zeolite simulation experiments. It contains cif files for all synthesized zeolites, organized by their three letter zeolite code. Downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. To facilitate smoother workflows, a simple python function which downloads cif files from the database was created. An example of using this to download a few different cif files is shown below.</p>
+<p>First, we import the MAZE package, the glob package, and the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function from the <code class="docutils literal notranslate"><span class="pre">maze.cif_download</span></code> module.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">glob</span>
 </pre></div>
 </div>
-<p>Next we declare a helper function which prints out all of the directories in the current working directory. This will help us visualize the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function’s behavior.</p>
+<p>Next, we declare a helper function which prints out all of the directories in the current working directory. This will help us visualize the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function’s behavior.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">print_dirs</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dirs in cwd&#39;</span><span class="p">,</span>  <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;**/&#39;</span><span class="p">))</span>
 <span class="gp">...</span>
@@ -180,7 +180,7 @@
 <span class="go">dirs in cwd []</span>
 </pre></div>
 </div>
-<p>Now let us try downloading the GOO cif file, with the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function. By default the directory that the cif file is downloaded to is <cite>data</cite>. If this ‘data’ directory doesn’t exist, it is created.</p>
+<p>Now, let’s download the GOO cif file, using the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function. By default, the cif file is downloaded to the <cite>data</cite> directory; if this ‘data’ directory doesn’t exist, it is created.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s2">&quot;GOO&quot;</span><span class="p">)</span> <span class="c1"># downloads &quot;GOO.cif&quot; to data/GOO.cif</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">print_dirs</span><span class="p">()</span>
 <span class="go">dirs in cwd [&#39;data/&#39;]</span>
@@ -188,7 +188,7 @@
 <span class="go">files in data dir [&#39;data/goo.cif&#39;]</span>
 </pre></div>
 </div>
-<p>The function worked, and now the cif file is just where we want it. If we want to download it to a custom location, we can do that as well by specifying this</p>
+<p>We can download the cif file to a custom location by specifying the directory we want to use:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;my_other_data&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">print_dirs</span><span class="p">()</span>
 <span class="go">dirs in cwd [&#39;my_other_data/&#39;, &#39;data/&#39;]</span>
@@ -196,11 +196,10 @@
 <span class="go">files in my_other_data dir [&#39;my_other_data/off.cif&#39;]</span>
 </pre></div>
 </div>
-<p>You now know how to use the <code class="docutils literal notranslate"><span class="pre">donwload_cif</span></code> function. Hopefully, this will be useful to you.</p>
 </div>
 <div class="section" id="building-a-zeotype-from-a-cif-file">
 <h2>Building a Zeotype from a cif File<a class="headerlink" href="#building-a-zeotype-from-a-cif-file" title="Permalink to this headline">¶</a></h2>
-<p>A cif file contains the crystallographic information that defines a zeolite structure. A downloaded from the iza-sc database of zeolite strucutres looks like this:</p>
+<p>A cif file contains the crystallographic information that defines a zeolite structure. A downloaded cif from the iza-sc database of zeolite strucutres looks like this:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data_cha
 #**************************************************************************
 #
@@ -246,9 +245,9 @@ _atom_site_fract_z
     t1    si    0.9997    0.2264    0.1051
 </pre></div>
 </div>
-<p>An important piece of information in this cif file is the _atom_site_label (01, 02, … t1, t2.. ect.) that is located in the first column of the cif file near the atom position information. This information about the atoms identities is lost when <code class="docutils literal notranslate"><span class="pre">ase.io.read</span></code> function is used to build an atoms object form a cif file. Knowing the identity of the T-sites is critical for zeolite simulation experiments. This issue inspired the creation of a custom constructor of the <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object, <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code>. This static method creates a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object and labels the unique atoms, by tagging them, and storing the mapping between the <code class="docutils literal notranslate"><span class="pre">atom_site_label</span></code> and the atom indices in the dictionaries <code class="docutils literal notranslate"><span class="pre">self.site_to_atom_indices</span></code> and <code class="docutils literal notranslate"><span class="pre">self.atom_indices_to_site</span></code>.</p>
+<p>An important piece of information in each cif file is the _atom_site_label (01, 02, … t1, t2.. ect.) that is located in the first column near the atom position information. This information about the atoms identities is lost when the <code class="docutils literal notranslate"><span class="pre">ase.io.read</span></code> function is used to build an atoms object from a cif file. Because the identity of the T-sites is critical for zeolite simulation experiments, this issue inspired the creation of a custom constructor of the <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object: <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code>. This static method creates a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object, labels the unique atoms by tagging them, and then stores the mapping between the <code class="docutils literal notranslate"><span class="pre">atom_site_label</span></code> and the atom indices in the dictionaries <code class="docutils literal notranslate"><span class="pre">self.site_to_atom_indices</span></code> and <code class="docutils literal notranslate"><span class="pre">self.atom_indices_to_site</span></code>.</p>
 <p>To demonstrate this feature, let us try building a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object from a cif file.</p>
-<p>First we import the MAZE package.</p>
+<p>First, we import the MAZE package.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
@@ -258,11 +257,11 @@ _atom_site_fract_z
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;cha&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># download cha.cif</span>
 </pre></div>
 </div>
-<p>We have our cif file so we can now use the static method <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code> to build a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> with labeled</p>
+<p>Now we can use the static method <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code> to build a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> with labeled atoms.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/cha.cif&#39;</span><span class="p">)</span>  <span class="c1"># build from code</span>
 </pre></div>
 </div>
-<p>Our <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> has been built. The atom identity information is now stored in two dictionaries. Let us take a look at them:</p>
+<p>Our <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> has been built. The atom identity information is now stored in two dictionaries. Let’s take a look at them:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;site_to_atom_indices map&#39;</span><span class="p">,</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="go">site_to_atom_indices map</span>
 </pre></div>
@@ -281,7 +280,7 @@ _atom_site_fract_z
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{0: &#39;o1&#39;, 1: &#39;o1&#39;, 2: &#39;o1&#39;, 3: &#39;o1&#39;, 4: &#39;o1&#39;, 5: &#39;o1&#39;, 6: &#39;o1&#39;, 7: &#39;o1&#39;, 8: &#39;o1&#39;, 9: &#39;o1&#39;, 10: &#39;o1&#39;, 11: &#39;o1&#39;, 12: &#39;o1&#39;, 13: &#39;o1&#39;, 14: &#39;o1&#39;, 15: &#39;o1&#39;, 16: &#39;o1&#39;, 17: &#39;o1&#39;, 18: &#39;o2&#39;, 19: &#39;o2&#39;, 20: &#39;o2&#39;, 21: &#39;o2&#39;, 22: &#39;o2&#39;, 23: &#39;o2&#39;, 24: &#39;o2&#39;, 25: &#39;o2&#39;, 26: &#39;o2&#39;, 27: &#39;o2&#39;, 28: &#39;o2&#39;, 29: &#39;o2&#39;, 30: &#39;o2&#39;, 31: &#39;o2&#39;, 32: &#39;o2&#39;, 33: &#39;o2&#39;, 34: &#39;o2&#39;, 35: &#39;o2&#39;, 36: &#39;o3&#39;, 37: &#39;o3&#39;, 38: &#39;o3&#39;, 39: &#39;o3&#39;, 40: &#39;o3&#39;, 41: &#39;o3&#39;, 42: &#39;o3&#39;, 43: &#39;o3&#39;, 44: &#39;o3&#39;, 45: &#39;o3&#39;, 46: &#39;o3&#39;, 47: &#39;o3&#39;, 48: &#39;o3&#39;, 49: &#39;o3&#39;, 50: &#39;o3&#39;, 51: &#39;o3&#39;, 52: &#39;o3&#39;, 53: &#39;o3&#39;, 54: &#39;o4&#39;, 55: &#39;o4&#39;, 56: &#39;o4&#39;, 57: &#39;o4&#39;, 58: &#39;o4&#39;, 59: &#39;o4&#39;, 60: &#39;o4&#39;, 61: &#39;o4&#39;, 62: &#39;o4&#39;, 63: &#39;o4&#39;, 64: &#39;o4&#39;, 65: &#39;o4&#39;, 66: &#39;o4&#39;, 67: &#39;o4&#39;, 68: &#39;o4&#39;, 69: &#39;o4&#39;, 70: &#39;o4&#39;, 71: &#39;o4&#39;, 72: &#39;t1&#39;, 73: &#39;t1&#39;, 74: &#39;t1&#39;, 75: &#39;t1&#39;, 76: &#39;t1&#39;, 77: &#39;t1&#39;, 78: &#39;t1&#39;, 79: &#39;t1&#39;, 80: &#39;t1&#39;, 81: &#39;t1&#39;, 82: &#39;t1&#39;, 83: &#39;t1&#39;, 84: &#39;t1&#39;, 85: &#39;t1&#39;, 86: &#39;t1&#39;, 87: &#39;t1&#39;, 88: &#39;t1&#39;, 89: &#39;t1&#39;, 90: &#39;t1&#39;, 91: &#39;t1&#39;, 92: &#39;t1&#39;, 93: &#39;t1&#39;, 94: &#39;t1&#39;, 95: &#39;t1&#39;, 96: &#39;t1&#39;, 97: &#39;t1&#39;, 98: &#39;t1&#39;, 99: &#39;t1&#39;, 100: &#39;t1&#39;, 101: &#39;t1&#39;, 102: &#39;t1&#39;, 103: &#39;t1&#39;, 104: &#39;t1&#39;, 105: &#39;t1&#39;, 106: &#39;t1&#39;, 107: &#39;t1&#39;}
 </pre></div>
 </div>
-<p>Depending on the situation one dictionary might be more useful than the other.</p>
+<p>Depending on the situation, one dictionary may be more useful than the other.</p>
 </div>
 <div class="section" id="identifying-atom-types-in-a-zeolite-structure">
 <h2>Identifying Atom Types in a Zeolite Structure<a class="headerlink" href="#identifying-atom-types-in-a-zeolite-structure" title="Permalink to this headline">¶</a></h2>
@@ -312,13 +311,13 @@ _atom_site_fract_z
 </div>
 <div class="section" id="extracting-adding-and-capping-clusters">
 <h2>Extracting, Adding and Capping Clusters<a class="headerlink" href="#extracting-adding-and-capping-clusters" title="Permalink to this headline">¶</a></h2>
-<p>One of the most useful features of the MAZE package is the ability to add and remove atoms from a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object. To demonstrate this we will extract a cluster from an <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code> object, change some of the atoms, then integrate it back into the main <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code>.</p>
-<p>First we load in the MAZE package and set the path of our cif file to the variable <code class="docutils literal notranslate"><span class="pre">cif_dir</span></code>.</p>
+<p>One of the most useful features of the MAZE package is the ability to add and remove atoms from a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object. To demonstrate this, we will extract a cluster from an <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code> object, change some of the atoms, and then integrate it back into the main <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code>.</p>
+<p>First, we load in the MAZE package and set the path of our cif file to the variable <code class="docutils literal notranslate"><span class="pre">cif_dir</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cif_dir</span> <span class="o">=</span> <span class="s2">&quot;/users/dda/code/zeotype/data/bea.cif&quot;</span>
 </pre></div>
 </div>
-<p>Next we build a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object from a cif file</p>
+<p>Next, we build a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object from a cif file</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">zeolite</span> <span class="o">=</span> <span class="n">maze</span><span class="o">.</span><span class="n">zeotypes</span><span class="o">.</span><span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">cif_dir</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -329,8 +328,8 @@ _atom_site_fract_z
 </div>
 <img alt="_images/zeolite.png" src="_images/zeolite.png" />
 <p>The next step is to pick a T-site and then use one of the static methods in the <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> class to select indices to build the cluster.</p>
-<p>The atom 154 is right in the middle of the zeolite, which will make viewing the cluster creation easy. Another option would be to use the <code class="docutils literal notranslate"><span class="pre">site_to_atom_indices</span></code> dictionary to select a specific T site.</p>
-<p>There are a few different cluster index finder functions to choose from. A simple one is <code class="docutils literal notranslate"><span class="pre">Cluster.get_oh_cluster_indices</span></code> which only selects the central t atom, and surrounding oxygen and hydrogens.</p>
+<p>The atom 154 is right in the middle of the zeolite, which will make viewing the cluster creation easy. One could also use the <code class="docutils literal notranslate"><span class="pre">site_to_atom_indices</span></code> dictionary to select a specific T site.</p>
+<p>There are a few different cluster-index-finder functions to choose from. A simple one is <code class="docutils literal notranslate"><span class="pre">Cluster.get_oh_cluster_indices</span></code> which only selects the central t atom, and surrounding oxygens and hydrogens.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">site</span> <span class="o">=</span> <span class="mi">154</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_indices</span> <span class="o">=</span> <span class="n">maze</span><span class="o">.</span><span class="n">zeotypes</span><span class="o">.</span><span class="n">Cluster</span><span class="o">.</span><span class="n">get_oh_cluster_indices</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_indices</span>
@@ -372,13 +371,13 @@ _atom_site_fract_z
 </pre></div>
 </div>
 <img alt="_images/uncapped_cluster.png" src="_images/uncapped_cluster.png" />
-<p>Finally we integrate the cluster back into the open framework. If the cluster has overlapping indices with the zeotype it is being integrated into, then the properties of those overlapping atoms will be changed to match the cluster being integrated.</p>
+<p>Finally, we integrate the cluster back into the open framework. If the cluster has overlapping indices with the zeotype it is being integrated into, then the properties of those overlapping atoms will be changed to match the cluster being integrated.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">iz</span> <span class="o">=</span> <span class="n">open_framework</span><span class="o">.</span><span class="n">integrate_other_zeotype</span><span class="p">(</span><span class="n">uncapped_cluster</span><span class="p">)</span>
 <span class="n">view</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span>
 </pre></div>
 </div>
 <img alt="_images/iz.png" src="_images/iz.png" />
-<p>This demo showed the power of the ZeoSE code to extract and add clusters to zeotypes. This is one of the most useful features of the ZeoSE code.</p>
+<p>This demo showed the power of the MAZE code to extract and add clusters to zeotypes. This is one of the most useful features of the MAZE code.</p>
 </div>
 </div>
 

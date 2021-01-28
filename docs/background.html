@@ -153,15 +153,15 @@
             
   <div class="section" id="background">
 <h1>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h1>
-<p>Zeolites are microporous materials integral to the modern world. Their roles include (but are not limited to) gas separators and catalysts. The structure of a zeolite determines its viability for industrial applications. Searching for optimal zeolite structures for specific applications is complicated by the vastness of the zeolite chemical space. Currently, over 245 unique zeolites have been synthesized, which is  minor compared to the one million theoretical zeolites that have been identified. Exploring this expansive space can be achieved by chemical simulation experiments, which can predict the properties of both synthesized and theoretical zeolites and identify promising targets for laboratory experiments.</p>
-<p>The Atomic Simulation Environment (ASE) is a set of tools that facilitates molecular simulation experiments. ASE offers an object-oriented interface to represent individual and groups of atoms and calculators. Many successful zeolite screening projects have been carried out with this software to date. Nevertheless,As the currently available general-purpose python codes are not ideally-suited for zeolite-specific tasks.</p>
-<p>The <strong>M</strong>ultiscale <strong>A</strong>tomistic <strong>Z</strong>eotype Simulation <strong>E</strong>nvironment (MAZE) aims to streamline zeolite experiment workflows. MAZE utilizes an object-oriented programming approach built around an “ImperfectZeolite” class that</p>
+<p>Zeolites are microporous aluminosilicate materials with important applications in catalysis and chemical separations. The atomic structure of a zeolite determines its chemical properties, which means that finding zeolite structures ideal for important applications is essential. This is complicated by the large number of known zeolite structures. Currently, over 245 unique zeolites have been synthesized, which is  a small fraction of the millions theoretically stable zeolites that have been identified. Exploring this vast space of different zeolite structures can be accelerated using chemical simulations, which can predict the properties of different zeolites in order to identify promising targets for laboratory experiments.</p>
+<p>The Atomic Simulation Environment (ASE) is a set of tools that facilitates chemical simulations. ASE offers an object-oriented interface to represent and manipulate groups of atoms while providing an interface to other chemical simulation software. Many successful zeolite screening projects have been carried out with this ASE to date. However, existing chemical simulation software is not well suited to zeolite-specific tasks.</p>
+<p>The <strong>M</strong>ultiscale <strong>A</strong>tomistic <strong>Z</strong>eotype Simulation <strong>E</strong>nvironment (MAZE) aims to streamline zeolite simulation workflows, by building upon ASE. MAZE utilizes an object-oriented programming approach built around an “ImperfectZeolite” class that</p>
 <ol class="arabic simple">
 <li><p>overcomes the cumbersome indexing issues associated with adding and removing atoms (e.g., creating defects, inserting TMs),</p></li>
 <li><p>simplifies multiscale calculations through custom-built wrappers for different codes and</p></li>
 <li><p>maintains the provenance of each calculation.</p></li>
 </ol>
-<p>The third aspect is especially important for modern computational studies, as every calculation step (e.g. DFT, AIMD, force field etc.) can be easily traced back to the IZA CIF file.</p>
+<p>The third functionality is especially important for modern computational studies, as every calculation step (e.g. DFT, AIMD, force field etc.) can be easily traced back to the IZA CIF file.</p>
 <p>For examples on the MAZE package please see the Demos section.</p>
 </div>
 
