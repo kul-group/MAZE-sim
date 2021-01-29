@@ -36,7 +36,7 @@ Installation
     ```
 Documentation 
 ==============
-For more complete documentation about the Zeotype code check out the [official documentation](https://kul-group.github.io/MAZE-sim/). 
+For complete class descriptions and tutorials check out the [official MAZE documentation](https://kul-group.github.io/MAZE-sim/). 
 
 Features 
 =======
