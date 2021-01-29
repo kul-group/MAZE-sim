@@ -34,7 +34,9 @@ Installation
    >>> maze.zeotypes.Zeotype()
    Zeotype(symbols='', pbc=False)
     ```
-
+Documentation 
+==============
+For more complete documentation about the Zeotype code check out the [official documentation](https://kul-group.github.io/MAZE-sim/). 
 
 Features 
 =======
