@@ -283,4 +283,4 @@ Finally, we integrate the cluster back into the open framework. If the cluster h
 
 .. image:: images/iz.png
 
-This demo showed the power of the MAZE code to extract and add clusters to zeotypes. This is one of the most useful features of the MAZE code.
+This demo showed the power of the MAZE code to extract and add clusters to zeotypes. This is one of the most useful features in the MAZE code.
