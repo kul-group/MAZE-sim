@@ -16,7 +16,15 @@ The following documentation frequently references ASE's Atoms object, ASE's Atom
 *********************************************************
 Motivation
 *********************************************************
+<<<<<<< HEAD
 The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features which make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code's design decisions.
+=======
+<<<<<<<< HEAD:docs/_sources/design_pattern.rst.txt
+The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features that make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code's design decisions.
+========
+The class ``Zeotype``, inherits from the atomic simulation environment (ase)'s Atoms class. It also adds additional features which make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code's design decisions.
+>>>>>>>> c4607a6ebc35c11de446ca3c2ef18ee47704d524:docs/build/html/_sources/design_pattern.rst.txt
+>>>>>>> c4607a6ebc35c11de446ca3c2ef18ee47704d524
 
 One feature of the ase.Atoms class is that an instance of the class stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.
 
@@ -87,7 +95,15 @@ The above example demonstrated some unusual behavior, now we will examine why th
     #. Integrate the optimized structure back into the original Zeolite Atoms object
     #. Save the altered Zeolite object as a .traj file with a unique name
 
+<<<<<<< HEAD
 Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.
+=======
+<<<<<<<< HEAD:docs/_sources/design_pattern.rst.txt
+Steps 1 and 2 are challenging, and the MAZE package presents a helpful solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not easy.
+========
+Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.
+>>>>>>>> c4607a6ebc35c11de446ca3c2ef18ee47704d524:docs/build/html/_sources/design_pattern.rst.txt
+>>>>>>> c4607a6ebc35c11de446ca3c2ef18ee47704d524
 
 In the sub-steps of part 3, the problem with "on-the-fly" object creation emerges. Part a,b c are can be completed with the base ASE package. However, part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping problem with the use of a custom Index Mapper.
 
