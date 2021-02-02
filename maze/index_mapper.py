@@ -147,6 +147,7 @@ class IndexMapper:
         Get a dictionary full of None for each name
         :return: A dictionary full of None for each known name
         """
+
         none_dict = {}
         for name in self.names:
             none_dict[name] = None
@@ -159,6 +160,7 @@ class IndexMapper:
         :param new_atom_indices: indices of the new atoms
         :return:
         """
+
         assert name not in self.names, 'name already exists'
         for index, value in self.main_index.items():
             value[name] = None
@@ -234,6 +236,7 @@ class IndexMapper:
         :param name: The name of the zeolite to delete from the index
         :return: None
         """
+
         try:
             self.names.remove(name)
         except:

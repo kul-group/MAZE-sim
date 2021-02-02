@@ -6,21 +6,17 @@ import os
 
 class TestZeotype(TestCase):
 
+    # testing init methods
     def test_init_with_no_arguments(self):
         my_zeotype = Zeotype()
         # tests inheritance
         self.assertIsInstance(my_zeotype, Zeotype)
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
-        self.assertIsEmptyList(my_zeotype.adsorbates)
-        self.assertIsEmptyList(my_zeotype.sites)
-        self.assertIsEmptyList(my_zeotype.clusters)
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.silent, False)
-        self.assertEqual(my_zeotype.zeolite_type, '')
         self.assertEqual(my_zeotype.site_to_atom_indices, None)
         self.assertEqual(my_zeotype.atom_indices_to_site, None)
-        self.assertEqual(my_zeotype.name, 'pristine')
+        self.assertEqual('parent', my_zeotype.name)
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         self.assertNotEqual(my_zeotype.index_mapper, None)
 
@@ -35,12 +31,7 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Zeotype)
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
-        self.assertIsEmptyList(my_zeotype.adsorbates)
-        self.assertIsEmptyList(my_zeotype.sites)
-        self.assertIsEmptyList(my_zeotype.clusters)
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.silent, True)
-        self.assertEqual(my_zeotype.zeolite_type, 'friendly')
         self.assertEqual(my_zeotype.site_to_atom_indices, {'T1': 0})
         self.assertEqual(my_zeotype.atom_indices_to_site, {0: 'T1'})
         self.assertEqual(my_zeotype.name, 'good_friend')
@@ -54,15 +45,10 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Zeotype)
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
-        self.assertIsEmptyList(my_zeotype.adsorbates)
-        self.assertIsEmptyList(my_zeotype.sites)
-        self.assertIsEmptyList(my_zeotype.clusters)
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.silent, False)
-        self.assertEqual(my_zeotype.zeolite_type, '')
         self.assertEqual(my_zeotype.site_to_atom_indices, None)
         self.assertEqual(my_zeotype.atom_indices_to_site, None)
-        self.assertEqual(my_zeotype.name, 'pristine')
+        self.assertEqual('parent', my_zeotype.name)
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         #tests atoms are there and behave the same
         self.assertCountEqual(my_zeotype.get_tags(), my_atoms.get_tags())
@@ -76,12 +62,7 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Zeotype)
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
-        self.assertIsEmptyList(my_zeotype.adsorbates)
-        self.assertIsEmptyList(my_zeotype.sites)
-        self.assertIsEmptyList(my_zeotype.clusters)
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.silent, False)
-        self.assertEqual(my_zeotype.zeolite_type, '')
         self.assertEqual(my_zeotype.site_to_atom_indices, z.site_to_atom_indices)
         self.assertEqual(my_zeotype.atom_indices_to_site, z.atom_indices_to_site)
         self.assertEqual(my_zeotype.name, z.name)
@@ -103,12 +84,7 @@ class TestZeotype(TestCase):
         self.assertIsInstance(iz, Zeotype)
         self.assertIsInstance(iz, Atoms)
         # tests empty list attributes
-        self.assertIsEmptyList(iz.adsorbates)
-        self.assertIsEmptyList(iz.sites)
-        self.assertIsEmptyList(iz.clusters)
         # tests corretly defined parameters
-        self.assertEqual(iz.silent, False)
-        self.assertEqual(iz.zeolite_type, '')
         self.assertEqual(iz.site_to_atom_indices, None)
         self.assertEqual(iz.atom_indices_to_site, None)
         #self.assertEqual(iz.name)
@@ -125,24 +101,62 @@ class TestZeotype(TestCase):
         self.assertEqual(iz.index_mapper, z.index_mapper)
         self.assertEqual(iz.index_mapper, z.index_mapper)
 
-    def test_count_atomtypes(self):
-        self.fail()
 
-    def test_add_cluster(self):
-        self.fail()
-
-    def test_integrate_cluster(self):
-        self.fail()
-
-    def assertIsEmptyList(self, my_list):
-        """
-        Args:
-            my_list:
-        """
-        self.assertIsInstance(my_list, list)
-        self.assertEqual(len(my_list), 0)
-
-    def test_build_from_cif(self):
+    def test_build_from_cif_with_labels(self):  # TODO: Write test case for building from CIF file (use rel path)
         abs_path = '/Users/dda/Code/MAZE-sim/data/BEA.cif'
         Zeotype.build_from_cif_with_labels(abs_path)
         self.assertEqual(True, True)
+
+    # other methods
+
+    def test_get_available_symbols(self):  # TODO: Write this test case
+        self.assertEqual(True, True)
+
+    def test__read_cif_note_siteJan2021Update(self):
+        pass
+
+    def test_read_cif_note_sites(self):
+        pass
+
+    def test_get_imperfect_zeolite(self):
+        pass
+
+    def test_update_nl(self):
+        pass
+
+    def test_get_hetero_atoms(self):
+        pass
+
+    def test_get_atom_types(self):
+        pass
+
+    def test_count_elements(self):
+        pass
+
+    def test_get_cluster(self):
+        pass
+
+    def test_find_silanol_groups(self):
+        pass
+
+    def test_find_silanol_nest_T_sites(self):
+        pass
+
+    def test_get_indices_compliment(self):
+        pass
+
+    def test_get_indices(self):
+        pass
+
+    def test_get_site_type(self):
+        pass
+
+    def test__get_old_to_new_map(self):
+        pass
+
+    def test__del__(self):
+        pass
+
+
+
+
