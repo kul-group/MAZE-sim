@@ -1,93 +1,26 @@
-source package
+MAZE Modules
 ==============
 
-Submodules
-----------
-
-source.adsorbate module
------------------------
-
-.. automodule:: source.adsorbate
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.cap\_clust module
-------------------------
-
-.. automodule:: source.cap_clust
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.cif\_download module
+cif\_download module
 ---------------------------
-
-.. automodule:: source.cif_download
+.. automodule:: cif_download
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
+   :special-members:
 
-source.extra\_framework module
-------------------------------
-
-.. automodule:: source.extra_framework
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.get\_cluster module
---------------------------
-
-.. automodule:: source.get_cluster
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.place\_adsorbate module
-------------------------------
-
-.. automodule:: source.place_adsorbate
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.placement module
------------------------
-
-.. automodule:: source.placement
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.pores module
--------------------
-
-.. automodule:: source.pores
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.type\_atoms module
--------------------------
-
-.. automodule:: source.type_atoms
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-source.zeotype module
+zeotypes module
 ---------------------
-
-.. automodule:: source.zeotype
+.. automodule:: zeotypes
    :members:
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: source
+index\_mapper module
+---------------------------
+.. automodule:: index_mapper
    :members:
    :undoc-members:
    :show-inheritance:
+

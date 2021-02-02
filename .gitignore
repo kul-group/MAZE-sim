@@ -1,6 +1,10 @@
+*.traj
+*.pyc
 *.xml
 *.iml
 *.cif
 .idea
 InspectProfiles
-/demo/.ipynb_checkpoints/
+/demos/.ipynb_checkpoints/
+.DS*
+/docs/build/latex/

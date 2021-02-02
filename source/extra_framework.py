@@ -1,3 +1,0 @@
-from .zeotype import Zeotype
-class ExtraFramework(Zeotype)
-    ...

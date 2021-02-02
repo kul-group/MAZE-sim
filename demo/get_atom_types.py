@@ -1,6 +1,5 @@
 from source.zeotype import Zeotype
 
-
 def main():
     cif_dir = "/Users/dda/Code/zeotype/data/GOO.cif"
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
