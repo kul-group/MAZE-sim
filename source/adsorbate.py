@@ -5,7 +5,8 @@ from sklearn.cluster import MeanShift
 from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-import source.zeotype
+#import source.zeotype
+import zeotype
 
 
 class Adsorbate(Atoms):
@@ -63,7 +64,7 @@ class Adsorbate(Atoms):
         return ans.x
 
     @staticmethod
-    def sphere_sample(radius, num_pts=500):
+    def sphere_sample(radius, num_pts=600):
         """
         generates random positions on the surface of a sphere of certain radius
         :param radius: radius of sphere surface to sample
@@ -138,14 +139,15 @@ class Adsorbate(Atoms):
         best_avg_dist = 0
         for pos in best_positions:
             void = self.find_void(pos)
-            void_avg_dist = self.avg_distance(void)  # average dist at void nearest to pos
+            void_avg_dist = self.min_distance(void)  # average dist at void nearest to pos
             best_pos = None
             if void_avg_dist > best_avg_dist:
                 best_avg_dist = void_avg_dist  # selects pos with largest nearby void
                 best_pos = pos
 
         if best_pos is None:
-            assert False, 'No good positions at specified index'
+            #assert False, 'No good positions at specified index'
+            return void
         return best_pos
 
     def pick_donor(self):
@@ -242,8 +244,7 @@ class Adsorbate(Atoms):
         if pos is None:
             pos = self.pick_ads_position(donor_ind, host_ind)
 
-        dummy_host = self.host_zeotype + Atom('H',
-                                                             position=pos)  # add dummy hydrogen atom to get distances to host atoms
+        dummy_host = self.host_zeotype + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
         vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
         donor_vec = self.get_donor_vec(donor_ind)  # get the direction of lone pairs on donor atom
 
@@ -297,7 +298,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from ase.build import molecule
 
-    zeotype = source.zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
+    zeotype = zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
     print(zeotype[30].symbol)
     zeotype[20].symbol = 'Sn'  # for visualization
     mol = molecule('CH3OH')
