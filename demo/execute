@@ -1,3 +1,0 @@
-jupyter nbconvert --to notebook --execute --inplace *.ipynb
-jupyter nbconvert --to html *.ipynb
-jupyter nbconvert --clear-output --inplace *.ipynb
