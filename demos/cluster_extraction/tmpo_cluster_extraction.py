@@ -1,5 +1,5 @@
 from ase.io import read, write
-from maze import Zeotype, Cluster
+from maze.zeotypes import Zeotype, Cluster
 import os
 from pathlib import Path
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -17,7 +17,8 @@ def find_tmpo(atoms):
             p_index = a.index
             break
     tmpo_indices.append(p_index)
-
+    if p_index is None:
+        return tmpo_indices
     nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
     nl.update(atoms)
     p_nl = nl.get_neighbors(p_index)[0]
@@ -30,8 +31,11 @@ def find_tmpo(atoms):
 
 
 def main():
-    input_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/'
-    output_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/output'
+    # input_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/'
+    # output_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/output'
+    # make sure to add / at end of path name to avoid annoying bug
+    input_data_dir = '/Users/dda/Desktop/t56_tmpo/'
+    output_data_dir = '/Users/dda/Desktop/t56_tmpo/output/'
     glob_cmd = os.path.join(input_data_dir, '**/**/*.traj')
     traj_files = glob.glob(glob_cmd)
     for traj_file in traj_files:
@@ -39,11 +43,17 @@ def main():
         tmpo = find_tmpo(z)
         tin_index = [a.index for a in z if a.symbol == 'Sn'][0]
         cluster_indices = Cluster.get_oh_cluster_multi_t_sites(z, [tin_index])
-        cluster_indices = list(set(cluster_indices).union(set(tmpo)))
-        cluster, od = z.get_cluster(0,0,0, cluster_indices=cluster_indices)
+        if len(tmpo) != 0:
+            cluster_indices = list(set(cluster_indices).union(set(tmpo)))
+        else:
+            cluster_indices = list(cluster_indices)
+        if None in cluster_indices:
+            cluster_indices.remove(None) # fixes bug that shouldn't exist
+        print(cluster_indices)
+        cluster, od = z.get_cluster(cluster_indices=cluster_indices)
         cluster = cluster.cap_atoms()
-        output_dir_path = os.path.join(output_data_dir,
-                                       traj_file.split(input_data_dir)[-1].split(os.path.basename(traj_file))[0])
+        folder_path =  traj_file.split(input_data_dir)[-1].split(os.path.basename(traj_file))[0]
+        output_dir_path = os.path.join(output_data_dir, folder_path)
         output_filepath = os.path.join(output_dir_path, 'cluster.traj')
         Path(output_dir_path).mkdir(exist_ok=True, parents=True)
         write(output_filepath, cluster)
