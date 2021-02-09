@@ -347,7 +347,7 @@ class Zeotype(Atoms):
             element = atom.symbol
             indices[element].append(atom.index)
             count[element] += 1
-        return indices, count
+        return dict(indices), dict(count)
 
     @staticmethod
     def count_atomtypes(atomtype_list: List[str]) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
