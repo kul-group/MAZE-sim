@@ -5,7 +5,6 @@ from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
 import source.zeotype
-import ase
 import warnings
 
 
@@ -302,7 +301,6 @@ class Adsorbate(Atoms):
 
 
 if __name__ == '__main__':
-    from ase.io import read
     from ase.visualize import view
     from ase.build import molecule
 
