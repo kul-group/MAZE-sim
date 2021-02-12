@@ -37,7 +37,7 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
         for names in z.additions.values():
             name_list.extend(names)
 
-    name_list = [z.name for z in zeotype_list]
+    print(name_list)
     assert "parent" in name_list, 'parent must be in zeotype list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
 
@@ -46,7 +46,7 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
 
     # save index mapper
     index_mapper_path = os.path.join(my_path, 'index_mapper.json')
-    for name in new_index_mapper.names:
+    for name in zeotype_list[0].index_mapper.names:
         if name not in name_list:
             new_index_mapper.delete_name(name)
     save_index_mapper(index_mapper_path, new_index_mapper)
@@ -70,8 +70,8 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
         with open(dict_path, 'w') as f:
             json.dump(dict_json, f, indent=4, ensure_ascii=True)
 
-        make_folder_to_zeo(folder_path)
-        delete_folder(folder_path)
+    make_folder_to_zeo(folder_path)
+    delete_folder(folder_path)
 
 
 def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
@@ -85,8 +85,18 @@ def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
 def load_index_mapper(filepath) -> IndexMapper:
     with open(filepath, 'r') as f:
         index_mapper_json = json.load(f)
+    new_main_dict = {}
+    for key, name_dict in index_mapper_json['main_index'].items():
+        new_name_dict = {}
+        for inner_key, value in name_dict.items():
+            if value is None:
+                new_name_dict[inner_key] = None
+            else:
+                new_name_dict[inner_key] = int(value)
+        new_main_dict[int(key)] = new_name_dict
+
     new_im = IndexMapper([0, 1, 2])
-    new_im.main_index = index_mapper_json['main_index']
+    new_im.main_index = new_main_dict
     if new_im.id < index_mapper_json['id']:
         new_im.id = index_mapper_json['id'] + 1
     new_im.names = index_mapper_json['names']
@@ -114,28 +124,11 @@ def read_zeotypes(file_path, str_ext: str = '.traj'):
                 my_zeotype.site_to_atom_indices = attr_dict['site_to_atom_indices']
 
             zeotype_dict[name] = my_zeotype
-
+    index_mapper = load_index_mapper(os.path.join(folder_path, 'index_mapper.json'))
     for name, z in zeotype_dict.items():
-        z.parent_zeotype = zeotype_dict['parent']
-        z.index_mapper = zeotype_dict['parent'].index_mapper
+        z.parent_zeotype = zeotype_dict['parent'].index_mapper
+        z.index_mapper = index_mapper
 
     delete_folder(folder_path)
     return zeotype_dict
 
-
-if __name__ == "__main__":
-    data_path = '/Users/dda/Code/MAZE-sim/data/'
-    cif_path = os.path.join(data_path, 'BEA.cif')
-    output_path = os.path.join(data_path, 'my_first_zeotype')
-    my_zeotype = Zeotype.build_from_cif_with_labels(cif_path)
-    cluster, od = my_zeotype.get_cluster(1,10,10)
-    # data_dir = os.path.join(Path(os.getcwd()).parent, 'data')
-    # output_traj = os.path.join(data_dir, 'test.traj')
-    # cif_dir = os.path.join(data_dir, 'BEA.cif')
-    # zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
-    save_zeotypes(output_path, [my_zeotype, cluster, od])
-    new_dict = read_zeotypes(output_path + '.zeo')
-    print(new_dict)
-    print(new_dict['parent'])
-    print(new_dict['parent'].index_mapper.main_index)
-    # Trajectory(output_traj,'w', zeolite)
