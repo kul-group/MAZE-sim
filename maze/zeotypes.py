@@ -72,11 +72,11 @@ class Zeotype(Atoms):
         # To Be compatible with ASE's atoms object, this code has to have the functionality to build from
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
         # The following if statements take care of this functionality depending on
-        # if the object being built is a MAZE-sim or if symbols is a MAZE-sim (there are four unique paths)
+        # if the object being built is a Zeotype or if symbols is a Zeotype (there are four unique paths)
 
-        if isinstance(symbols, Zeotype):  # if symbols is a MAZE-sim or MAZE-sim subclass
+        if isinstance(symbols, Zeotype):  # if symbols is Zeotype or Zeotype subclass
             self.additions = copy.deepcopy(symbols.additions)
-            if _is_zeotype:  # if the object being built is a MAZE-sim
+            if _is_zeotype:  # if the object being built is a Zeotype
                 self.site_to_atom_indices = symbols.site_to_atom_indices
                 self.atom_indices_to_site = symbols.atom_indices_to_site
                 self.name = 'parent'  # must be parent to agree with index mapper
@@ -91,13 +91,13 @@ class Zeotype(Atoms):
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
 
-        else:  # if symbols is not a MAZE-sim or MAZE-sim child class
-            if _is_zeotype:
+        else:  # if symbols is not a Zeotype or Zeotype child class
+            if _is_zeotype:  # if Zeotype object is being built
                 self.name = 'parent'  # must be parent for code to work properly
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
             else:
-                self.name = None
+                self.name = None  # TODO: Ensure that a parent zeotype class is made!
                 self.index_mapper = None
                 self.parent_zeotype = None
 
