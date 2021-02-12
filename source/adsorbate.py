@@ -1,5 +1,4 @@
 import numpy as np
-from random import random
 from scipy.optimize import minimize
 from sklearn.cluster import MeanShift
 from ase import Atom, Atoms
@@ -99,6 +98,7 @@ class Adsorbate(Atoms):
             # generate-a-random-sample-of-points-distributed-on-the-surface-of-a-unit-sphere/33977530#33977530
             # for discussion on this algorithm
 
+            np.random.seed(10)  # Use random seed for consistent runs
             vec = np.random.normal(0, 1, 3)  # select three random points (if normal dist no skip needed)
             vec /= np.linalg.norm(vec)  # normalize vector
             vec *= radius  # lengthen vector to desired radius
