@@ -5,7 +5,7 @@ from typing import Dict, List
 import numpy as np
 from ase import Atom
 
-from source.zeotype import Zeotype, ImperfectZeotype
+from source.zeotypes import Zeotype, ImperfectZeotype
 
 
 class ExtraFramework(ImperfectZeotype):

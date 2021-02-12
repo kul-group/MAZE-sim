@@ -34,10 +34,11 @@ def main():
     # input_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/'
     # output_data_dir = '/Users/dda/Box/Kulkarni/data/sn_bea_tmpo_structures/output'
     # make sure to add / at end of path name to avoid annoying bug
-    input_data_dir = '/Users/dda/Desktop/t56_tmpo/'
-    output_data_dir = '/Users/dda/Desktop/t56_tmpo/output/'
-    glob_cmd = os.path.join(input_data_dir, '**/**/*.traj')
-    traj_files = glob.glob(glob_cmd)
+    input_data_dir = '/Users/dda/Desktop/t29_tmpo_fix/'
+    output_data_dir = '/Users/dda/Desktop/t29_tmpo_fix/output/'
+    glob_cmd = os.path.join(input_data_dir, '**/*.traj')
+    traj_files = glob.glob(glob_cmd, recursive=True)
+    print(traj_files)
     for traj_file in traj_files:
         z = Zeotype(read(traj_file))
         tmpo = find_tmpo(z)
