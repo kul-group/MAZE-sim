@@ -6,20 +6,44 @@ import os
 from pathlib import Path
 import json
 from source.index_mapper import IndexMapper
-from typing import List
+from typing import List, Iterable, Dict
 import shutil
 
 
-def make_folder_to_zeo(folder_path):
+def make_folder_to_zeo(folder_path: str) -> None:
+    """
+    Creates a zip archive with a .zeo extension
+    :param folder_path: path of folder to be zipped
+    :type folder_path: str
+    :return: None
+    :rtype: None
+    """
+
     shutil.make_archive(folder_path, 'zip', folder_path)
     shutil.move(folder_path + '.zip', folder_path + '.zeo')
 
 
-def delete_folder(folder_path):
+def delete_folder(folder_path: str) -> None:
+    """
+    Deletes a folder
+    :param folder_path: folder path to delete
+    :type folder_path: str
+    :return: None
+    :rtype: None
+    """
+
     shutil.rmtree(folder_path)
 
 
 def unpack_zeo_file(filename) -> str:
+    """
+    unpacks a zeo file
+    :param filename: name of zeo file with .zeo extension
+    :type filename: str
+    :return: path to unpacked file
+    :rtype: str
+    """
+
     file_dir = Path(filename).parents[0]
     file_stem = Path(filename).stem
     output_path = os.path.join(file_dir, file_stem)
@@ -27,7 +51,19 @@ def unpack_zeo_file(filename) -> str:
     return output_path
 
 
-def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = '.traj'):
+def save_zeotypes(folder_path: str, zeotype_list: Iterable[Zeotype], ase_ext: str = '.traj') -> None:
+    """
+    This saves a list of Zeotypes to a .zeo file
+    :param folder_path: path and name of the zeo file without the zeo extension
+    :type folder_path: str
+    :param zeotype_list: an iterable collection of Zeotype objects (or subclasses)
+    :type zeotype_list: Iterable[Zeotype]
+    :param ase_ext: extension to save the Zeotype files (default .traj)
+    :type ase_ext: str
+    :return: None
+    :rtype: None
+    """
+
     assert '.' not in folder_path, 'do not add file extension when saving zeolites'
     my_path = Path(folder_path)
     my_path.mkdir(parents=True, exist_ok=True)
@@ -62,8 +98,6 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
                                  'atom_indices_to_site': z.atom_indices_to_site}
             dict_json.update(additional_params)
 
-        # TODO: impliment save index mapper
-        # save things
         binary_path = os.path.join(zeotype_folder, z.name + ase_ext)
         dict_path = os.path.join(zeotype_folder, z.name + '.json')
         write(binary_path, z)
@@ -75,6 +109,16 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
 
 
 def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
+    """
+    Saves an index mapper to json file format
+    :param filepath: json filepath
+    :type filepath: str
+    :param index_mapper: IndexMapper object to save
+    :type index_mapper: IndexMapper
+    :return: None
+    :rtype: None
+    """
+
     json_dict = {'main_index': index_mapper.main_index,
                  'id': index_mapper.id,
                  'names': index_mapper.names}
@@ -83,6 +127,14 @@ def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
 
 
 def load_index_mapper(filepath) -> IndexMapper:
+    """
+    Loads an IndexMapper object from a json file
+    :param filepath: filepath to load IndexMapper from
+    :type filepath: str
+    :return: loaded IndexMapper
+    :rtype: IndexMapper
+    """
+
     with open(filepath, 'r') as f:
         index_mapper_json = json.load(f)
     new_main_dict = {}
@@ -103,7 +155,17 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-def read_zeotypes(file_path, str_ext: str = '.traj'):
+def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, Zeotype]:
+    """
+    Read the zeotypes from a .zeo file
+    :param file_path: path to .zeo file with or without .zeo extension
+    :type file_path: str
+    :param str_ext: type of files in .zeo zip file
+    :type str_ext: str
+    :return: Dictionary of Zeotypes loaded from the files
+    :rtype: Dict[str, Zeotype]
+    """
+
     if '.' not in file_path:
         file_path = file_path + '.zeo'
     folder_path = unpack_zeo_file(file_path)
