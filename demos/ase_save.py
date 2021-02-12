@@ -7,11 +7,36 @@ from pathlib import Path
 import json
 from source.index_mapper import IndexMapper
 from typing import List
+import shutil
+
+
+def make_folder_to_zeo(folder_path):
+    shutil.make_archive(folder_path, 'zip', folder_path)
+    shutil.move(folder_path + '.zip', folder_path + '.zeo')
+
+
+def delete_folder(folder_path):
+    shutil.rmtree(folder_path)
+
+
+def unpack_zeo_file(filename) -> str:
+    file_dir = Path(filename).parents[0]
+    file_stem = Path(filename).stem
+    output_path = os.path.join(file_dir, file_stem)
+    shutil.unpack_archive(filename, output_path, 'zip')
+    return output_path
 
 
 def save_zeotype(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = '.traj'):
+    assert '.' not in folder_path, 'do not add file extension when saving zeolites'
     my_path = Path(folder_path)
     my_path.mkdir(parents=True, exist_ok=True)
+    name_list = []
+    for z in zeotype_list:
+        name_list.append(z.name)
+        for names in z.additions.values():
+            name_list.extend(names)
+
     name_list = [z.name for z in zeotype_list]
     assert "parent" in name_list, 'parent must be in zeotype list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
@@ -45,6 +70,9 @@ def save_zeotype(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = '
         with open(dict_path, 'w') as f:
             json.dump(dict_json, f, indent=4, ensure_ascii=True)
 
+        make_folder_to_zeo(folder_path)
+        delete_folder(folder_path)
+
 
 def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
     json_dict = {'main_index': index_mapper.main_index,
@@ -65,7 +93,10 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-def read_zeotype(folder_path, str_ext: str = '.traj'):
+def read_zeotype(file_path, str_ext: str = '.traj'):
+    if '.' not in file_path:
+        file_path = file_path + '.zeo'
+    folder_path = unpack_zeo_file(file_path)
     zeotype_dict = {}
     folder_list = glob.glob(os.path.join(folder_path, '*/'))
     for folder in folder_list:
@@ -88,6 +119,8 @@ def read_zeotype(folder_path, str_ext: str = '.traj'):
             z.parent_zeotype = zeotype_dict['parent']
             z.index_mapper = zeotype_dict['parent'].index_mapper
 
+        delete_folder(folder_path)
+
         return zeotype_dict
 
 
@@ -101,7 +134,7 @@ if __name__ == "__main__":
     # cif_dir = os.path.join(data_dir, 'BEA.cif')
     # zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     save_zeotype(output_path, [my_zeotype])
-    new_dict = read_zeotype(output_path)
+    new_dict = read_zeotype(output_path + '.zeo')
     print(new_dict)
     print(new_dict['parent'])
     print(new_dict['parent'].index_mapper.main_index)
