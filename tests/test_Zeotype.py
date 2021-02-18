@@ -77,7 +77,7 @@ class TestZeotype(TestCase):
 
     def test_build_iz_from_z(self):
         z = Zeotype.build_from_cif_with_labels('GOO.cif')
-        iz = z.get_imperfect_zeolite()
+        iz = z.get_imperfect_zeotype()
 
         # tests inheritance
         self.assertIsInstance(iz, ImperfectZeotype)

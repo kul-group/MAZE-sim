@@ -8,3 +8,4 @@ InspectProfiles
 /demos/.ipynb_checkpoints/
 .DS*
 /docs/build/latex/
+/MAZE_sim.egg-info/

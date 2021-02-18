@@ -1,4 +1,5 @@
 import copy
+import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Iterable, Optional, Union
 
@@ -8,48 +9,12 @@ import numpy as np
 from ase import Atoms
 from ase.io import cif
 from ase.neighborlist import natural_cutoffs, NeighborList
-from ase.visualize import view
 from packaging.version import parse as parse_version
 import pkg_resources
 from maze.adsorbate import Adsorbate
 from maze.index_mapper import IndexMapper
-
-
-class Silanol():
-    """
-    This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite
-    """
-
-    def __init__(self, parent_zeotype: 'Zeotype', Si_index: int, O_index: int, H_index: int,
-                 Si_neighbor_list: List[int]):
-        """
-       Create a Silanol object
-        :param parent_zeotype: The parent zeolite, where the silanol group is located
-        :param Si_index: the index of the Si atom
-        :param O_index: the index of the O atom
-        :param H_index: the index of the H atom
-        :param Si_neighbor_list: The neighbor list of the Si atom, useful for other algos
-        """
-        self.parent_zeotype = parent_zeotype
-        self.Si_index = Si_index
-        self.O_index = O_index
-        self.H_index = H_index
-        self.Si_neighbor_list = Si_neighbor_list
-
-    def __str__(self) -> str:
-        """
-        This ensures the str rep of ta Silanol object is nice
-        :return: str rep of object
-        """
-        return f'Si: {self.Si_index} O: {self.O_index} H: {self.H_index}'
-
-    def __repr__(self) -> str:
-        """
-        Makes repr same as str
-        :return: str rep of object
-        """
-        return self.__str__()
-
+from maze.silanol import Silanol
+from maze.cif_download import download_cif
 
 class Zeotype(Atoms):
     """
@@ -264,7 +229,7 @@ class Zeotype(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def get_imperfect_zeolite(self) -> 'ImperfectZeotype':
+    def get_imperfect_zeotype(self) -> 'ImperfectZeotype':
         """
         :return: An imperfect Zeotype constructed from the current Zeotype
         """
@@ -757,6 +722,23 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.register(self.name, new_self.name, old_to_new_map)
         return new_self
 
+    @classmethod
+    def make(cls, iza_code: str, data_dir='data'):
+        """
+        Builds an ImperfectZeotype from iza code
+        :param iza_zeolite_code: zeolite iza code
+        :type iza_zeolite_code: str
+        :return: An imperfect zeotype class or subclass
+        :rtype: cls
+        """
+        iza_code.capitalize()
+        cif_path = os.path.join('data', iza_code + '.cif')
+        if not os.path.exists(cif_path):
+            download_cif(iza_code, data_dir)
+        parent = Zeotype.build_from_cif_with_labels(cif_path)
+        return cls(parent)
+
+
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
         """
@@ -786,6 +768,59 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
+    def extend(self, other) -> "ImperfectZeotype":
+        """
+        Overrides ase.Atoms method
+        :param other: other atoms-like object to add to current object
+        :type other: str or atoms object
+        :return:
+        :rtype:
+        """
+        new_atoms = Atoms(other)
+        return self.add_atoms(new_atoms, 'extension')
+
+    def get_type(self, index: int) -> 'str':
+        """
+        Get the type of atom at a certain index
+        :param index: the atom index to get the type of
+        :type index: int
+        :return: the name of the type of index
+        :rtype: str
+        """
+        assert self.parent_zeotype.atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
+        return self.parent_zeotype.atom_indices_to_site[
+            self.index_mapper.get_index(self.name, self.parent_zeotype.name, index)]
+
+    def get_site_type(self) -> List[str]:
+        """
+        Get a list of all of the types in the parent zeotype
+        :return: List of the names of all types
+        :rtype: List[str]
+        """
+        assert self.parent_zeotype.site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
+        assert self.parent_zeotype.atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
+        return list(self.parent_zeotype.site_to_atom_indices.keys())
+
+    def find_type(self, atom_type_name: str) -> List[int]:
+        """
+        Find the type of the atom in the parent zeotype list
+
+        :param atom_type_name: the name of a certain site
+        :type atom_type_name: str
+        :return: List of indices that match site description
+        :rtype: List[int]
+        """
+        assert self.parent_zeotype.site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
+        assert atom_type_name in self.parent_zeotype.site_to_atom_indices, 'atom type name not found'
+        parent_list = self.parent_zeotype.site_to_atom_indices[atom_type_name]
+        self_list = []
+        for p_index in parent_list:
+            self_index = self.index_mapper.get_index(self.parent_zeotype.name, self.name, p_index)
+            if self_index is not None:
+                self_list.append(self_index)
+
+        return self_list
+
     def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'ImperfectZeotype':
         """
         Adds additional atoms to current imperfect MAZE-sim
@@ -798,6 +833,7 @@ class ImperfectZeotype(Zeotype):
         # add atoms to indexer
         # register atoms_to_add with index mapper
         atom_indices = [atom.index for atom in atoms_to_add]
+        # TODO: Find a way to map new atoms back to parent zeotype if that mapping exists
         if short_description:
             new_atom_name = self.index_mapper.get_unique_name(atom_type) + '_' + short_description
         else:
