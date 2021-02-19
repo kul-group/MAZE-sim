@@ -77,7 +77,7 @@ class Adsorbate(Atoms):
 
         assert self.host_zeotype is not None, "Cannot find void position when host zeotype is None"
 
-        fun_to_min = lambda pos: -1 * self.min_distance(pos)  # 1 param function for scipy.minimize
+        fun_to_min = lambda pos: -1 * self.avg_distance(pos)  # 1 param function for scipy.minimize
         ans = minimize(fun_to_min, void_position_guess)
         return ans.x
 
