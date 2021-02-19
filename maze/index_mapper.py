@@ -81,7 +81,7 @@ class IndexMapper:
         name1_to_name2_map = {}
         for row in self.main_index.values():
             if row[name1] is not None:
-                name1_to_name2_map[name1] = row[name2]
+                name1_to_name2_map[row[name1]] = row[name2]
 
         return name1_to_name2_map
 
@@ -186,21 +186,6 @@ class IndexMapper:
         for i in atom_indices_to_delete:
             self.main_index[name_to_main_dict[i]][name] = None
 
-    def update_indices(self, name: str, old_to_new_map: Dict[int, int]) -> None:
-        """
-        Update the indices of an item
-        :param name: name of indices to update
-        :param old_to_new_map: old map to new map
-        :return: None
-        """
-
-        for index, value in self.main_index.items():
-            old_value = value[name]
-            if old_value in old_to_new_map:
-                value[name] = old_to_new_map[old_value]
-            else:
-                value[name] = None
-
     def get_index(self, sender_name: str, receiver_name: str, sender_index: int) -> int:
         """
         get the index of another object
@@ -216,19 +201,6 @@ class IndexMapper:
             if name_dict[sender_name] == sender_index:
                 return name_dict[receiver_name]
 
-    def get_overlap(self, name1: str, name2: str) -> List[int]:
-        """
-        Get the list of names that overlap
-        :param name1: name of object 1
-        :param name2: name of object 2
-        :return: overlapping indices
-        """
-        overlap_indices_name1 = []
-        for name_dict in self.main_index.values():
-            if name_dict[name1] is not None and name_dict[name2] is not None:
-                overlap_indices_name1.append(name_dict[name1])
-
-        return overlap_indices_name1
 
     def delete_name(self, name: str) -> None:
         """
