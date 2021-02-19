@@ -154,6 +154,9 @@ class TestZeotype(TestCase):
     def test__get_old_to_new_map(self):
         pass
 
+    def test_copy(self):
+        pass
+
     def test__del__(self):
         pass
 

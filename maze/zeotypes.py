@@ -108,7 +108,7 @@ class Zeotype(Atoms):
         zeotype = cls(atoms)
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
-        return zeotype
+        return cls(zeotype)
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
@@ -427,7 +427,6 @@ class Zeotype(Atoms):
     def pop(self, index: int = -1):
         raise NotImplementedError
 
-
     def get_site_type(self, index: int) -> str:
         """
         Get the idenity of a site
@@ -465,6 +464,9 @@ class Zeotype(Atoms):
                 continue
 
         return old_to_new_map
+
+    def __copy__(self):
+        return self.__class__(self)
 
     def __del__(self) -> None:
         if self.index_mapper is not None:
