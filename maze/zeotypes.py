@@ -421,6 +421,13 @@ class Zeotype(Atoms):
         """
         return [a.index for a in atoms_object]
 
+    def extend(self, other):
+        raise NotImplementedError
+
+    def pop(self, index: int = -1):
+        raise NotImplementedError
+
+
     def get_site_type(self, index: int) -> str:
         """
         Get the idenity of a site
@@ -778,6 +785,10 @@ class ImperfectZeotype(Zeotype):
         """
         new_atoms = Atoms(other)
         return self.add_atoms(new_atoms, 'extension')
+
+    def pop(self, index: int = -1) -> "ImperfectZeotype":
+        return self.delete_atoms(self[index].index)
+
 
     def get_type(self, index: int) -> 'str':
         """
