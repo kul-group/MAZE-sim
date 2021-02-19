@@ -4,7 +4,8 @@ from sklearn.cluster import MeanShift
 from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-import source.zeotype
+import source.zeotypes
+import ase
 import warnings
 
 
@@ -304,7 +305,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from ase.build import molecule
 
-    zeotype = source.zeotype.Zeotype.build_from_cif_with_labels('BEA.cif')
+    zeotype = source.zeotypes.Zeotype.build_from_cif_with_labels('BEA.cif')
     iz = zeotype.get_imperfect_zeolite()
     iz[174].symbol = 'Sn'
 

@@ -2,7 +2,7 @@ import urllib.request
 import os
 from urllib.error import HTTPError
 from pathlib import Path
-from .zeotype import Zeotype
+from .zeotypes import Zeotype
 
 def download_cif(code: str, data_dir='data'):
     """
