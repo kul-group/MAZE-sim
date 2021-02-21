@@ -331,7 +331,8 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> int:
+    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> \
+            Tuple["Cluster", "OpenDefect"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.

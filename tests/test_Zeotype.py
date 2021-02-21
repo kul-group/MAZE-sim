@@ -1,5 +1,5 @@
 from unittest import TestCase
-from maze.zeotypes import Zeotype, ImperfectZeotype
+from maze.zeotypes import Zeotype, ImperfectZeotype, Cluster, OpenDefect
 import ase
 import ase.data
 from ase import Atoms
@@ -204,7 +204,10 @@ class TestZeotype(TestCase):
 
     def test_get_cluster(self):
         z = Zeotype.make('CHA')
-        z.get_cluster()
+        cluster, opendefect = z.get_cluster(0, 100, 3)
+        self.assertIsInstance(cluster, Cluster)
+        self.assertIsInstance(opendefect, OpenDefect)
+
 
     def test_find_silanol_groups(self):
         pass
