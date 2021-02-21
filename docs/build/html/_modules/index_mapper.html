@@ -231,7 +231,7 @@
         <span class="n">name1_to_name2_map</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">name1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">name1_to_name2_map</span><span class="p">[</span><span class="n">name1</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">name2</span><span class="p">]</span>
+                <span class="n">name1_to_name2_map</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">name1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">name2</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">name1_to_name2_map</span></div>
 
@@ -297,6 +297,7 @@
 <span class="sd">        Get a dictionary full of None for each name</span>
 <span class="sd">        :return: A dictionary full of None for each known name</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">none_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
             <span class="n">none_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -309,6 +310,7 @@
 <span class="sd">        :param new_atom_indices: indices of the new atoms</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">assert</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="s1">&#39;name already exists&#39;</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">value</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -334,21 +336,6 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">atom_indices_to_delete</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="p">[</span><span class="n">name_to_main_dict</span><span class="p">[</span><span class="n">i</span><span class="p">]][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="IndexMapper.update_indices"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.update_indices">[docs]</a>    <span class="k">def</span> <span class="nf">update_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">old_to_new_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Update the indices of an item</span>
-<span class="sd">        :param name: name of indices to update</span>
-<span class="sd">        :param old_to_new_map: old map to new map</span>
-<span class="sd">        :return: None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">old_value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">old_value</span> <span class="ow">in</span> <span class="n">old_to_new_map</span><span class="p">:</span>
-                <span class="n">value</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_to_new_map</span><span class="p">[</span><span class="n">old_value</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">value</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
-
 <div class="viewcode-block" id="IndexMapper.get_index"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.get_index">[docs]</a>    <span class="k">def</span> <span class="nf">get_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sender_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">receiver_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sender_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        get the index of another object</span>
@@ -364,19 +351,6 @@
             <span class="k">if</span> <span class="n">name_dict</span><span class="p">[</span><span class="n">sender_name</span><span class="p">]</span> <span class="o">==</span> <span class="n">sender_index</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">name_dict</span><span class="p">[</span><span class="n">receiver_name</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="IndexMapper.get_overlap"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.get_overlap">[docs]</a>    <span class="k">def</span> <span class="nf">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name2</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the list of names that overlap</span>
-<span class="sd">        :param name1: name of object 1</span>
-<span class="sd">        :param name2: name of object 2</span>
-<span class="sd">        :return: overlapping indices</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">overlap_indices_name1</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">name_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name_dict</span><span class="p">[</span><span class="n">name1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name_dict</span><span class="p">[</span><span class="n">name2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">overlap_indices_name1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name_dict</span><span class="p">[</span><span class="n">name1</span><span class="p">])</span>
-
-        <span class="k">return</span> <span class="n">overlap_indices_name1</span></div>
 
 <div class="viewcode-block" id="IndexMapper.delete_name"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.delete_name">[docs]</a>    <span class="k">def</span> <span class="nf">delete_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -384,6 +358,7 @@
 <span class="sd">        :param name: The name of the zeolite to delete from the index</span>
 <span class="sd">        :return: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>

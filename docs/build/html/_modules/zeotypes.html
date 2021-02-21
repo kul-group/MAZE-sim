@@ -149,6 +149,7 @@
             
   <h1>Source code for zeotypes</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -158,48 +159,12 @@
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
 <span class="kn">from</span> <span class="nn">ase.io</span> <span class="kn">import</span> <span class="n">cif</span>
 <span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">natural_cutoffs</span><span class="p">,</span> <span class="n">NeighborList</span>
-<span class="kn">from</span> <span class="nn">ase.visualize</span> <span class="kn">import</span> <span class="n">view</span>
 <span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_version</span>
 <span class="kn">import</span> <span class="nn">pkg_resources</span>
 <span class="kn">from</span> <span class="nn">maze.adsorbate</span> <span class="kn">import</span> <span class="n">Adsorbate</span>
 <span class="kn">from</span> <span class="nn">maze.index_mapper</span> <span class="kn">import</span> <span class="n">IndexMapper</span>
-
-
-<div class="viewcode-block" id="Silanol"><a class="viewcode-back" href="../source.html#zeotypes.Silanol">[docs]</a><span class="k">class</span> <span class="nc">Silanol</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This Silanol class represents a Silanol Group (Si-O-H) It can be used to find Silanol nests in the Zeolite</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="Silanol.__init__"><a class="viewcode-back" href="../source.html#zeotypes.Silanol.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_zeotype</span><span class="p">:</span> <span class="s1">&#39;Zeotype&#39;</span><span class="p">,</span> <span class="n">Si_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">O_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">H_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                 <span class="n">Si_neighbor_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">       Create a Silanol object</span>
-<span class="sd">        :param parent_zeotype: The parent zeolite, where the silanol group is located</span>
-<span class="sd">        :param Si_index: the index of the Si atom</span>
-<span class="sd">        :param O_index: the index of the O atom</span>
-<span class="sd">        :param H_index: the index of the H atom</span>
-<span class="sd">        :param Si_neighbor_list: The neighbor list of the Si atom, useful for other algos</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="n">parent_zeotype</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Si_index</span> <span class="o">=</span> <span class="n">Si_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">O_index</span> <span class="o">=</span> <span class="n">O_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">H_index</span> <span class="o">=</span> <span class="n">H_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Si_neighbor_list</span> <span class="o">=</span> <span class="n">Si_neighbor_list</span></div>
-
-<div class="viewcode-block" id="Silanol.__str__"><a class="viewcode-back" href="../source.html#zeotypes.Silanol.__str__">[docs]</a>    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This ensures the str rep of ta Silanol object is nice</span>
-<span class="sd">        :return: str rep of object</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;Si: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Si_index</span><span class="si">}</span><span class="s1"> O: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">O_index</span><span class="si">}</span><span class="s1"> H: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">H_index</span><span class="si">}</span><span class="s1">&#39;</span></div>
-
-<div class="viewcode-block" id="Silanol.__repr__"><a class="viewcode-back" href="../source.html#zeotypes.Silanol.__repr__">[docs]</a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Makes repr same as str</span>
-<span class="sd">        :return: str rep of object</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span></div></div>
-
+<span class="kn">from</span> <span class="nn">maze.silanol</span> <span class="kn">import</span> <span class="n">Silanol</span>
+<span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
 
 <div class="viewcode-block" id="Zeotype"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype">[docs]</a><span class="k">class</span> <span class="nc">Zeotype</span><span class="p">(</span><span class="n">Atoms</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -222,11 +187,11 @@
         <span class="c1"># To Be compatible with ASE&#39;s atoms object, this code has to have the functionality to build from</span>
         <span class="c1"># an atom&#39;s object, a Zeotype object, or a sub class of a Zeotype object</span>
         <span class="c1"># The following if statements take care of this functionality depending on</span>
-        <span class="c1"># if the object being built is a MAZE-sim or if symbols is a MAZE-sim (there are four unique paths)</span>
+        <span class="c1"># if the object being built is a Zeotype or if symbols is a Zeotype (there are four unique paths)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">Zeotype</span><span class="p">):</span>  <span class="c1"># if symbols is a MAZE-sim or MAZE-sim subclass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">Zeotype</span><span class="p">):</span>  <span class="c1"># if symbols is Zeotype or Zeotype subclass</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">additions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">symbols</span><span class="o">.</span><span class="n">additions</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>  <span class="c1"># if the object being built is a MAZE-sim</span>
+            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>  <span class="c1"># if the object being built is a Zeotype</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">site_to_atom_indices</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">atom_indices_to_site</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;parent&#39;</span>  <span class="c1"># must be parent to agree with index mapper</span>
@@ -241,13 +206,13 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_unique_name</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>  <span class="c1"># use name</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">add_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">symbols</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
 
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># if symbols is not a MAZE-sim or MAZE-sim child class</span>
-            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># if symbols is not a Zeotype or Zeotype child class</span>
+            <span class="k">if</span> <span class="n">_is_zeotype</span><span class="p">:</span>  <span class="c1"># if Zeotype object is being built</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;parent&#39;</span>  <span class="c1"># must be parent for code to work properly</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="n">IndexMapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="bp">self</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># TODO: Ensure that a parent zeotype class is made!</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -293,7 +258,7 @@
         <span class="n">zeotype</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
         <span class="n">zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="o">=</span> <span class="n">site_to_atom_indices</span>
         <span class="n">zeotype</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="o">=</span> <span class="n">atom_indices_to_site</span>
-        <span class="k">return</span> <span class="n">zeotype</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">zeotype</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Zeotype._read_cif_note_siteJan2021Update"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype._read_cif_note_siteJan2021Update">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_read_cif_note_siteJan2021Update</span><span class="p">(</span><span class="n">fileobj</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">store_tags</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">primitive_cell</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -414,7 +379,7 @@
 
         <span class="k">return</span> <span class="n">atoms</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">site_to_atom_indices</span><span class="p">),</span> <span class="n">atom_indices_to_site</span></div>
 
-<div class="viewcode-block" id="Zeotype.get_imperfect_zeolite"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_imperfect_zeolite">[docs]</a>    <span class="k">def</span> <span class="nf">get_imperfect_zeolite</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
+<div class="viewcode-block" id="Zeotype.get_imperfect_zeotype"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_imperfect_zeotype">[docs]</a>    <span class="k">def</span> <span class="nf">get_imperfect_zeotype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :return: An imperfect Zeotype constructed from the current Zeotype</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -497,7 +462,7 @@
             <span class="n">element</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">symbol</span>
             <span class="n">indices</span><span class="p">[</span><span class="n">element</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
             <span class="n">count</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">indices</span><span class="p">,</span> <span class="n">count</span></div>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">count</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Zeotype.count_atomtypes"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.count_atomtypes">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">count_atomtypes</span><span class="p">(</span><span class="n">atomtype_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Dict</span><span class="p">[</span><span class="s1">&#39;str&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
@@ -516,7 +481,8 @@
             <span class="n">count</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">indices</span><span class="p">,</span> <span class="n">count</span>  <span class="c1"># TODO: Combine with count_elements method</span></div>
 
-<div class="viewcode-block" id="Zeotype.get_cluster"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">get_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cluster_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="Zeotype.get_cluster"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">get_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_neighbors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cluster_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> \
+            <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="s2">&quot;OpenDefect&quot;</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster</span>
 <span class="sd">        is given by the size parameter.</span>
@@ -606,6 +572,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms_object</span><span class="p">]</span></div>
 
+<div class="viewcode-block" id="Zeotype.extend"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Zeotype.pop"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
 <div class="viewcode-block" id="Zeotype.get_site_type"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.get_site_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the idenity of a site</span>
@@ -644,9 +616,28 @@
 
         <span class="k">return</span> <span class="n">old_to_new_map</span></div>
 
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">delete_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">delete_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Zeotype.make"><a class="viewcode-back" href="../source.html#zeotypes.Zeotype.make">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">iza_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds an ImperfectZeotype from iza code</span>
+<span class="sd">        :param iza_zeolite_code: zeolite iza code</span>
+<span class="sd">        :type iza_zeolite_code: str</span>
+<span class="sd">        :return: An imperfect zeotype class or subclass</span>
+<span class="sd">        :rtype: cls</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">iza_code</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+        <span class="n">cif_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">iza_code</span> <span class="o">+</span> <span class="s1">&#39;.cif&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cif_path</span><span class="p">):</span>
+            <span class="n">download_cif</span><span class="p">(</span><span class="n">iza_code</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">)</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">cif_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="ImperfectZeotype"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype">[docs]</a><span class="k">class</span> <span class="nc">ImperfectZeotype</span><span class="p">(</span><span class="n">Zeotype</span><span class="p">):</span>
@@ -936,6 +927,63 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">add_name</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">old_to_new_map</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_self</span></div>
 
+<div class="viewcode-block" id="ImperfectZeotype.extend"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ImperfectZeotype&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overrides ase.Atoms method</span>
+<span class="sd">        :param other: other atoms-like object to add to current object</span>
+<span class="sd">        :type other: str or atoms object</span>
+<span class="sd">        :return:</span>
+<span class="sd">        :rtype:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_atoms</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">new_atoms</span><span class="p">,</span> <span class="s1">&#39;extension&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImperfectZeotype.pop"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ImperfectZeotype&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ImperfectZeotype.get_type"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the type of atom at a certain index</span>
+<span class="sd">        :param index: the atom index to get the type of</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :return: the name of the type of index</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">atom_indices_to_site</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="ImperfectZeotype.get_site_type"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.get_site_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of all of the types in the parent zeotype</span>
+<span class="sd">        :return: List of the names of all types</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">atom_indices_to_site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="ImperfectZeotype.find_type"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.find_type">[docs]</a>    <span class="k">def</span> <span class="nf">find_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_type_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the type of the atom in the parent zeotype list</span>
+
+<span class="sd">        :param atom_type_name: the name of a certain site</span>
+<span class="sd">        :type atom_type_name: str</span>
+<span class="sd">        :return: List of indices that match site description</span>
+<span class="sd">        :rtype: List[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">assert</span> <span class="n">atom_type_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="p">,</span> <span class="s1">&#39;atom type name not found&#39;</span>
+        <span class="n">parent_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="p">[</span><span class="n">atom_type_name</span><span class="p">]</span>
+        <span class="n">self_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p_index</span> <span class="ow">in</span> <span class="n">parent_list</span><span class="p">:</span>
+            <span class="n">self_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">self_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">self_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">self_index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">self_list</span></div>
+
 <div class="viewcode-block" id="ImperfectZeotype.add_atoms"><a class="viewcode-back" href="../source.html#zeotypes.ImperfectZeotype.add_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">add_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms_to_add</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">,</span> <span class="n">atom_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">short_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds additional atoms to current imperfect MAZE-sim</span>
@@ -948,6 +996,7 @@
         <span class="c1"># add atoms to indexer</span>
         <span class="c1"># register atoms_to_add with index mapper</span>
         <span class="n">atom_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms_to_add</span><span class="p">]</span>
+        <span class="c1"># TODO: Find a way to map new atoms back to parent zeotype if that mapping exists</span>
         <span class="k">if</span> <span class="n">short_description</span><span class="p">:</span>
             <span class="n">new_atom_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_unique_name</span><span class="p">(</span><span class="n">atom_type</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">short_description</span>
         <span class="k">else</span><span class="p">:</span>
