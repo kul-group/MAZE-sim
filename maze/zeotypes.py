@@ -472,6 +472,22 @@ class Zeotype(Atoms):
         if self.index_mapper is not None:
             self.index_mapper.delete_name(self.name)
 
+    @classmethod
+    def make(cls, iza_code: str, data_dir='data'):
+        """
+        Builds an ImperfectZeotype from iza code
+        :param iza_zeolite_code: zeolite iza code
+        :type iza_zeolite_code: str
+        :return: An imperfect zeotype class or subclass
+        :rtype: cls
+        """
+        iza_code.capitalize()
+        cif_path = os.path.join('data', iza_code + '.cif')
+        if not os.path.exists(cif_path):
+            download_cif(iza_code, data_dir)
+        parent = Zeotype.build_from_cif_with_labels(cif_path)
+        return cls(parent)
+
 
 class ImperfectZeotype(Zeotype):
     """
@@ -730,23 +746,6 @@ class ImperfectZeotype(Zeotype):
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.register(self.name, new_self.name, old_to_new_map)
         return new_self
-
-    @classmethod
-    def make(cls, iza_code: str, data_dir='data'):
-        """
-        Builds an ImperfectZeotype from iza code
-        :param iza_zeolite_code: zeolite iza code
-        :type iza_zeolite_code: str
-        :return: An imperfect zeotype class or subclass
-        :rtype: cls
-        """
-        iza_code.capitalize()
-        cif_path = os.path.join('data', iza_code + '.cif')
-        if not os.path.exists(cif_path):
-            download_cif(iza_code, data_dir)
-        parent = Zeotype.build_from_cif_with_labels(cif_path)
-        return cls(parent)
-
 
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
