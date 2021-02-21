@@ -5,7 +5,7 @@ from maze.zeotypes import Zeotype
 import os
 from pathlib import Path
 import json
-from source.index_mapper import IndexMapper
+from maze.index_mapper import IndexMapper
 from typing import List, Iterable, Dict
 import shutil
 

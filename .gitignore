@@ -9,3 +9,5 @@ InspectProfiles
 .DS*
 /docs/build/latex/
 /MAZE_sim.egg-info/
+tests/data/*
+data/*

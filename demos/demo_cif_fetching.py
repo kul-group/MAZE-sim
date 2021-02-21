@@ -1,13 +1,12 @@
-from maze import download_cif, build_zeolite_from_code
-
-
-def main():
-    my_dir = "//data"
-    download_cif("OFF", data_dir=my_dir)
-    download_cif("GOO", data_dir=my_dir)
-    zeolite = build_zeolite_from_code("BEA", data_dir=my_dir)
-    print(zeolite, zeolite.get_tags(), sep='\n')
+from maze import zeotypes as zeo
+import copy
 
 
 if __name__ == '__main__':
-    main()
+    cha = zeo.ImperfectZeotype.make('CHA')
+    cha4 = zeo.ImperfectZeotype(cha)
+    print(cha.index_mapper.main_index)
+    cha2 = copy.copy(cha)
+    print(cha2.index_mapper.main_index)
+    print(cha.index_mapper.main_index)
+    print(cha.index_mapper==cha2.index_mapper)

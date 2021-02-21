@@ -108,7 +108,7 @@ class Zeotype(Atoms):
         zeotype = cls(atoms)
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
-        return zeotype
+        return cls(zeotype)
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
@@ -331,7 +331,8 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> int:
+    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> \
+            Tuple["Cluster", "OpenDefect"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -427,7 +428,6 @@ class Zeotype(Atoms):
     def pop(self, index: int = -1):
         raise NotImplementedError
 
-
     def get_site_type(self, index: int) -> str:
         """
         Get the idenity of a site
@@ -466,9 +466,28 @@ class Zeotype(Atoms):
 
         return old_to_new_map
 
+    def __copy__(self):
+        return self.__class__(self)
+
     def __del__(self) -> None:
         if self.index_mapper is not None:
             self.index_mapper.delete_name(self.name)
+
+    @classmethod
+    def make(cls, iza_code: str, data_dir='data'):
+        """
+        Builds an ImperfectZeotype from iza code
+        :param iza_zeolite_code: zeolite iza code
+        :type iza_zeolite_code: str
+        :return: An imperfect zeotype class or subclass
+        :rtype: cls
+        """
+        iza_code.capitalize()
+        cif_path = os.path.join('data', iza_code + '.cif')
+        if not os.path.exists(cif_path):
+            download_cif(iza_code, data_dir)
+        parent = Zeotype.build_from_cif_with_labels(cif_path)
+        return cls(parent)
 
 
 class ImperfectZeotype(Zeotype):
@@ -728,23 +747,6 @@ class ImperfectZeotype(Zeotype):
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.register(self.name, new_self.name, old_to_new_map)
         return new_self
-
-    @classmethod
-    def make(cls, iza_code: str, data_dir='data'):
-        """
-        Builds an ImperfectZeotype from iza code
-        :param iza_zeolite_code: zeolite iza code
-        :type iza_zeolite_code: str
-        :return: An imperfect zeotype class or subclass
-        :rtype: cls
-        """
-        iza_code.capitalize()
-        cif_path = os.path.join('data', iza_code + '.cif')
-        if not os.path.exists(cif_path):
-            download_cif(iza_code, data_dir)
-        parent = Zeotype.build_from_cif_with_labels(cif_path)
-        return cls(parent)
-
 
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
