@@ -38,7 +38,6 @@ class Zeotype(Atoms):
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
         # The following if statements take care of this functionality depending on
         # if the object being built is a Zeotype or if symbols is a Zeotype (there are four unique paths)
-
         if isinstance(symbols, Zeotype):  # if symbols is Zeotype or Zeotype subclass
             self.additions = copy.deepcopy(symbols.additions)
             if _is_zeotype:  # if the object being built is a Zeotype
@@ -54,7 +53,7 @@ class Zeotype(Atoms):
                 self.atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
-                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
+                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
 
         else:  # if symbols is not a Zeotype or Zeotype child class
             if _is_zeotype:  # if Zeotype object is being built
@@ -62,9 +61,12 @@ class Zeotype(Atoms):
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
             else:
-                self.name = None  # TODO: Ensure that a parent zeotype class is made!
-                self.index_mapper = None
-                self.parent_zeotype = None
+                # make a parent zeotype of self
+                parent = Zeotype(symbols)
+                self.parent_zeotype = parent
+                self.index_mapper = parent.index_mapper
+                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
             self.site_to_atom_indices = site_to_atom_indices
             self.atom_indices_to_site = atom_indices_to_site
@@ -109,6 +111,28 @@ class Zeotype(Atoms):
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
         return cls(zeotype)
+
+    def _masked_rotate(self, center, axis, diff, mask):
+        # This method is overloaded to avoid use of extend method
+        # do rotation of subgroup by copying it to temporary atoms object
+        # and then rotating that
+        #
+        # recursive object definition might not be the most elegant thing,
+        # more generally useful might be a rotation function with a mask?
+        group = Atoms()  # changed from self.__class__()
+        for i in range(len(self)):
+            if mask[i]:
+                group += self[i]
+        group.translate(-center)
+        group.rotate(diff * 180 / np.pi, axis)
+        group.translate(center)
+        # set positions in original atoms object
+        j = 0
+        for i in range(len(self)):
+            if mask[i]:
+                self.positions[i] = group[j].position
+                j += 1
+
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
@@ -470,7 +494,7 @@ class Zeotype(Atoms):
         return self.__class__(self)
 
     def __del__(self) -> None:
-        if self.index_mapper is not None:
+        if hasattr(self, 'index_mapper') and self.index_mapper is not None:
             self.index_mapper.delete_name(self.name)
 
     @classmethod
