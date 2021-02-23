@@ -62,9 +62,12 @@ class Zeotype(Atoms):
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
             else:
-                self.name = None  # TODO: Ensure that a parent zeotype class is made!
-                self.index_mapper = None
-                self.parent_zeotype = None
+                # make a parent zeotype of self
+                parent = Zeotype(symbols)
+                self.parent_zeotype = parent
+                self.index_mapper = parent.index_mapper
+                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
 
             self.site_to_atom_indices = site_to_atom_indices
             self.atom_indices_to_site = atom_indices_to_site
@@ -422,8 +425,8 @@ class Zeotype(Atoms):
         """
         return [a.index for a in atoms_object]
 
-    def extend(self, other):
-        raise NotImplementedError
+    # def extend(self, other):
+    #     raise NotImplementedError
 
     def pop(self, index: int = -1):
         raise NotImplementedError
@@ -469,9 +472,9 @@ class Zeotype(Atoms):
     def __copy__(self):
         return self.__class__(self)
 
-    def __del__(self) -> None:
-        if self.index_mapper is not None:
-            self.index_mapper.delete_name(self.name)
+    # def __del__(self) -> None:
+    #     if self.index_mapper is not None:
+    #         self.index_mapper.delete_name(self.name)
 
     @classmethod
     def make(cls, iza_code: str, data_dir='data'):
@@ -777,16 +780,16 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
-    def extend(self, other) -> "ImperfectZeotype":
-        """
-        Overrides ase.Atoms method
-        :param other: other atoms-like object to add to current object
-        :type other: str or atoms object
-        :return:
-        :rtype:
-        """
-        new_atoms = Atoms(other)
-        return self.add_atoms(new_atoms, 'extension')
+    # def extend(self, other) -> "ImperfectZeotype":
+    #     """
+    #     Overrides ase.Atoms method
+    #     :param other: other atoms-like object to add to current object
+    #     :type other: str or atoms object
+    #     :return:
+    #     :rtype:
+    #     """
+    #     new_atoms = Atoms(other)
+    #     return self.add_atoms(new_atoms, 'extension')
 
     def pop(self, index: int = -1) -> "ImperfectZeotype":
         return self.delete_atoms(self[index].index)
