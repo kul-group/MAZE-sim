@@ -652,6 +652,7 @@ class ImperfectZeotype(Zeotype):
         :param other: other Atoms object that the other_indices corresponds to
         :return: None
         """
+
         self[self_index].symbol = other[other_index].symbol
         self[self_index].position = other[other_index].position
         self[self_index].tag = other[other_index].tag
@@ -814,7 +815,6 @@ class ImperfectZeotype(Zeotype):
 
     def pop(self, index: int = -1) -> "ImperfectZeotype":
         return self.delete_atoms(self[index].index)
-
 
     def get_type(self, index: int) -> 'str':
         """

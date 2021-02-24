@@ -1,5 +1,4 @@
 import warnings
-
 import numpy as np
 from ase import Atom, Atoms
 from ase.data import atomic_numbers, covalent_radii
