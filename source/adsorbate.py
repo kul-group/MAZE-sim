@@ -83,7 +83,7 @@ class Adsorbate(Atoms):
         return ans.x
 
     @staticmethod
-    def sphere_sample(radius, num_pts=500):
+    def sphere_sample(radius, num_pts=600):
         """generates random positions on the surface of a sphere of certain
         radius :param radius: radius of sphere surface to sample :param num_pts:
         number of points to try :return: list of x,y,z positions on surface of
@@ -93,19 +93,18 @@ class Adsorbate(Atoms):
             radius:
             num_pts:
         """
-        position_list = []
-        for _ in range(int(num_pts)):
+        np.random.seed(43874)  # Use random seed for consistent runs
+        positions = np.ones([num_pts, 3])
+        for i in range(int(num_pts)):
             # see https://stackoverflow.com/questions/33976911/
             # generate-a-random-sample-of-points-distributed-on-the-surface-of-a-unit-sphere/33977530#33977530
             # for discussion on this algorithm
 
-            np.random.seed(43874)  # Use random seed for consistent runs
             vec = np.random.normal(0, 1, 3)  # select three random points (if normal dist no skip needed)
             vec /= np.linalg.norm(vec)  # normalize vector
             vec *= radius  # lengthen vector to desired radius
-            position_list.append(list(vec))
-
-        return position_list
+            positions[i] = vec
+        return positions
 
     def get_viable_positions(self, index, radius, cutoff, num_pts=None):
         """finds positions near host atom far enough from other framework atoms.
@@ -153,11 +152,11 @@ class Adsorbate(Atoms):
 
         viable_pos = self.get_viable_positions(index, radius, cutoff, num_pts)
         ms = MeanShift(bin_seeding=True)
-        ms.fit(np.array(viable_pos))
+        ms.fit(viable_pos)
         cluster_centers = ms.cluster_centers_
         return cluster_centers
 
-    def find_best_place(self, index, radius, cutoff, num_pts=500):
+    def find_best_place(self, index, radius, cutoff, num_pts=600):
         """picks the best location to place an adsorbate around the host atom
         :param index: index of host atom at center :param radius: radius around
         host atom to test points :param cutoff: minimum distance from other host
@@ -240,9 +239,9 @@ class Adsorbate(Atoms):
         donor_radius, host_radius = covalent_radii[donor_atom_number], covalent_radii[host_atom_number]
 
         if radius is None:
-            radius = host_radius + donor_radius
+            radius = 1.5*(host_radius + donor_radius)
         if cutoff is None:
-            cutoff = host_radius
+            cutoff = 1.1*host_radius
 
         pos = self.find_best_place(host_ind, radius, cutoff)
         return pos
@@ -311,8 +310,6 @@ if __name__ == '__main__':
     iz[186].symbol = 'Sn'
     mol = molecule('CH3OH')
     ads = Adsorbate(mol, host_zeotype=iz)
-    #ads = ads.position_ads(1, 186, pos=[6.660, 6.660, 9.820])
-    #ads = ads.position_ads(pos=[6.660, 6.660, 9.820])
     ads = ads.position_ads()
     iz, ads = iz.integrate_adsorbate(ads)
     view(iz)
