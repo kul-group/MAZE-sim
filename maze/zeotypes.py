@@ -38,7 +38,6 @@ class Zeotype(Atoms):
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
         # The following if statements take care of this functionality depending on
         # if the object being built is a Zeotype or if symbols is a Zeotype (there are four unique paths)
-
         if isinstance(symbols, Zeotype):  # if symbols is Zeotype or Zeotype subclass
             self.additions = copy.deepcopy(symbols.additions)
             if _is_zeotype:  # if the object being built is a Zeotype
@@ -54,7 +53,7 @@ class Zeotype(Atoms):
                 self.atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
-                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(symbols, self))
+                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
 
         else:  # if symbols is not a Zeotype or Zeotype child class
             if _is_zeotype:  # if Zeotype object is being built
@@ -62,9 +61,12 @@ class Zeotype(Atoms):
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
             else:
-                self.name = None  # TODO: Ensure that a parent zeotype class is made!
-                self.index_mapper = None
-                self.parent_zeotype = None
+                # make a parent zeotype of self
+                parent = Zeotype(symbols)
+                self.parent_zeotype = parent
+                self.index_mapper = parent.index_mapper
+                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
             self.site_to_atom_indices = site_to_atom_indices
             self.atom_indices_to_site = atom_indices_to_site
@@ -108,7 +110,29 @@ class Zeotype(Atoms):
         zeotype = cls(atoms)
         zeotype.site_to_atom_indices = site_to_atom_indices
         zeotype.atom_indices_to_site = atom_indices_to_site
-        return zeotype
+        return cls(zeotype)
+
+    def _masked_rotate(self, center, axis, diff, mask):
+        # This method is overloaded to avoid use of extend method
+        # do rotation of subgroup by copying it to temporary atoms object
+        # and then rotating that
+        #
+        # recursive object definition might not be the most elegant thing,
+        # more generally useful might be a rotation function with a mask?
+        group = Atoms()  # changed from self.__class__()
+        for i in range(len(self)):
+            if mask[i]:
+                group += self[i]
+        group.translate(-center)
+        group.rotate(diff * 180 / np.pi, axis)
+        group.translate(center)
+        # set positions in original atoms object
+        j = 0
+        for i in range(len(self)):
+            if mask[i]:
+                self.positions[i] = group[j].position
+                j += 1
+
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
@@ -331,7 +355,8 @@ class Zeotype(Atoms):
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
 
-    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> int:
+    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> \
+            Tuple["Cluster", "OpenDefect"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -427,7 +452,6 @@ class Zeotype(Atoms):
     def pop(self, index: int = -1):
         raise NotImplementedError
 
-
     def get_site_type(self, index: int) -> str:
         """
         Get the idenity of a site
@@ -466,9 +490,28 @@ class Zeotype(Atoms):
 
         return old_to_new_map
 
+    def __copy__(self):
+        return self.__class__(self)
+
     def __del__(self) -> None:
-        if self.index_mapper is not None:
+        if hasattr(self, 'index_mapper') and self.index_mapper is not None:
             self.index_mapper.delete_name(self.name)
+
+    @classmethod
+    def make(cls, iza_code: str, data_dir='data'):
+        """
+        Builds an ImperfectZeotype from iza code
+        :param iza_zeolite_code: zeolite iza code
+        :type iza_zeolite_code: str
+        :return: An imperfect zeotype class or subclass
+        :rtype: cls
+        """
+        iza_code.capitalize()
+        cif_path = os.path.join('data', iza_code + '.cif')
+        if not os.path.exists(cif_path):
+            download_cif(iza_code, data_dir)
+        parent = Zeotype.build_from_cif_with_labels(cif_path)
+        return cls(parent)
 
 
 class ImperfectZeotype(Zeotype):
@@ -609,6 +652,7 @@ class ImperfectZeotype(Zeotype):
         :param other: other Atoms object that the other_indices corresponds to
         :return: None
         """
+
         self[self_index].symbol = other[other_index].symbol
         self[self_index].position = other[other_index].position
         self[self_index].tag = other[other_index].tag
@@ -729,23 +773,6 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.register(self.name, new_self.name, old_to_new_map)
         return new_self
 
-    @classmethod
-    def make(cls, iza_code: str, data_dir='data'):
-        """
-        Builds an ImperfectZeotype from iza code
-        :param iza_zeolite_code: zeolite iza code
-        :type iza_zeolite_code: str
-        :return: An imperfect zeotype class or subclass
-        :rtype: cls
-        """
-        iza_code.capitalize()
-        cif_path = os.path.join('data', iza_code + '.cif')
-        if not os.path.exists(cif_path):
-            download_cif(iza_code, data_dir)
-        parent = Zeotype.build_from_cif_with_labels(cif_path)
-        return cls(parent)
-
-
     @staticmethod
     def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
         """
@@ -788,7 +815,6 @@ class ImperfectZeotype(Zeotype):
 
     def pop(self, index: int = -1) -> "ImperfectZeotype":
         return self.delete_atoms(self[index].index)
-
 
     def get_type(self, index: int) -> 'str':
         """

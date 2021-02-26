@@ -309,7 +309,7 @@
 &gt;&gt;&gt; from maze.cif_download import download_cif
 &gt;&gt;&gt; download_cif<span class="o">(</span><span class="s1">&#39;BEA&#39;</span>, <span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="o">)</span> <span class="c1"># Download BEA.cif</span>
 &gt;&gt;&gt; <span class="nv">my_zeolite</span> <span class="o">=</span> Zeotype.build_from_cif_with_labels<span class="o">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="o">)</span>  <span class="c1"># build zeolite code</span>
-&gt;&gt;&gt; <span class="nv">my_iz</span> <span class="o">=</span> my_zeolite.get_imperfect_zeolite<span class="o">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+&gt;&gt;&gt; <span class="nv">my_iz</span> <span class="o">=</span> my_zeolite.get_imperfect_zeotype<span class="o">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
 &gt;&gt;&gt; <span class="nv">atom_indices_to_delete</span> <span class="o">=</span> <span class="o">[</span>i <span class="k">for</span> i in range<span class="o">(</span><span class="m">0</span>, <span class="m">50</span><span class="o">)]</span>  <span class="c1"># make a list from 0 to 49</span>
 &gt;&gt;&gt; <span class="nv">my_new_iz</span> <span class="o">=</span> my_iz.delete_atoms<span class="o">(</span>atom_indices_to_delete<span class="o">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
 &gt;&gt;&gt; print<span class="o">(</span><span class="s1">&#39;my_iz has&#39;</span>, len<span class="o">(</span>my_iz<span class="o">)</span>, <span class="s1">&#39;atoms in it&#39;</span><span class="o">)</span>
@@ -318,6 +318,38 @@
  my_new_iz has <span class="m">142</span> atoms in it
 </pre></div>
 </div>
+<dl>
+<dt>The</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;BEA&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># Download BEA.cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="p">)</span>  <span class="c1"># build zeolite code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_iz</span> <span class="o">=</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">get_imperfect_zeotype</span><span class="p">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atom_indices_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_new_iz</span> <span class="o">=</span> <span class="n">my_iz</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">atom_indices_to_delete</span><span class="p">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_iz has 192 atoms in it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_new_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_new_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_new_iz has 142 atoms in it</span>
+</pre></div>
+</div>
+</dd>
+<dt>The</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;BEA&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># Download BEA.cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="p">)</span>  <span class="c1"># build zeolite code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_iz</span> <span class="o">=</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">get_imperfect_zeolite</span><span class="p">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atom_indices_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_new_iz</span> <span class="o">=</span> <span class="n">my_iz</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">atom_indices_to_delete</span><span class="p">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_iz has 192 atoms in it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_new_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_new_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_new_iz has 142 atoms in it</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 <p>The <code class="docutils literal notranslate"><span class="pre">my_new_iz</span></code> object has 50 less atoms than the original <code class="docutils literal notranslate"><span class="pre">my_iz</span></code> object. At first, this does not appear any different than using the <code class="docutils literal notranslate"><span class="pre">del</span></code> operator on an ase.Atoms object.</p>
 <p>However, there is now a new <code class="docutils literal notranslate"><span class="pre">index_mapper</span></code> object, which shows the relationship between all of the zeolite objects in the program.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># insert script above here</span>
