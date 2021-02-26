@@ -308,8 +308,28 @@ if __name__ == '__main__':
     zeo = Zeotype.build_from_cif_with_labels('BEA.cif')
     iz = zeo.get_imperfect_zeotype()
     iz[186].symbol = 'Sn'
-    mol = molecule('CH3OH')
+
+    # Test 1
+    mol = molecule('PH3')
     ads = Adsorbate(mol, host_zeotype=iz)
-    ads = ads.position_ads()
-    iz, ads = iz.integrate_adsorbate(ads)
-    view(iz)
+    ads2 = ads.position_ads()
+    iz_new, ads3 = iz.integrate_adsorbate(ads2)
+    view(iz_new)
+
+    # Test 2
+    mol = molecule('CH3CN')
+    ads = Adsorbate(mol, host_zeotype=iz)
+    ads2 = ads.position_ads()
+    iz_new, ads3 = iz.integrate_adsorbate(ads2)
+    view(iz_new)
+
+    # Test 3
+    mol = molecule('CH3CH2OCH3')
+    ads = Adsorbate(mol, host_zeotype=iz)
+    ads2 = ads.position_ads()
+    iz_new, ads3 = iz.integrate_adsorbate(ads2)
+    view(iz_new)
+
+
+
+
