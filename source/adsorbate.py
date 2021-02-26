@@ -4,7 +4,7 @@ from sklearn.cluster import MeanShift
 from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-import source.zeotypes
+import maze.zeotypes
 import ase
 import warnings
 
@@ -44,7 +44,7 @@ class Adsorbate(Atoms):
         assert self.host_zeotype is not None, "Cannot find min distance when host zeotype is None"
 
         dummy_atom = Atom('H', position=ads_position)
-        dummy_host = self.host_zeotype + dummy_atom
+        dummy_host = ase.Atoms(self.host_zeotype) + dummy_atom
         min_distance = min(dummy_host.get_distances(-1, [i for i in range(len(self.host_zeotype))], mic=True))
         return min_distance
 
@@ -59,7 +59,7 @@ class Adsorbate(Atoms):
         assert self.host_zeotype is not None, "Cannot find average distance when host zeotype is None"
 
         dummy_atom = Atom('H', position=ads_position)
-        dummy_host = self.host_zeotype + dummy_atom
+        dummy_host = ase.Atoms(self.host_zeotype) + dummy_atom
         avg_distance = np.average(dummy_host.get_distances(-1, [i for i in range(len(self.host_zeotype))], mic=True))
         return avg_distance
 
@@ -185,7 +185,7 @@ class Adsorbate(Atoms):
         return best_pos
 
     def pick_donor(self):
-        """finds atom in adsorbate most likely to bind to metal Heuristic: N > O
+        """finds atom in adsorbate most likely to bind to metal. Heuristic: N > O
         > P > S > X > C > H :param ads: adsorbate atoms object :return: index of
         donor atom in adsorbate
         """
@@ -290,7 +290,7 @@ class Adsorbate(Atoms):
         if pos is None:
             pos = self.pick_ads_position(donor_ind, host_ind)
 
-        dummy_host = self.host_zeotype + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
+        dummy_host = ase.Atoms(self.host_zeotype) + Atom('H', position=pos)  # add dummy hydrogen atom to get distances to host atoms
         vec = dummy_host.get_distance(-1, host_ind, mic=True, vector=True)
         donor_vec = self.get_donor_vec(donor_ind)  # get the direction of lone pairs on donor atom
 
