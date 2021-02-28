@@ -5,23 +5,24 @@ from maze.zeotypes import Zeotype, Cluster, OpenDefect, ImperfectZeotype
 import json
 from copy import deepcopy
 import ase
-
+from pathlib import Path
 
 class ZeotypeDatabase:
     zeotype_dict = {'Zeotype': Zeotype, 'Cluster': Cluster, 'OpenDefect': OpenDefect,
                     'ImperfectZeotype': ImperfectZeotype}
 
-    def __init__(self, ase_db_name: Union[Database, str], datajson_name: str):
+    def __init__(self, ase_db_name: str, datajson_name: str):
         self.parent_zeotype_dict: Dict[str, int] = {}
         self.data_dict = {}
         self.ase_db = None
         self.json_filepath = datajson_name if 'json' in datajson_name else datajson_name + '.json'
-        if isinstance(ase_db_name, Database):
-            self.ase_db = ase_db_name
-        elif isinstance(ase_db_name, str):
-            self.ase_db = connect(ase_db_name)
+        self.ase_db = connect(ase_db_name)
+        json_path = Path(datajson_name)
+        if json_path.is_file():
+            with open(self.json_filepath, 'r') as f:
+                self.data_dict = json.load(f)
         else:
-            raise ValueError('ase_db_name must be a str object or ase.core.Database object')
+            self.data_dict = {}
 
     def add_data(self, key, new_data):
         self.data_dict[key] = new_data
