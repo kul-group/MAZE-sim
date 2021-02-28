@@ -1,6 +1,6 @@
 import os
 from maze.zeotypes import Zeotype
-from maze.io import *
+from maze.io_zeotype import *
 
 if __name__ == "__main__":
     data_path = '/Users/dda/Code/MAZE-sim/data/'

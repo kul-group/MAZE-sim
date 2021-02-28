@@ -194,3 +194,4 @@ def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, Zeotype]:
     delete_folder(folder_path)
     return zeotype_dict
 
+

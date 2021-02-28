@@ -2,6 +2,7 @@ import copy
 import os
 from collections import defaultdict
 from typing import List, Dict, Tuple, Iterable, Optional, Union
+import uuid
 
 import ase
 import ase.data
@@ -72,6 +73,7 @@ class Zeotype(Atoms):
             self.atom_indices_to_site = atom_indices_to_site
             self.additions = copy.deepcopy(additions) if additions else defaultdict(list)
 
+        self.unique_id = str(uuid.uuid4())
         self.update_nl()
 
     @staticmethod
