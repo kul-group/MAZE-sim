@@ -11,3 +11,5 @@ InspectProfiles
 /MAZE_sim.egg-info/
 tests/data/*
 data/*
+test.db
+test.json
