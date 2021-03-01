@@ -1,17 +1,28 @@
-from ase.db import connect
-from typing import Union, Dict
-from ase.db.core import Database
-from maze.zeotypes import Zeotype, Cluster, OpenDefect, ImperfectZeotype
 import json
 from copy import deepcopy
-import ase
 from pathlib import Path
+from typing import Dict
+
+import ase
+from ase.db import connect
+
+from maze.zeotypes import Zeotype, Cluster, OpenDefect, ImperfectZeotype
+
 
 class ZeotypeDatabase:
     zeotype_dict = {'Zeotype': Zeotype, 'Cluster': Cluster, 'OpenDefect': OpenDefect,
                     'ImperfectZeotype': ImperfectZeotype}
 
     def __init__(self, ase_db_name: str, datajson_name: str):
+        """
+        Initializes a ZeotypeDatabase object. If ase_db_name and datajson_name exist, they are loaded. If they do not
+        exist they are created.
+        :param ase_db_name: filepath (including name) of the ase database (must end in db)
+        :type ase_db_name: str
+        :param datajson_name: name of the additional json database
+        :type datajson_name: str
+        """
+
         self.parent_zeotype_dict: Dict[str, int] = {}
         self.data_dict = {}
         self.ase_db = None
@@ -21,14 +32,38 @@ class ZeotypeDatabase:
         if json_path.is_file():
             with open(self.json_filepath, 'r') as f:
                 self.data_dict = json.load(f)
+                for key in self.data_dict.keys():
+                    if self.data_dict[key]['name'] == 'parent':
+                        self.parent_zeotype_dict[self.data_dict[key]['GUID']] = int(key)
+
         else:
             self.data_dict = {}
 
-    def add_data(self, key, new_data):
+    def add_data(self, key: int, new_data: Dict) -> None:
+        """
+        Add data to the json database
+        :param key: db id of Zeotype object data belongs to
+        :type key: int
+        :param new_data: dict of new data to add to database
+        :type new_data: Dict
+        :return: None
+        :rtype: None
+        """
+
         self.data_dict[key] = new_data
         self.write_data()
 
-    def _get(self, key, default=None):
+    def _get(self, key: int, default=None) -> Dict:
+        """
+        get an atoms object from the ase database
+        :param key: id of atoms object in database
+        :type key: int
+        :param default: default value
+        :type default: Optional[Union[str, int]]
+        :return: Data dict
+        :rtype: Dict
+        """
+
         if default is None:
             row = self.ase_db.get(key)  # ase_db.get cannot except default=None as arg
         else:
@@ -41,18 +76,43 @@ class ZeotypeDatabase:
         data['atoms'] = atoms
         return data
 
-    def _write(self, zeotype: Zeotype, data: Dict):
+    def _write(self, zeotype: Zeotype, data: Dict) -> int:
+        """
+        Write a Zeotype to the ase db and jsondata dict
+        :param zeotype: Zeotype object to write to the database
+        :type zeotype: Zeotype
+        :param data: data corresponding to Zeotype
+        :type data: Dict
+        :return: id of added Zeotype in both dbs
+        :rtype: int
+        """
+
         key = self.ase_db.write(zeotype)
         self.add_data(key, data)
         return key
 
-    def write_data(self):
+    def write_data(self) -> None:
+        """
+        Write data dict to the json database
+        :return: None
+        :rtype: None
+        """
+
         with open(self.json_filepath, 'w') as f:
             json.dump(self.data_dict, f, indent=4)
 
 
     def make_parent_dict(self, zeotype: Zeotype) -> Dict:
+        """
+        Make a dictionary for the parent zeotype
+        :param zeotype: Parent zeotype to make dictionary from
+        :type zeotype: Zeotype
+        :return: Dict of zeotype's data
+        :rtype: Dict
+        """
+
         data = {'name': zeotype.name,
+                'GUID': zeotype.unique_id,
                 'type': 'Zeotype',
                 'parent_index': 0,  # hardcode to 0 when self
                 'additions': dict(zeotype.additions),
@@ -65,12 +125,29 @@ class ZeotypeDatabase:
         return data
 
     def write_parent(self, zeotype: Zeotype) -> int:
+        """
+        Write parent zeotype to both databases
+        :param zeotype: parent zeotype to write to database
+        :type zeotype: Zeotype
+        :return: id of added zeotype
+        :rtype: int
+        """
+
         data = self.make_parent_dict(zeotype)
         db_index = self._write(zeotype, data)
         self.parent_zeotype_dict[zeotype.unique_id] = db_index
         return db_index
 
     def update_parent(self, zeotype: Zeotype, key: int) -> None:
+        """
+        Update the parent zeotype
+        :param zeotype: zeotype to add to the
+        :type zeotype:
+        :param key:
+        :type key:
+        :return:
+        :rtype:
+        """
         data = self.make_parent_dict(zeotype)
         self.add_data(key, data)
 
@@ -130,6 +207,16 @@ class ZeotypeDatabase:
             zeotype.name = data['name']
             return zeotype
 
+    @classmethod
+    def connect(cls, db_name: str) -> "ZeotypeDatabase":
+        path = Path(db_name)
+        if path.suffix != '.db':
+            raise ValueError('db_name must end in .db')
+        ase_db_path = db_name
+        jsondata_path = path.with_suffix('json')
+        return ZeotypeDatabase(ase_db_path, jsondata_path)
+
+
 if __name__ == "__main__":
     import pandas as pd
     db = ZeotypeDatabase('test.db', 'test.json')
@@ -141,3 +228,4 @@ if __name__ == "__main__":
     print(bea_2.parent_zeotype)
     print(pd.DataFrame(bea_2.index_mapper.main_index).T.head())
     print(bea_2)
+    print(db.parent_zeotype_dict)
