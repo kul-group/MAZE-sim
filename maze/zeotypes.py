@@ -456,7 +456,7 @@ class Zeotype(Atoms):
 
     def get_site_type(self, index: int) -> str:
         """
-        Get the idenity of a site
+        Get the identity of a site
 
         :param index: Index of site in self
         :return: Label for the site (comes from CIF) file
