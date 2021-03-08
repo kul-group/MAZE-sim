@@ -1,7 +1,7 @@
 import json
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 import ase
 from ase.db import connect
@@ -141,17 +141,24 @@ class ZeotypeDatabase:
     def update_parent(self, zeotype: Zeotype, key: int) -> None:
         """
         Update the parent zeotype
-        :param zeotype: zeotype to add to the
-        :type zeotype:
-        :param key:
-        :type key:
-        :return:
-        :rtype:
+        :param zeotype: Parent zeotype with the data to update
+        :type zeotype: Zeotype
+        :param key: key of the parent zeotype
+        :type key: int
+        :return: None
+        :rtype: None
         """
         data = self.make_parent_dict(zeotype)
         self.add_data(key, data)
 
-    def write(self, zeotype: Zeotype):
+    def write(self, zeotype: Zeotype) -> int:
+        """
+        Write a Zeotype to both databases
+        :param zeotype: Zeotype to write to database
+        :type zeotype: Zeotype
+        :return: index of zeotype that was added to db
+        :rtype: int
+        """
         if zeotype.parent_zeotype is zeotype:  # writing parent zeotype
             if zeotype.unique_id in self.parent_zeotype_dict.keys():
                 db_index = self.parent_zeotype_dict[zeotype.unique_id]
@@ -179,7 +186,14 @@ class ZeotypeDatabase:
             db_index = self._write(zeotype, data)
             return db_index
 
-    def build_parent_zeotype(self, data):
+    def build_parent_zeotype(self, data: Dict) -> Zeotype:
+        """
+        Build a parent zeotype from data dict
+        :param data: data dict containing atoms object and metadata for zeotype
+        :type data: Dict
+        :return: parent Zeotype
+        :rtype: Zeotype
+        """
         assert data['type'] == 'Zeotype', 'only use build_parent_zeotype for building Zeotypes'
         zeotype = self.zeotype_dict[data['type']](data['atoms'])
         zeotype.additions = data['additions']
@@ -191,7 +205,16 @@ class ZeotypeDatabase:
 
         return zeotype
 
-    def get(self, key, default=None):
+    def get(self, key: int, default=None) -> Optional[Zeotype]:
+        """
+        Get a zeotype from the database
+        :param key: zeotype key
+        :type key: int
+        :param default: what to return if key not in db
+        :type default: Anytype
+        :return: zeotype from database or default
+        :rtype: Optional[Zeotype]
+        """
         data = self._get(key, default=None)
         if data is None:
             return default
@@ -209,6 +232,13 @@ class ZeotypeDatabase:
 
     @classmethod
     def connect(cls, db_name: str) -> "ZeotypeDatabase":
+        """
+        This is a connect method for the ZeotypeDatabase
+        :param db_name: name of database
+        :type db_name: str
+        :return: zeotype database with that name
+        :rtype: ZeotypeDatabase
+        """
         path = Path(db_name)
         if path.suffix != '.db':
             raise ValueError('db_name must end in .db')
@@ -218,6 +248,7 @@ class ZeotypeDatabase:
 
 
 if __name__ == "__main__":
+    # testing script for databse
     import pandas as pd
     db = ZeotypeDatabase('test.db', 'test.json')
     bea = ImperfectZeotype.make('BEA')
