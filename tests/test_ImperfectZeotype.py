@@ -1,9 +1,11 @@
 from unittest import TestCase
+from maze.zeotypes import ImperfectZeotype, Zeotype
+from maze.index_mapper import IndexMapper
+from ase import Atoms
 
 
 class TestImperfectZeotype(TestCase):
-    def test_register_self(self):
-        self.fail()
+
 
     def test_build_cap_atoms(self):
         self.fail()
@@ -18,7 +20,7 @@ class TestImperfectZeotype(TestCase):
         self.fail()
 
     def test_remove_adsorbate(self):
-        self.fail()
+        self.fail
 
     def test_integrate_other_zeotype(self):
         self.fail()

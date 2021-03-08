@@ -533,17 +533,6 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, site_to_atom_indices, atom_indices_to_site,
                          additions, _is_zeotype=False)
 
-    def register_self(self, source: Zeotype) -> None:
-        """
-        This method registers the current ImperfectZeotype with the index_mapper by using the common
-        positions between the atoms in self and source.
-
-        :param source: Source Zeotype or subclass that was used to build current ImperfectZeotype
-            for the mapping to work correctly, the atom positions must be identical. This
-        :return: None
-        """
-        name = self.index_mapper.get_unique_name(self.__name__)
-        self.index_mapper.add_name(name, source.name, self._get_old_to_new_map(source, self))
 
     def build_cap_atoms(self, cap_atoms_dict: Dict[str, np.array]) -> Atoms:
         symbol_list = []
