@@ -297,9 +297,7 @@ class Zeotype(Atoms):
                     label = 'other'
             else:
                 label = 'other'
-
             type_dict[label].append(atom.index)
-
         return dict(type_dict)
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
