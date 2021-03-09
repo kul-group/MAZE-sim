@@ -35,3 +35,51 @@ class Silanol():
         :return: str rep of object
         """
         return self.__str__()
+
+    @staticmethod
+    def find_silanol_groups(zeotype: "Zeotype") -> List["Silanol"]:
+        """
+        Finds all of the silanol groups in the Zeotype
+
+        :return: A list of Silanol groups
+        """
+        silanol_list = []
+        for atom in zeotype:
+            if atom.symbol == 'Si':
+                for neighbor_index in zeotype.neighbor_list.get_neighbors(atom.index)[-1]:
+                    if zeotype[neighbor_index].symbol == 'O':
+                        for next_neighbor_index in zeotype.neighbor_list.get_neighbors(zeotype[neighbor_index].index)[
+                            -1]:
+                            if zeotype[next_neighbor_index].symbol == 'H':
+                                # found one!
+                                silanol = Silanol(zeotype, atom.index, neighbor_index, next_neighbor_index,
+                                                  zeotype.neighbor_list.get_neighbors(atom.index)[-1])
+                                silanol_list.append(silanol)
+        return silanol_list
+
+    @staticmethod
+    def find_silanol_nest_T_sites(zeotype: "Zeotype") -> List[int]:
+        """
+        Finds all of the T sites that are in silanol nests
+
+        :return: A list of T sites in silanol nests
+        """
+        sites_list = []
+        sil_list = Silanol.find_silanol_groups(zeotype)
+        if zeotype.atom_indices_to_site is None:
+            for sil in sil_list:
+                sites_list.append(sil.Si_index)
+                for i in sil.Si_neighbor_list:
+                    if 'Sn' == zeotype[i].symbol:
+                        sites_list.append(i)
+        else:
+            for sil in sil_list:
+
+                if 'T' in zeotype.atom_indices_to_site(sil.Si_index):
+                    sites_list.append(sil.Si_index)
+                else:
+                    for index in sil.Si_neighbor_list:
+                        if 'Sn' == zeotype[index].symbol:
+                            sites_list.append(index)
+
+        return sites_list

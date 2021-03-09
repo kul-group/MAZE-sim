@@ -235,12 +235,6 @@ class Zeotype(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def get_imperfect_zeotype(self) -> 'ImperfectZeotype':
-        """
-        :return: An imperfect Zeotype constructed from the current Zeotype
-        """
-        return ImperfectZeotype(self)
-
     def update_nl(self, mult: int = 1) -> None:
         """
         Builds and updates neighborlist
@@ -361,51 +355,7 @@ class Zeotype(Atoms):
         # self.clusters.append(new_cluster)
         return new_cluster, od
 
-    def find_silanol_groups(self) -> List[Silanol]:
-        """
-        Finds all of the silanol groups in the Zeotype
 
-        :return: A list of Silanol groups
-        """
-        silanol_list = []
-        for atom in self:
-            if atom.symbol == 'Si':
-                for neighbor_index in self.neighbor_list.get_neighbors(atom.index)[0]:
-                    if self[neighbor_index].symbol == 'O':
-                        for next_neighbor_index in self.neighbor_list.get_neighbors(self[neighbor_index].index)[0]:
-                            if self[next_neighbor_index].symbol == 'H':
-                                # found one!
-                                silanol = Silanol(self, atom.index, neighbor_index, next_neighbor_index,
-                                                  self.neighbor_list.get_neighbors(atom.index)[0])
-                                silanol_list.append(silanol)
-        return silanol_list
-
-    def find_silanol_nest_T_sites(self) -> List[int]:
-        """
-        Finds all of the T sites that are in silanol nests
-
-        :return: A list of T sites in silanol nests
-        """
-        sites_list = []
-        sil_list = self.find_silanol_groups()
-        if self.atom_indices_to_site is None:
-
-            for sil in sil_list:
-                sites_list.append(sil.Si_index)
-                for i in sil.Si_neighbor_list:
-                    if 'Sn' == self[i].symbol:
-                        sites_list.append(i)
-        else:
-            for sil in sil_list:
-
-                if 'T' in self.atom_indices_to_site(sil.Si_index):
-                    sites_list.append(sil.Si_index)
-                else:
-                    for index in sil.Si_neighbor_list:
-                        if 'Sn' == self[index].symbol:
-                            sites_list.append(index)
-
-        return sites_list
 
     @staticmethod
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
