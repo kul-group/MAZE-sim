@@ -2,16 +2,49 @@ from unittest import TestCase
 from maze.zeotypes import ImperfectZeotype, Zeotype
 from maze.index_mapper import IndexMapper
 from ase import Atoms
-
+import numpy as np
 
 class TestImperfectZeotype(TestCase):
-
-
     def test_build_cap_atoms(self):
-        self.fail()
+        with self.subTest(msg="testing simple case"):
+            cap_atoms_dict = {'H': [np.array([0, 0, 0])],
+                              'O': [np.array([1, 2, 3])],
+                              'N': [np.array([1, 3, 5])]}
+            cap_atoms = ImperfectZeotype.build_cap_atoms(cap_atoms_dict)
+            for atom in cap_atoms:
+                self.assertIn(atom.symbol, cap_atoms_dict)
+                self.assertCountEqual(cap_atoms_dict[atom.symbol][0], atom.position)
+        with self.subTest(msg="testing multi atoms of same type"):
+            cap_atoms_dict = {'H': [np.array([0, 0, 0]), np.array([1, 1, 1])],
+                              'O': [np.array([3, 3, 3]), np.array([3, 4, 5])]}
+            cap_atoms = ImperfectZeotype.build_cap_atoms(cap_atoms_dict)
+            # this complicated for loop checks that the position is in the
+            for atom in cap_atoms:
+                array_in = False
+                for pos in cap_atoms_dict[atom.symbol]:
+                    all_equal = True
+                    for dict_el, atom_el in zip(pos, atom.position):
+                        if dict_el != atom_el:
+                            all_equal = False
+                            break
+                    if all_equal:
+                        array_in = True
+                        break
+                self.assertTrue(array_in)
+
 
     def test_cap_atoms(self):
-        self.fail()
+        with self.subTest(msg="test hydrogen capping"):
+            iz = ImperfectZeotype(Zeotype('O3SiOSi', positions=[[0,0,0], [0, 0, -1], [0, 0, 1]]))
+            iz = iz.delete_atoms(2)  # delete Si
+            iz = iz.cap_atoms()
+            x = 0
+            #self.assertEqual(len(iz), 3)
+            for atom in iz:
+                if atom.symbol == "H":
+                    self.assertTrue(np.all(atom.position == np.array([0, 0, 1])))
+                if atom.symbol == "O":
+                    self.assertTrue(np.all(atom.position == np.array([0, 0, -1])))
 
     def test_remove_caps(self):
         self.fail()

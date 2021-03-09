@@ -172,7 +172,39 @@ class IndexMapper:
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
 
-        x = self.main_index
+
+    def pop(self, name: str, atom_index_to_delete: int) -> int:
+        """
+        Deletes a single atom index
+        :param name: name of Zeotype to delete atom
+        :type name: str
+        :param atom_index_to_delete: index to delete (using own mapping)
+        :type atom_index_to_delete: int
+        :return: index deleted
+        :rtype: int
+        """
+        self.delete_atoms(name, [atom_index_to_delete])
+        return atom_index_to_delete
+
+    def extend(self, name: str, new_atom_indices: Iterable[int]) -> None:
+        """
+        This adds additional atom indices to the zeotype
+        :param name: name to add indices to
+        :type name: str
+        :param new_atom_indices: list of indices
+        :type new_atom_indices: Iterable[int]
+        :return: None
+        :rtype: None
+        """
+
+        assert name in self.names, 'name not in index mapper'
+
+        for index in new_atom_indices:
+            none_dict = self._make_none_dict()  # could be slow
+            none_dict[name] = index
+            self.i_max += 1
+            self.main_index[self.i_max] = none_dict
+
 
     def delete_atoms(self, name: str, atom_indices_to_delete: Iterable[int]) -> None:
         """

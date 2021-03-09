@@ -17,6 +17,7 @@ from maze.index_mapper import IndexMapper
 from maze.silanol import Silanol
 from maze.cif_download import download_cif
 
+
 class Zeotype(Atoms):
     """
     A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif
@@ -135,11 +136,10 @@ class Zeotype(Atoms):
                 self.positions[i] = group[j].position
                 j += 1
 
-
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
-                             subtrans_included=True, fractional_occupancies=True,
-                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
+                                         subtrans_included=True, fractional_occupancies=True,
+                                         reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
 
         """
         The helper function used by build_from_cif_with_labels when using an ASE version
@@ -449,10 +449,29 @@ class Zeotype(Atoms):
         return [a.index for a in atoms_object]
 
     def extend(self, other):
-        raise NotImplementedError
+        """
+        This extends the current Zeotype with additional atoms
+        :param other: atoms like object to extend with
+        :type other: Atoms
+        :return: None
+        :rtype: None
+        """
+        self_length = len(self)
+        other_indices = [self_length + i for i in range(0, len(other))]
+        self.index_mapper.extend(self.name, other_indices)
+        super().extend(other)
 
     def pop(self, index: int = -1):
-        raise NotImplementedError
+        """
+        This removes
+        :param index: index to pop
+        :type index: int
+        :return: Atom
+        :rtype: Atom
+        """
+
+        self.index_mapper.pop(index)
+        return super().pop(index)
 
     def get_site_type(self, index: int) -> str:
         """
@@ -533,8 +552,8 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, site_to_atom_indices, atom_indices_to_site,
                          additions, _is_zeotype=False)
 
-
-    def build_cap_atoms(self, cap_atoms_dict: Dict[str, np.array]) -> Atoms:
+    @staticmethod
+    def build_cap_atoms(cap_atoms_dict: Dict[str, np.array]) -> Atoms:
         symbol_list = []
         position_list = []
         for symbol, pos_list in cap_atoms_dict.items():
@@ -793,20 +812,6 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
-    def extend(self, other) -> "ImperfectZeotype":
-        """
-        Overrides ase.Atoms method
-        :param other: other atoms-like object to add to current object
-        :type other: str or atoms object
-        :return:
-        :rtype:
-        """
-        new_atoms = Atoms(other)
-        return self.add_atoms(new_atoms, 'extension')
-
-    def pop(self, index: int = -1) -> "ImperfectZeotype":
-        return self.delete_atoms(self[index].index)
-
     def get_type(self, index: int) -> 'str':
         """
         Get the type of atom at a certain index
@@ -946,10 +951,16 @@ class ImperfectZeotype(Zeotype):
             print("no matching parent oxygen found using old method")
             self_index = atom_to_cap_self_i
             self.update_nl()
-            neighbor = self.neighbor_list.get_neighbors(self_index)[0][
-                -1]  # first index in the list of neighbor indicies
-            direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-            oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            nl = self.neighbor_list.get_neighbors(self_index)[0]
+            if len(nl) != 0:
+                neighbor = nl[-1]  # first index in the list of neighbor indicies
+                direction = self.get_positions()[self_index] - self.get_positions()[
+                    neighbor]  # vector from neighbor to Si
+                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            else:
+                direction = np.array([0, 0, 1])
+                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+
             return oxygen_pos
         else:
             return self.parent_zeotype.get_positions()[site_pi]
@@ -1127,5 +1138,3 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
             new_cluster_indices = current_cluster_indices
 
         return list(cluster_indices)
-
-
