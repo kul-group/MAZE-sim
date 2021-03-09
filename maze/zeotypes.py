@@ -115,26 +115,26 @@ class Zeotype(Atoms):
         zeotype.atom_indices_to_site = atom_indices_to_site
         return cls(zeotype)
 
-    def _masked_rotate(self, center, axis, diff, mask):
-        # This method is overloaded to avoid use of extend method
-        # do rotation of subgroup by copying it to temporary atoms object
-        # and then rotating that
-        #
-        # recursive object definition might not be the most elegant thing,
-        # more generally useful might be a rotation function with a mask?
-        group = Atoms()  # changed from self.__class__()
-        for i in range(len(self)):
-            if mask[i]:
-                group += self[i]
-        group.translate(-center)
-        group.rotate(diff * 180 / np.pi, axis)
-        group.translate(center)
-        # set positions in original atoms object
-        j = 0
-        for i in range(len(self)):
-            if mask[i]:
-                self.positions[i] = group[j].position
-                j += 1
+    # def _masked_rotate(self, center, axis, diff, mask):
+    #     # This method is overloaded to avoid use of extend method
+    #     # do rotation of subgroup by copying it to temporary atoms object
+    #     # and then rotating that
+    #     #
+    #     # recursive object definition might not be the most elegant thing,
+    #     # more generally useful might be a rotation function with a mask?
+    #     group = Atoms()  # changed from self.__class__()
+    #     for i in range(len(self)):
+    #         if mask[i]:
+    #             group += self[i]
+    #     group.translate(-center)
+    #     group.rotate(diff * 180 / np.pi, axis)
+    #     group.translate(center)
+    #     # set positions in original atoms object
+    #     j = 0
+    #     for i in range(len(self)):
+    #         if mask[i]:
+    #             self.positions[i] = group[j].position
+    #             j += 1
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
