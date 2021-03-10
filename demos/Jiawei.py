@@ -20,7 +20,7 @@ def get_unique_t_sites(zeolite):
     return unique_t_site_indices
 
 
-def create_1Al_replacement(unique_t_site_indices, EFzeolite):
+def create_unique_1Al_replacement(unique_t_site_indices, EFzeolite):
     # create structures with 1 Al replacement for all unique T sites
     traj_1Al = []
     for site_name, t_site in unique_t_site_indices.items():
