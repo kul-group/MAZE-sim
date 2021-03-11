@@ -183,7 +183,15 @@ class IndexMapper:
         :return: index deleted
         :rtype: int
         """
-        self.delete_atoms(name, [atom_index_to_delete])
+        name_to_main_dict = self._reverse_main_index(name)
+        name_indices = list(name_to_main_dict.keys())
+        name_indices.sort()
+        for i in name_indices:
+            if i == atom_index_to_delete:
+                self.main_index[name_to_main_dict[i]][name] = None
+            elif i > atom_index_to_delete:
+                self.main_index[name_to_main_dict[i]][name] -= 1
+
         return atom_index_to_delete
 
     def extend(self, name: str, new_atom_indices: Iterable[int]) -> None:
