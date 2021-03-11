@@ -243,14 +243,14 @@ class ZeotypeDatabase:
         if path.suffix != '.db':
             raise ValueError('db_name must end in .db')
         ase_db_path = db_name
-        jsondata_path = path.with_suffix('json')
+        jsondata_path = str(path.with_suffix('.json'))
         return ZeotypeDatabase(ase_db_path, jsondata_path)
 
 
 if __name__ == "__main__":
     # testing script for databse
     import pandas as pd
-    db = ZeotypeDatabase('test.db', 'test.json')
+    db = ZeotypeDatabase.connect('test4.db') #ZeotypeDatabase('test.db', 'test.json')
     bea = ImperfectZeotype.make('BEA')
     cluster = bea.get_cluster(cluster_indices=[0,2,13])
     index = db.write(bea)

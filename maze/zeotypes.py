@@ -17,6 +17,7 @@ from maze.index_mapper import IndexMapper
 from maze.silanol import Silanol
 from maze.cif_download import download_cif
 
+
 class Zeotype(Atoms):
     """
     A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif
@@ -114,32 +115,11 @@ class Zeotype(Atoms):
         zeotype.atom_indices_to_site = atom_indices_to_site
         return cls(zeotype)
 
-    def _masked_rotate(self, center, axis, diff, mask):
-        # This method is overloaded to avoid use of extend method
-        # do rotation of subgroup by copying it to temporary atoms object
-        # and then rotating that
-        #
-        # recursive object definition might not be the most elegant thing,
-        # more generally useful might be a rotation function with a mask?
-        group = Atoms()  # changed from self.__class__()
-        for i in range(len(self)):
-            if mask[i]:
-                group += self[i]
-        group.translate(-center)
-        group.rotate(diff * 180 / np.pi, axis)
-        group.translate(center)
-        # set positions in original atoms object
-        j = 0
-        for i in range(len(self)):
-            if mask[i]:
-                self.positions[i] = group[j].position
-                j += 1
-
 
     @staticmethod
     def _read_cif_note_siteJan2021Update(fileobj: str, store_tags=False, primitive_cell=False,
-                             subtrans_included=True, fractional_occupancies=True,
-                             reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
+                                         subtrans_included=True, fractional_occupancies=True,
+                                         reader='ase') -> Tuple[Atoms, Dict[str, int], Dict[int, str]]:
 
         """
         The helper function used by build_from_cif_with_labels when using an ASE version
@@ -255,12 +235,6 @@ class Zeotype(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def get_imperfect_zeotype(self) -> 'ImperfectZeotype':
-        """
-        :return: An imperfect Zeotype constructed from the current Zeotype
-        """
-        return ImperfectZeotype(self)
-
     def update_nl(self, mult: int = 1) -> None:
         """
         Builds and updates neighborlist
@@ -323,9 +297,7 @@ class Zeotype(Atoms):
                     label = 'other'
             else:
                 label = 'other'
-
             type_dict[label].append(atom.index)
-
         return dict(type_dict)
 
     def count_elements(self) -> Tuple[Dict['str', List[int]], Dict['str', int]]:
@@ -381,51 +353,7 @@ class Zeotype(Atoms):
         # self.clusters.append(new_cluster)
         return new_cluster, od
 
-    def find_silanol_groups(self) -> List[Silanol]:
-        """
-        Finds all of the silanol groups in the Zeotype
 
-        :return: A list of Silanol groups
-        """
-        silanol_list = []
-        for atom in self:
-            if atom.symbol == 'Si':
-                for neighbor_index in self.neighbor_list.get_neighbors(atom.index)[0]:
-                    if self[neighbor_index].symbol == 'O':
-                        for next_neighbor_index in self.neighbor_list.get_neighbors(self[neighbor_index].index)[0]:
-                            if self[next_neighbor_index].symbol == 'H':
-                                # found one!
-                                silanol = Silanol(self, atom.index, neighbor_index, next_neighbor_index,
-                                                  self.neighbor_list.get_neighbors(atom.index)[0])
-                                silanol_list.append(silanol)
-        return silanol_list
-
-    def find_silanol_nest_T_sites(self) -> List[int]:
-        """
-        Finds all of the T sites that are in silanol nests
-
-        :return: A list of T sites in silanol nests
-        """
-        sites_list = []
-        sil_list = self.find_silanol_groups()
-        if self.atom_indices_to_site is None:
-
-            for sil in sil_list:
-                sites_list.append(sil.Si_index)
-                for i in sil.Si_neighbor_list:
-                    if 'Sn' == self[i].symbol:
-                        sites_list.append(i)
-        else:
-            for sil in sil_list:
-
-                if 'T' in self.atom_indices_to_site(sil.Si_index):
-                    sites_list.append(sil.Si_index)
-                else:
-                    for index in sil.Si_neighbor_list:
-                        if 'Sn' == self[index].symbol:
-                            sites_list.append(index)
-
-        return sites_list
 
     @staticmethod
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
@@ -449,10 +377,29 @@ class Zeotype(Atoms):
         return [a.index for a in atoms_object]
 
     def extend(self, other):
-        raise NotImplementedError
+        """
+        This extends the current Zeotype with additional atoms
+        :param other: atoms like object to extend with
+        :type other: Atoms
+        :return: None
+        :rtype: None
+        """
+        self_length = len(self)
+        other_indices = [self_length + i for i in range(0, len(other))]
+        self.index_mapper.extend(self.name, other_indices)
+        super().extend(other)
 
     def pop(self, index: int = -1):
-        raise NotImplementedError
+        """
+        This removes
+        :param index: index to pop
+        :type index: int
+        :return: Atom
+        :rtype: Atom
+        """
+
+        self.index_mapper.pop(index)
+        return super().pop(index)
 
     def get_site_type(self, index: int) -> str:
         """
@@ -533,19 +480,8 @@ class ImperfectZeotype(Zeotype):
                          calculator, info, velocities, site_to_atom_indices, atom_indices_to_site,
                          additions, _is_zeotype=False)
 
-    def register_self(self, source: Zeotype) -> None:
-        """
-        This method registers the current ImperfectZeotype with the index_mapper by using the common
-        positions between the atoms in self and source.
-
-        :param source: Source Zeotype or subclass that was used to build current ImperfectZeotype
-            for the mapping to work correctly, the atom positions must be identical. This
-        :return: None
-        """
-        name = self.index_mapper.get_unique_name(self.__name__)
-        self.index_mapper.add_name(name, source.name, self._get_old_to_new_map(source, self))
-
-    def build_cap_atoms(self, cap_atoms_dict: Dict[str, np.array]) -> Atoms:
+    @staticmethod
+    def build_cap_atoms(cap_atoms_dict: Dict[str, np.array]) -> Atoms:
         symbol_list = []
         position_list = []
         for symbol, pos_list in cap_atoms_dict.items():
@@ -804,20 +740,6 @@ class ImperfectZeotype(Zeotype):
         self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
         return new_self
 
-    def extend(self, other) -> "ImperfectZeotype":
-        """
-        Overrides ase.Atoms method
-        :param other: other atoms-like object to add to current object
-        :type other: str or atoms object
-        :return:
-        :rtype:
-        """
-        new_atoms = Atoms(other)
-        return self.add_atoms(new_atoms, 'extension')
-
-    def pop(self, index: int = -1) -> "ImperfectZeotype":
-        return self.delete_atoms(self[index].index)
-
     def get_type(self, index: int) -> 'str':
         """
         Get the type of atom at a certain index
@@ -957,10 +879,16 @@ class ImperfectZeotype(Zeotype):
             print("no matching parent oxygen found using old method")
             self_index = atom_to_cap_self_i
             self.update_nl()
-            neighbor = self.neighbor_list.get_neighbors(self_index)[0][
-                -1]  # first index in the list of neighbor indicies
-            direction = self.get_positions()[self_index] - self.get_positions()[neighbor]  # vector from neighbor to Si
-            oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            nl = self.neighbor_list.get_neighbors(self_index)[0]
+            if len(nl) != 0:
+                neighbor = nl[-1]  # first index in the list of neighbor indicies
+                direction = self.get_positions()[self_index] - self.get_positions()[
+                    neighbor]  # vector from neighbor to Si
+                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            else:
+                direction = np.array([0, 0, 1])
+                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+
             return oxygen_pos
         else:
             return self.parent_zeotype.get_positions()[site_pi]
@@ -1138,5 +1066,3 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
             new_cluster_indices = current_cluster_indices
 
         return list(cluster_indices)
-
-
