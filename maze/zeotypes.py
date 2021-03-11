@@ -401,7 +401,7 @@ class Zeotype(Atoms):
         self.index_mapper.pop(index)
         return super().pop(index)
 
-    def get_site_type(self, index: int) -> str:
+    def get_site_types(self, index: int) -> str:
         """
         Get the identity of a site
 
@@ -752,7 +752,7 @@ class ImperfectZeotype(Zeotype):
         return self.parent_zeotype.atom_indices_to_site[
             self.index_mapper.get_index(self.name, self.parent_zeotype.name, index)]
 
-    def get_site_type(self) -> List[str]:
+    def get_site_types(self) -> List[str]:
         """
         Get a list of all of the types in the parent zeotype
         :return: List of the names of all types
