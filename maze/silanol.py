@@ -66,7 +66,7 @@ class Silanol():
         """
         sites_list = []
         sil_list = Silanol.find_silanol_groups(zeotype)
-        if zeotype.atom_indices_to_site is None:
+        if zeotype._atom_indices_to_site is None:
             for sil in sil_list:
                 sites_list.append(sil.Si_index)
                 for i in sil.Si_neighbor_list:
@@ -75,7 +75,7 @@ class Silanol():
         else:
             for sil in sil_list:
 
-                if 'T' in zeotype.atom_indices_to_site(sil.Si_index):
+                if 'T' in zeotype._atom_indices_to_site(sil.Si_index):
                     sites_list.append(sil.Si_index)
                 else:
                     for index in sil.Si_neighbor_list:
