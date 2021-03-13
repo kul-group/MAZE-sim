@@ -58,8 +58,8 @@ def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = 
                      'type': str(type(z)),
                      'additions': z.additions}
         if z.name == 'parent':
-            additional_params = {'site_to_atom_indices': z.site_to_atom_indices,
-                                 'atom_indices_to_site': z.atom_indices_to_site}
+            additional_params = {'site_to_atom_indices': z._site_to_atom_indices,
+                                 'atom_indices_to_site': z._atom_indices_to_site}
             dict_json.update(additional_params)
 
         # TODO: impliment save index mapper
@@ -110,8 +110,8 @@ def read_zeotypes(file_path, str_ext: str = '.traj'):
             my_zeotype.additions = attr_dict['additions']
 
             if name == 'parent':
-                my_zeotype.atom_indices_to_site = attr_dict['atom_indices_to_site']
-                my_zeotype.site_to_atom_indices = attr_dict['site_to_atom_indices']
+                my_zeotype._atom_indices_to_site = attr_dict['atom_indices_to_site']
+                my_zeotype._site_to_atom_indices = attr_dict['site_to_atom_indices']
 
             zeotype_dict[name] = my_zeotype
 

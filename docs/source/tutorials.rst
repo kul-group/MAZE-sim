@@ -121,6 +121,12 @@ Now we can use the static method ``build_from_cif_with_labels`` to build a ``Zeo
 
 Our ``Zeotype`` has been built. The atom identity information is now stored in two dictionaries. Let's take a look at them:
 
+    >>> print('site_to_atom_indices map', my_zeolite._site_to_atom_indices, sep='\n\n')
+    site_to_atom_indices map
+
+    >>> print('site_to_atom_indices map', my_zeolite._site_to_atom_indices, sep='\n\n')
+    site_to_atom_indices map
+
     >>> print('site_to_atom_indices map', my_zeolite.site_to_atom_indices, sep='\n\n')
     site_to_atom_indices map
 

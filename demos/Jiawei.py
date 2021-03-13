@@ -13,7 +13,7 @@ def get_unique_t_sites(zeolite):
     # get all unique T sites
     unique_t_site_indices = {}
     indices_only = []
-    for site_name, value in zeolite.site_to_atom_indices.items():
+    for site_name, value in zeolite._site_to_atom_indices.items():
         if 'T' in site_name:
             unique_t_site_indices[site_name] = value[1]
             indices_only.append(value[1])

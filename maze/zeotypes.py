@@ -43,16 +43,16 @@ class Zeotype(Atoms):
         if isinstance(symbols, Zeotype):  # if symbols is Zeotype or Zeotype subclass
             self.additions = copy.deepcopy(symbols.additions)
             if _is_zeotype:  # if the object being built is a Zeotype
-                self.site_to_atom_indices = symbols.site_to_atom_indices
-                self.atom_indices_to_site = symbols.atom_indices_to_site
+                self._site_to_atom_indices = symbols._site_to_atom_indices
+                self._atom_indices_to_site = symbols._atom_indices_to_site
                 self.name = 'parent'  # must be parent to agree with index mapper
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
 
             else:  # if the object being built is a subtype of MAZE-sim
                 self.parent_zeotype = symbols.parent_zeotype
-                self.site_to_atom_indices = None
-                self.atom_indices_to_site = None
+                self._site_to_atom_indices = None
+                self._atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
@@ -70,15 +70,39 @@ class Zeotype(Atoms):
                 self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
                 self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
-            self.site_to_atom_indices = site_to_atom_indices
-            self.atom_indices_to_site = atom_indices_to_site
+            self._site_to_atom_indices = site_to_atom_indices
+            self._atom_indices_to_site = atom_indices_to_site
             self.additions = copy.deepcopy(additions) if additions else defaultdict(list)
 
         self.unique_id = str(uuid.uuid4())
         self.update_nl()
 
+    @property
+    def site_to_atom_indices(self) -> Dict:
+        my_site_to_atom_indices = {}
+        for site, indices in self.parent_zeotype._site_to_atom_indices.items():
+            my_indices = []
+            for index in indices:
+                index = self.index_mapper.main_index[index][self.name]
+                if index is not None:
+                    my_indices.append(index)
+            my_site_to_atom_indices[site] = my_indices
+
+        return my_site_to_atom_indices
+
+    @property
+    def atom_indices_to_sites(self) -> Dict:
+        my_atom_indices_to_sites = {}
+        for index, site in self.parent_zeotype._atom_indices_to_site.items():
+            my_index = self.index_mapper.main_index[index][self.name]
+            if my_index is not None:
+                my_atom_indices_to_sites[my_index] = site
+
+        return my_atom_indices_to_sites
+
+
     @staticmethod
-    def get_available_symbols(atom_list: List[str]) -> List[str]:
+    def _get_available_symbols(atom_list: List[str]) -> List[str]:
         """
         :param atom_list: A list of atom symbols to be excluded from returned list
         :return: a list of all possible atom symbols that do not include items from
@@ -111,8 +135,8 @@ class Zeotype(Atoms):
 
         atoms, site_to_atom_indices, atom_indices_to_site = cif_reader(filepath, **kwargs)
         zeotype = cls(atoms)
-        zeotype.site_to_atom_indices = site_to_atom_indices
-        zeotype.atom_indices_to_site = atom_indices_to_site
+        zeotype._site_to_atom_indices = site_to_atom_indices
+        zeotype._atom_indices_to_site = atom_indices_to_site
         return cls(zeotype)
 
 
@@ -153,7 +177,7 @@ class Zeotype(Atoms):
         # replace elements with replacement symbol
         element_to_T_site = {}
         sym_to_original_element = {}
-        possible_syms = Zeotype.get_available_symbols(
+        possible_syms = Zeotype._get_available_symbols(
             cif._tags["_atom_site_type_symbol"])  # only get symbols not in CIF file
         for i in range(len(cif._tags["_atom_site_label"])):  # label all atoms
             sym = possible_syms.pop()
@@ -205,7 +229,7 @@ class Zeotype(Atoms):
         # replace elements with replacement symbol
         element_to_T_site = {}
         sym_to_original_element = {}
-        possible_syms = Zeotype.get_available_symbols(
+        possible_syms = Zeotype._get_available_symbols(
             b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
         for i in range(len(b_dict["_atom_site_label"])):  # label all atoms
             sym = possible_syms.pop()
@@ -408,9 +432,9 @@ class Zeotype(Atoms):
         :param index: Index of site in self
         :return: Label for the site (comes from CIF) file
         """
-        assert self.parent_zeotype.atom_indices_to_site is not None, 'atom_indices_to_site is None, cannot get label'
+        assert self.parent_zeotype._atom_indices_to_site is not None, 'atom_indices_to_site is None, cannot get label'
         pz_index = self.index_mapper.get_index(self, self.parent_zeotype, index)
-        return self.parent_zeotype.atom_indices_to_site[pz_index]
+        return self.parent_zeotype._atom_indices_to_site[pz_index]
 
     @staticmethod
     def _get_old_to_new_map(old: Atoms, new: Atoms) -> Dict[int, int]:
@@ -748,8 +772,8 @@ class ImperfectZeotype(Zeotype):
         :return: the name of the type of index
         :rtype: str
         """
-        assert self.parent_zeotype.atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
-        return self.parent_zeotype.atom_indices_to_site[
+        assert self.parent_zeotype._atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
+        return self.parent_zeotype._atom_indices_to_site[
             self.index_mapper.get_index(self.name, self.parent_zeotype.name, index)]
 
     def get_site_type(self) -> List[str]:
@@ -758,9 +782,9 @@ class ImperfectZeotype(Zeotype):
         :return: List of the names of all types
         :rtype: List[str]
         """
-        assert self.parent_zeotype.site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
-        assert self.parent_zeotype.atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
-        return list(self.parent_zeotype.site_to_atom_indices.keys())
+        assert self.parent_zeotype._site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
+        assert self.parent_zeotype._atom_indices_to_site is not None, 'Parent Zeotype site mapping missing'
+        return list(self.parent_zeotype._site_to_atom_indices.keys())
 
     def find_type(self, atom_type_name: str) -> List[int]:
         """
@@ -771,9 +795,9 @@ class ImperfectZeotype(Zeotype):
         :return: List of indices that match site description
         :rtype: List[int]
         """
-        assert self.parent_zeotype.site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
-        assert atom_type_name in self.parent_zeotype.site_to_atom_indices, 'atom type name not found'
-        parent_list = self.parent_zeotype.site_to_atom_indices[atom_type_name]
+        assert self.parent_zeotype._site_to_atom_indices is not None, 'Parent Zeotype site mapping missing'
+        assert atom_type_name in self.parent_zeotype._site_to_atom_indices, 'atom type name not found'
+        parent_list = self.parent_zeotype._site_to_atom_indices[atom_type_name]
         self_list = []
         for p_index in parent_list:
             self_index = self.index_mapper.get_index(self.parent_zeotype.name, self.name, p_index)

@@ -116,8 +116,8 @@ class ZeotypeDatabase:
                 'type': 'Zeotype',
                 'parent_index': 0,  # hardcode to 0 when self
                 'additions': dict(zeotype.additions),
-                'atom_indices_to_site': zeotype.atom_indices_to_site,
-                'site_to_atom_indices': zeotype.site_to_atom_indices,
+                'atom_indices_to_site': zeotype._atom_indices_to_site,
+                'site_to_atom_indices': zeotype._site_to_atom_indices,
                 'main_index': zeotype.index_mapper.main_index,
                 'id': zeotype.index_mapper.id,
                 'names': zeotype.index_mapper.names}
@@ -200,8 +200,8 @@ class ZeotypeDatabase:
         zeotype.index_mapper.main_index = data['main_index']
         zeotype.index_mapper.names = data['names']
         zeotype.index_mapper.id = data['id']
-        zeotype.atom_indices_to_site = data['atom_indices_to_site']
-        zeotype.site_to_atom_indices = data['site_to_atom_indices']
+        zeotype._atom_indices_to_site = data['atom_indices_to_site']
+        zeotype._site_to_atom_indices = data['site_to_atom_indices']
 
         return zeotype
 

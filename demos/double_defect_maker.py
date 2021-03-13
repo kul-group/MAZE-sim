@@ -14,7 +14,7 @@ def defect_maker(cif_dir, zeolite_code, output_dir, savefiles=True):
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     open_defect = OpenDefect(zeolite)
     unique_t_site_indices = {}
-    for site_name, value in zeolite.site_to_atom_indices.items():
+    for site_name, value in zeolite._site_to_atom_indices.items():
         if 'T' in site_name:
             unique_t_site_indices[site_name] = value[1]
 

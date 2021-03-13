@@ -16,8 +16,8 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.site_to_atom_indices, None)
-        self.assertEqual(my_zeotype.atom_indices_to_site, None)
+        self.assertEqual(my_zeotype._site_to_atom_indices, None)
+        self.assertEqual(my_zeotype._atom_indices_to_site, None)
         self.assertEqual('parent', my_zeotype.name)
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         self.assertNotEqual(my_zeotype.index_mapper, None)
@@ -34,8 +34,8 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.site_to_atom_indices, {'T1': 0})
-        self.assertEqual(my_zeotype.atom_indices_to_site, {0: 'T1'})
+        self.assertEqual(my_zeotype._site_to_atom_indices, {'T1': 0})
+        self.assertEqual(my_zeotype._atom_indices_to_site, {0: 'T1'})
         self.assertEqual(my_zeotype.name, 'good_friend')
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         self.assertNotEqual(my_zeotype.index_mapper, None)
@@ -48,8 +48,8 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.site_to_atom_indices, None)
-        self.assertEqual(my_zeotype.atom_indices_to_site, None)
+        self.assertEqual(my_zeotype._site_to_atom_indices, None)
+        self.assertEqual(my_zeotype._atom_indices_to_site, None)
         self.assertEqual('parent', my_zeotype.name)
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         #tests atoms are there and behave the same
@@ -65,8 +65,8 @@ class TestZeotype(TestCase):
         self.assertIsInstance(my_zeotype, Atoms)
         # tests empty list attributes
         # tests corretly defined parameters
-        self.assertEqual(my_zeotype.site_to_atom_indices, z.site_to_atom_indices)
-        self.assertEqual(my_zeotype.atom_indices_to_site, z.atom_indices_to_site)
+        self.assertEqual(my_zeotype._site_to_atom_indices, z._site_to_atom_indices)
+        self.assertEqual(my_zeotype._atom_indices_to_site, z._atom_indices_to_site)
         self.assertEqual(my_zeotype.name, z.name)
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         #tests atoms are there and behave the same
@@ -86,8 +86,8 @@ class TestZeotype(TestCase):
         self.assertIsInstance(iz, Atoms)
         # tests empty list attributes
         # tests corretly defined parameters
-        self.assertEqual(iz.site_to_atom_indices, None)
-        self.assertEqual(iz.atom_indices_to_site, None)
+        self.assertEqual(iz._site_to_atom_indices, None)
+        self.assertEqual(iz._atom_indices_to_site, None)
         #self.assertEqual(iz.name)
         self.assertEqual(iz.parent_zeotype, z)
         #tests atoms are there and behave the same
@@ -115,7 +115,7 @@ class TestZeotype(TestCase):
 
         self.assertIsInstance(z, Zeotype)
         self.assertIs(z, z.parent_zeotype)
-        self.assertDictEqual(cha_site_dict, z.site_to_atom_indices)
+        self.assertDictEqual(cha_site_dict, z._site_to_atom_indices)
 
     def test_build_from_cif_with_labels(self):  # TODO: Write test case for building from CIF file (use rel path)
         abs_path = '/Users/dda/Code/MAZE-sim/tests/data/CHA.cif'
@@ -128,7 +128,7 @@ class TestZeotype(TestCase):
         z = Zeotype.build_from_cif_with_labels(abs_path)
         self.assertIsInstance(z, Zeotype)
         self.assertIs(z, z.parent_zeotype)
-        self.assertDictEqual(cha_site_dict, z.site_to_atom_indices)
+        self.assertDictEqual(cha_site_dict, z._site_to_atom_indices)
 
     # other methods
 
@@ -136,7 +136,7 @@ class TestZeotype(TestCase):
         all_symbols = ase.data.chemical_symbols
         atoms_to_exclude = ['H', 'O', 'Ca', 'He']
         with self.subTest(msg='All but these four'):
-            available_syms = Zeotype.get_available_symbols(atoms_to_exclude)
+            available_syms = Zeotype._get_available_symbols(atoms_to_exclude)
             self.assertEqual(len(available_syms), len(all_symbols) - len(atoms_to_exclude))
             for sym in atoms_to_exclude:
                 self.assertNotIn(sym, available_syms)

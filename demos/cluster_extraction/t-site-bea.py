@@ -9,7 +9,7 @@ def main():
     open_defect = OpenDefect(zeolite)
 
     unique_t_site_indices = {}
-    for key, value in zeolite.site_to_atom_indices.items():
+    for key, value in zeolite._site_to_atom_indices.items():
         if 'T' in key:
             unique_t_site_indices[key] = value[1]
     unique_t_site_to_od = defaultdict(list)
