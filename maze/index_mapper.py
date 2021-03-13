@@ -183,6 +183,7 @@ class IndexMapper:
         :return: index deleted
         :rtype: int
         """
+
         name_to_main_dict = self._reverse_main_index(name)
         name_indices = list(name_to_main_dict.keys())
         name_indices.sort()
