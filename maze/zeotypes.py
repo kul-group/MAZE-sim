@@ -14,7 +14,6 @@ from packaging.version import parse as parse_version
 import pkg_resources
 from maze.adsorbate import Adsorbate
 from maze.index_mapper import IndexMapper
-from maze.silanol import Silanol
 from maze.cif_download import download_cif
 
 
@@ -31,7 +30,7 @@ class Zeotype(Atoms):
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
-                 additions=None, _is_zeotype=True):
+                 additions=None, _is_zeotype=True, name=None):
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms, charges, scaled_positions,
                          cell, pbc, celldisp, constraint, calculator, info, velocities)
@@ -54,11 +53,14 @@ class Zeotype(Atoms):
                 self._site_to_atom_indices = None
                 self._atom_indices_to_site = None
                 self.index_mapper = symbols.index_mapper
-                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                if name is None:
+                    self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                else:
+                    self.name = self.index_mapper.get_unique_name(name)
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
 
         else:  # if symbols is not a Zeotype or Zeotype child class
-            if _is_zeotype:  # if Zeotype object is being built
+            if _is_zeotype:  # if Zeotype object is being built  # TODO: get rid of _is_zeotype attribute
                 self.name = 'parent'  # must be parent for code to work properly
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
@@ -67,7 +69,11 @@ class Zeotype(Atoms):
                 parent = Zeotype(symbols)
                 self.parent_zeotype = parent
                 self.index_mapper = parent.index_mapper
-                self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                if name is None:
+                    self.name = self.index_mapper.get_unique_name(type(self).__name__)  # use name
+                else:
+                    self.name = self.index_mapper.get_unique_name(name)
+
                 self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
             self._site_to_atom_indices = site_to_atom_indices
@@ -352,32 +358,6 @@ class Zeotype(Atoms):
             indices[element].append(i)
             count[element] += 1
         return indices, count  # TODO: Combine with count_elements method
-
-    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> \
-            Tuple["Cluster", "OpenDefect"]:
-        """
-        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
-        is given by the size parameter.
-
-        :param cluster_indices: Indices of cluster to make
-        :param max_size: max size of cluster
-        :param index: index of the central atom in the cluster
-        :param max_neighbors: number of neighbors from the host atom in the final cluster
-        :return: index of the cluster in the MAZE-sim cluster array
-        """
-        if cluster_indices is None:
-            cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
-
-        new_cluster = Cluster(self)
-        indices_to_delete = self.get_indices_compliment(self, cluster_indices)
-        new_cluster = new_cluster.delete_atoms(indices_to_delete)
-        od = OpenDefect.build_from_indices(self, cluster_indices)
-        # iz = self.get_imperfect_zeolite()
-        # iz.delete_atoms(cluster_indices)
-        # self.clusters.append(new_cluster)
-        return new_cluster, od
-
-
 
     @staticmethod
     def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
@@ -928,6 +908,30 @@ class ImperfectZeotype(Zeotype):
         direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
+
+    def get_cluster(self, index: int = 0, max_size: int = 0, max_neighbors: int = 0, cluster_indices=None) -> \
+            Tuple["Cluster", "OpenDefect"]:
+        """
+        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
+        is given by the size parameter.
+
+        :param cluster_indices: Indices of cluster to make
+        :param max_size: max size of cluster
+        :param index: index of the central atom in the cluster
+        :param max_neighbors: number of neighbors from the host atom in the final cluster
+        :return: index of the cluster in the MAZE-sim cluster array
+        """
+        if cluster_indices is None:
+            cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
+
+        new_cluster = Cluster(self)
+        indices_to_delete = self.get_indices_compliment(self, cluster_indices)
+        new_cluster = new_cluster.delete_atoms(indices_to_delete)
+        od = OpenDefect.build_from_indices(self, cluster_indices)
+        # iz = self.get_imperfect_zeolite()
+        # iz.delete_atoms(cluster_indices)
+        # self.clusters.append(new_cluster)
+        return new_cluster, od
 
 
 class OpenDefect(ImperfectZeotype):
