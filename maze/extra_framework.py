@@ -68,8 +68,7 @@ class ExtraFramework(ImperfectZeotype):
 
 class ExtraFrameworkMaker(object):
     def __init__(self, cif_dir):
-        self.zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
-        self.EFzeolite = ImperfectZeotype(self.zeolite)
+        self.EFzeolite = ImperfectZeotype.make(cif_dir)
         self.traj_1Al = []
         self.traj_2Al = []
         self.count = 0
@@ -82,7 +81,7 @@ class ExtraFrameworkMaker(object):
     def get_unique_t_sites(self) -> dict:
         # return a dictionary containing all unique T site names and indices
         unique_t_site_indices = {}
-        for site_name, value in self.zeolite._site_to_atom_indices.items():
+        for site_name, value in self.EFzeolite.site_to_atom_indices.items():
             if 'T' in site_name:
                 unique_t_site_indices[site_name] = value[1]
         return unique_t_site_indices
