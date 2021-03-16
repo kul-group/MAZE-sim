@@ -27,7 +27,7 @@ class TestZeotype(TestCase):
                              masses=None, magmoms=None, charges=None, scaled_positions=None, cell=None,
                              pbc=None, celldisp=None, constraint=None, calculator=None, info=None,
                              velocities=None, silent=True, zeolite_type='friendly',
-                             site_to_atom_indices={'T1': 0}, atom_indices_to_site={0: 'T1'}, name='good_friend')
+                             site_to_atom_indices={'T1': 0}, atom_indices_to_site={0: 'T1'}, ztype='good_friend')
         # TODO: Add in reasonable numbers, tags, momenta, ect.
         # tests inheritance
         self.assertIsInstance(my_zeotype, Zeotype)

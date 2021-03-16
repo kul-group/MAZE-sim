@@ -5,7 +5,8 @@ from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
 import maze.zeotypes
-from maze.zeotypes import Zeotype, ImperfectZeotype
+from maze.zeotypes import ImperfectZeotype
+from maze.perfect_zeotype import Zeotype
 import ase
 import warnings
 

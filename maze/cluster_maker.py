@@ -20,31 +20,29 @@ class ClusterMaker(ABC):
     @staticmethod
     def get_open_defect(zeotype: Zeotype, indices: Iterable[int], name="Open Defect"):
         new_od = ImperfectZeotype(zeotype, ztype=name)
-        new_od = new_od.delete_atoms(indices_to_delete)
+        new_od = new_od.delete_atoms(indices)
         return new_od
 
 
 class DefaultClusterMaker(ClusterMaker):
     def __init__(self):
-        # note you can change this function to be whatever you want
-        self.get_cluster_indices = self.get_oh_cluster_indices
+        pass
 
     def get_cluster_indices(self, zeotype: Zeotype, start_site: int, **kwargs):
         return self.get_cluster_indices(zeotype, start_site)
 
-    @staticmethod
-    def get_oh_cluster_multi_t_sites(zeolite: Zeotype, t_sites: Iterable[int]) -> List[int]:
+    @classmethod
+    def get_oh_cluster_multi_t_sites(cls, zeolite: Zeotype, t_sites: Iterable[int]) -> List[int]:
         """
         get an OH cluster with multiple T sites
         :param zeolite: The MAZE-sim from which to extract the cluster
         :param t_sites: the central t site
         :return: A list of indices of the cluster
         """
-        all_indces = set()
+        all_indices = set()
         for t_site in t_sites:
-            all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
-
-        return list(all_indces)
+            all_indices.update(cls.get_oh_cluster_indices(zeolite, t_site))
+        return list(all_indices)
 
     @staticmethod
     def get_oh_cluster_indices(zeolite: Zeotype, t_site: int) -> List[int]:

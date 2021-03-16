@@ -1,7 +1,7 @@
 import copy
 import glob
 from ase.io import read, write
-from maze.zeotypes import Zeotype
+from maze.perfect_zeotype import Zeotype
 import os
 from pathlib import Path
 import json
