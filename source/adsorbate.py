@@ -305,7 +305,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from ase.build import molecule
 
-    iz = ImpefectZeotype.make('BEA')
+    iz = ImperfectZeotype.make('BEA')
     iz[186].symbol = 'Sn'
 
     # Test 1
