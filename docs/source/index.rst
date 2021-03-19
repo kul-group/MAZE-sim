@@ -18,6 +18,7 @@ This project aims to extend ASE to more naturally represent the properties of ze
    key_classes
    source
    modules
+   adsorbate
    :caption: Contents:
 
 
