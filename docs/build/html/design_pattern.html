@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MAZE Index Mapper &mdash; MAZE 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MAZE Key Classes" href="key_classes.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MAZE
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MAZE Index Mapper</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-index-mapper-solution">The Index Mapper Solution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-delete-atoms-method">The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MAZE</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>MAZE Index Mapper</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/design_pattern.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="maze-index-mapper">
+<h1>MAZE Index Mapper<a class="headerlink" href="#maze-index-mapper" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<p>The following documentation frequently references ASE’s Atoms object, ASE’s Atom object and the individual atoms within ASE’s Atoms objects. Since this can get confusing, clarity the following definitions are provided for clarity:</p>
+<ul class="simple">
+<li><p>ase: short for the atomic simulation environment, which is what the MAZE package is based off of.</p></li>
+<li><p>ase.Atoms class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> in the ase package.</p></li>
+<li><p>ase.Atom class: Refers to the class definition of <code class="docutils literal notranslate"><span class="pre">Atom</span></code> in the ase package.</p></li>
+<li><p>ase.Atoms object: Refers to an instance of the class <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code>.</p></li>
+<li><p>ase.Atom object: Refers to an instance of the class <code class="docutils literal notranslate"><span class="pre">ase.Atom</span></code>.</p></li>
+<li><p>atoms: (lowercase) refers to the atoms represented by an <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> object or a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object.</p></li>
+</ul>
+</div>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p>The class <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits from the atomic simulation environment (ase)’s Atoms class. It also adds additional features which make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code’s design decisions.</p>
+<p>One feature of the ase.Atoms class is that an instance of the class stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.</p>
+<p>An example of this problematic behavior occurs when square brackets are used to access a specific Atom object from an Atoms object (i.e. <code class="docutils literal notranslate"><span class="pre">first_atom</span> <span class="pre">=</span> <span class="pre">co[0]</span></code>). Every time this operation is performed, a new Atom object is created. A demonstration is shown below:</p>
+<p>First we create a simple Atoms object.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mf">1.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span>
+<span class="go">Atoms(symbols=&#39;CO&#39;, pbc=False)</span>
+</pre></div>
+</div>
+<p>Next, we use the <code class="docutils literal notranslate"><span class="pre">[index]</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>) operation to get the first atom from the co Atoms object. We then print the ID of the <code class="docutils literal notranslate"><span class="pre">first_atom</span></code> object.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">first_atom</span><span class="p">)</span>
+<span class="go">Atom(&#39;C&#39;, [0.0, 0.0, 0.0], index=0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span><span class="p">(</span><span class="n">first_atom</span><span class="p">)</span>
+<span class="go">140571043655264</span>
+</pre></div>
+</div>
+<p>After performing this operation again, and checking the ID of <code class="docutils literal notranslate"><span class="pre">first_atom_2</span></code> we notice that <code class="docutils literal notranslate"><span class="pre">first_atom</span></code> and <code class="docutils literal notranslate"><span class="pre">first_atom_2</span></code> have different IDs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom_2</span> <span class="o">=</span> <span class="n">co</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">first_atom_2</span><span class="p">)</span>
+<span class="go">Atom(&#39;C&#39;, [0.0, 0.0, 0.0], index=0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">id</span><span class="p">(</span><span class="n">first_atom_2</span><span class="p">)</span>
+<span class="go">140571043655424</span>
+</pre></div>
+</div>
+<p>This behavior is unintuitive because if <code class="docutils literal notranslate"><span class="pre">co</span></code> was a numpy array filled with objects, then both <code class="docutils literal notranslate"><span class="pre">first_atom</span></code> and <code class="docutils literal notranslate"><span class="pre">first_atom_2</span></code> would point towards the same object and <code class="docutils literal notranslate"><span class="pre">id(first_atom)</span> <span class="pre">==</span> <span class="pre">id(first_atom_2)</span></code>. The reason for this strange behavior is that every time the <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> operation is performed a new Atom object is created, and thus the ID’s of the two Atom objects are different.</p>
+<p>We can check equality between objects in two different ways. One is with the <code class="docutils literal notranslate"><span class="pre">is</span></code> operation, which checks to see if the variables reference the same object. The other is with the <code class="docutils literal notranslate"><span class="pre">==</span></code> operation, which uses the <code class="docutils literal notranslate"><span class="pre">__eq__</span></code> method defined in the left class to check equality. If we use the <code class="docutils literal notranslate"><span class="pre">is</span></code> operation on our two Atom objects, we get <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="ow">is</span> <span class="n">first_atom_2</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>We already knew that <code class="docutils literal notranslate"><span class="pre">id(first_atom)</span> <span class="pre">!=</span> <span class="pre">id(first_atom_2)</span></code> , so this result isn’t surprising. However, the result of the <code class="docutils literal notranslate"><span class="pre">==</span></code> operation is surprising.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">first_atom</span> <span class="o">==</span> <span class="n">first_atom_2</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Even though <code class="docutils literal notranslate"><span class="pre">first_atom</span></code> and <code class="docutils literal notranslate"><span class="pre">first_atom_2</span></code> came from the same Atoms object and share the same values for all of their properties, the <code class="docutils literal notranslate"><span class="pre">==</span></code> operation returns <code class="docutils literal notranslate"><span class="pre">False</span></code>! This is more unexpected behavior.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> operation can be used to select a subset of the parent Atoms object. If a list of indices is pasted in, the same equality behavior is encountered:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mf">1.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co2</span> <span class="o">=</span> <span class="n">Atoms</span><span class="p">(</span><span class="s1">&#39;CO&#39;</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="p">[(</span><span class="o">-</span><span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">d</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+<span class="go">Atoms(symbols=&#39;CO2&#39;, pbc=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span> <span class="o">=</span> <span class="n">co2</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span>
+<span class="go">Atoms(symbols=&#39;CO&#39;, pbc=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">co</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">co2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The above example demonstrated some unusual behavior, now we will examine why this is an issue. Let’s take a look at a typical Zeolite simulation workflow:</p>
+<ol class="arabic">
+<li><p>Load a Zeolite cif file into an Atoms object</p></li>
+<li><p>Identify the T sites in that Atoms object</p></li>
+<li><p>For each unique T site:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Create a new Atoms object consisting of a T site and the Atoms adjacent to the T site (e.g. a 5T cluster)</p></li>
+<li><p>Remove an Si atom from the new Atoms object</p></li>
+<li><p>Optimize the structure of the new Atoms object</p></li>
+<li><p>Integrate the optimized structure back into the original Zeolite Atoms object</p></li>
+<li><p>Save the altered Zeolite object as a .traj file with a unique name</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+<p>Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the <code class="docutils literal notranslate"><span class="pre">Zeolite.build_from_cif_with_labels</span></code> method, which reads a <code class="docutils literal notranslate"><span class="pre">cif</span></code> file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.</p>
+<p>In the sub-steps of part 3, the problem with “on-the-fly” object creation emerges. Part a,b c are can be completed with the base ASE package. However, part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping problem with the use of a custom Index Mapper.</p>
+</div>
+<div class="section" id="the-index-mapper-solution">
+<h2>The Index Mapper Solution<a class="headerlink" href="#the-index-mapper-solution" title="Permalink to this headline">¶</a></h2>
+<p>Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. MAZE solves the identity storage problem by creating an <code class="docutils literal notranslate"><span class="pre">IndexMapper</span></code> object, which is a table that stores the mapping between indices of a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object and all <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> objects derived from the parent <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>. The IndexMapper.main_index can be thought of as a table that looks like this:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 20%" />
+<col style="width: 43%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>main</p></th>
+<th class="head"><p>parent</p></th>
+<th class="head"><p>ImperfectZeotype1</p></th>
+<th class="head"><p>Cluster2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-even"><td><p>100</p></td>
+<td><p>None</p></td>
+<td><p>99</p></td>
+<td><p>None</p></td>
+</tr>
+</tbody>
+</table>
+<p>The implementation of the <code class="docutils literal notranslate"><span class="pre">IndexMapper.main_index</span></code> is a dictionary of dictionaries, where the keys for the parent dictionary are the main indices, and the keys for the sub-dictionaries are the names of the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolites</span></code>. The values of the sub-dictionaries are the indices of the parent. For example, the above table would be represented as the following nested dictionary:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
+1: {‘parent’:1, ‘ImperfectZeotype1’:1, ‘Cluster2’:None},
+2: {‘parent’:2, ‘ImperfectZeotype1’:2, ‘Cluster2’:None},
+….
+100: {‘parent’: None, ‘ImperfectZeotype1’:99, ‘Cluster2’:None}}
+</pre></div>
+</div>
+<p>To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object. When atoms are added or removed from the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> and <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> methods of the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> class return new <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code>.</p>
+<p>Note that when Python’s garbage collector deletes an ImperfectZeolite object, the object is deregistered from the <code class="docutils literal notranslate"><span class="pre">main_index</span></code> table.</p>
+<p>The additional functionality of the Zeolite code builds on the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method. The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is described in detail in the following section.</p>
+</div>
+<div class="section" id="the-delete-atoms-method">
+<h2>The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> Method<a class="headerlink" href="#the-delete-atoms-method" title="Permalink to this headline">¶</a></h2>
+<p>The delete_atoms method returns a copy of the original <code class="docutils literal notranslate"><span class="pre">ImpefectZeolite</span></code> with the specified atoms deleted. An example of the delete method is shown below:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import maze
+&gt;&gt;&gt; from maze.zeotypes import Zeotype
+&gt;&gt;&gt; from maze.cif_download import download_cif
+&gt;&gt;&gt; download_cif<span class="o">(</span><span class="s1">&#39;BEA&#39;</span>, <span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="o">)</span> <span class="c1"># Download BEA.cif</span>
+&gt;&gt;&gt; <span class="nv">my_zeolite</span> <span class="o">=</span> Zeotype.build_from_cif_with_labels<span class="o">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="o">)</span>  <span class="c1"># build zeolite code</span>
+&gt;&gt;&gt; <span class="nv">my_iz</span> <span class="o">=</span> my_zeolite.get_imperfect_zeotype<span class="o">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+&gt;&gt;&gt; <span class="nv">atom_indices_to_delete</span> <span class="o">=</span> <span class="o">[</span>i <span class="k">for</span> i in range<span class="o">(</span><span class="m">0</span>, <span class="m">50</span><span class="o">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+&gt;&gt;&gt; <span class="nv">my_new_iz</span> <span class="o">=</span> my_iz.delete_atoms<span class="o">(</span>atom_indices_to_delete<span class="o">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
+&gt;&gt;&gt; print<span class="o">(</span><span class="s1">&#39;my_iz has&#39;</span>, len<span class="o">(</span>my_iz<span class="o">)</span>, <span class="s1">&#39;atoms in it&#39;</span><span class="o">)</span>
+ my_iz has <span class="m">192</span> atoms in it
+&gt;&gt;&gt; print<span class="o">(</span><span class="s1">&#39;my_new_iz has&#39;</span>, len<span class="o">(</span>my_new_iz<span class="o">)</span>, <span class="s1">&#39;atoms in it&#39;</span><span class="o">)</span>
+ my_new_iz has <span class="m">142</span> atoms in it
+</pre></div>
+</div>
+<dl>
+<dt>The</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;BEA&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># Download BEA.cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="p">)</span>  <span class="c1"># build zeolite code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_iz</span> <span class="o">=</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">get_imperfect_zeotype</span><span class="p">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atom_indices_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_new_iz</span> <span class="o">=</span> <span class="n">my_iz</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">atom_indices_to_delete</span><span class="p">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_iz has 192 atoms in it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_new_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_new_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_new_iz has 142 atoms in it</span>
+</pre></div>
+</div>
+</dd>
+<dt>The</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;BEA&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># Download BEA.cif</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/BEA.cif&#39;</span><span class="p">)</span>  <span class="c1"># build zeolite code</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_iz</span> <span class="o">=</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">get_imperfect_zeolite</span><span class="p">()</span>  <span class="c1"># get an imperfect zeolite that you can add and remove atoms from</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">atom_indices_to_delete</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_new_iz</span> <span class="o">=</span> <span class="n">my_iz</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">atom_indices_to_delete</span><span class="p">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_iz has 192 atoms in it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;my_new_iz has&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">my_new_iz</span><span class="p">),</span> <span class="s1">&#39;atoms in it&#39;</span><span class="p">)</span>
+<span class="go"> my_new_iz has 142 atoms in it</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>The <code class="docutils literal notranslate"><span class="pre">my_new_iz</span></code> object has 50 less atoms than the original <code class="docutils literal notranslate"><span class="pre">my_iz</span></code> object. At first, this does not appear any different than using the <code class="docutils literal notranslate"><span class="pre">del</span></code> operator on an ase.Atoms object.</p>
+<p>However, there is now a new <code class="docutils literal notranslate"><span class="pre">index_mapper</span></code> object, which shows the relationship between all of the zeolite objects in the program.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># insert script above here</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">index_mapping_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">my_new_iz</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">main_index</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">zeolites</span> <span class="o">=</span> <span class="p">[</span><span class="n">my_zeolite</span><span class="p">,</span> <span class="n">my_iz</span><span class="p">,</span> <span class="n">my_new_iz</span><span class="p">]</span>
+<span class="n">zeolites_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;my_zeolite&#39;</span><span class="p">,</span> <span class="s1">&#39;my_iz&#39;</span><span class="p">,</span> <span class="s1">&#39;my_new_iz&#39;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">zeolites_names</span><span class="p">,</span> <span class="n">zeolites</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.name&#39;</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DATAFRAME&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">index_mapping_dataframe</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>output</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span> my_zeolite.name parent
+ my_iz.name ImperfectZeotype_1
+ my_new_iz.name ImperfectZeotype_2
+ <span class="nv">DATAFRAME</span>
+<span class="o">========</span>  <span class="o">====================</span>  <span class="o">====================</span>
+parent    ImperfectZeotype_1    <span class="nv">ImperfectZeotype_2</span>
+<span class="o">========</span>  <span class="o">====================</span>  <span class="o">====================</span>
+<span class="m">0</span>         <span class="m">0</span>                     NaN
+<span class="m">1</span>         <span class="m">1</span>                     NaN
+<span class="m">2</span>         <span class="m">2</span>                     <span class="m">2</span>
+<span class="m">3</span>         <span class="m">3</span>                     <span class="m">3</span>
+<span class="m">4</span>         <span class="m">4</span>                     <span class="m">4</span>
+...       ...                   ...
+<span class="m">187</span>       <span class="m">187</span>                   <span class="m">137</span>
+<span class="m">188</span>       <span class="m">188</span>                   <span class="m">138</span>
+<span class="m">189</span>       <span class="m">189</span>                   <span class="m">139</span>
+<span class="m">190</span>       <span class="m">190</span>                   <span class="m">140</span>
+<span class="m">191</span>       <span class="m">191</span>                   <span class="nv">141</span>
+<span class="o">========</span>  <span class="o">====================</span>  <span class="o">====================</span>
+</pre></div>
+</div>
+<p>With this mapping, we can alter the Imperfect Zeolite with fewer atoms and then integrate it back into the larger Zeolite.</p>
+<p>To offer further insight into how the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method works, let’s examine the source code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">delete_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices_to_delete</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ImperfectZeotype&#39;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Delete atoms from imperfect zeotype by returning a copy with atoms deleted</span>
+
+<span class="sd">    :param indices_to_delete: Indices of atoms in current zeotype to delete</span>
+<span class="sd">    :return: a copy of self with atoms deleted</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">new_self_a</span><span class="p">[</span><span class="n">indices_to_delete</span><span class="p">]</span>
+    <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_self_a</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">set_attrs_source</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+    <span class="n">old_to_new_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_self</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">old_to_new_map</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_self</span>
+</pre></div>
+</div>
+<p>We will now go through this line-by-line. The first line uses <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initialization method to build an Atoms object that contains all of the atoms of the imperfect zeolite being operated on, but none of the additional information encoded in the imperfect zeolite object. The point of this step is to create a simple copy of <code class="docutils literal notranslate"><span class="pre">self</span></code>, without all of the complexities added by the <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> object. The <code class="docutils literal notranslate"><span class="pre">ase.Atoms</span></code> initialization method is analogous to <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> in that there is no shared information between <code class="docutils literal notranslate"><span class="pre">self</span></code> and <code class="docutils literal notranslate"><span class="pre">new_self_a</span></code>.</p>
+<p>The next line deletes the atoms using the <code class="docutils literal notranslate"><span class="pre">del</span></code> operation on the new_self_a object. The side effects of this operation are contained to the <code class="docutils literal notranslate"><span class="pre">new_self_a</span> <span class="pre">object</span></code>. After the <code class="docutils literal notranslate"><span class="pre">del</span></code> operation, a <code class="docutils literal notranslate"><span class="pre">new_self</span></code> is built using the <code class="docutils literal notranslate"><span class="pre">self.__class__</span></code> method. This is used so that a subclass will return another copy of itself rather than an <code class="docutils literal notranslate"><span class="pre">ImperfectZeolite</span></code> object.</p>
+<p>After <code class="docutils literal notranslate"><span class="pre">new_self</span></code> is created its attributes are set to that of its source. It is important that <code class="docutils literal notranslate"><span class="pre">new_self</span></code> share the same <code class="docutils literal notranslate"><span class="pre">index_mapper</span></code> and <code class="docutils literal notranslate"><span class="pre">parent_zeotype</span></code> as its source. The one attribute difference will be its name, which is uniquely set during initialization.</p>
+<p>Now comes the registration. First an <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is created which maps the indices in <code class="docutils literal notranslate"><span class="pre">self</span></code> to those in <code class="docutils literal notranslate"><span class="pre">new_self</span></code>. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is used in conjunction with the <code class="docutils literal notranslate"><span class="pre">self.index_mapper.register</span></code> method to add another column to the table corresponding to the <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object. After registration, this <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object is finally returned.</p>
+<p>This <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is used in the initialization of <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> and <code class="docutils literal notranslate"><span class="pre">OpenDefect</span></code> objects.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
+<p>Hopefully this guide on the Index Mapper Design pattern was useful. For more details read through the corresponding source code.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="key_classes.html" class="btn btn-neutral float-right" title="MAZE Key Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Dexter Antonio, Sam Holton
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
