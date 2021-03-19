@@ -55,7 +55,7 @@ class Zeotype(Atoms):
                     self.ztype = symbols.ztype if symbols.ztype != 'parent' and symbols.ztype else type(self).__name__
                 else:
                     self.ztype = ztype
-                self.name = self.index_mapper.get_unique_name(ztype)
+                self.name = self.index_mapper.get_unique_name(self.ztype)
                 self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
 
         else:  # if symbols is not a Zeotype or Zeotype child class

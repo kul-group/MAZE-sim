@@ -9,7 +9,7 @@ from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from maze.adsorbate import Adsorbate
 from maze.perfect_zeotype import Zeotype
-from maze.cluster_maker import DefaultClusterMaker
+#from maze.cluster_maker import DefaultClusterMaker
 
 class ImperfectZeotype(Zeotype):
     """
@@ -30,9 +30,9 @@ class ImperfectZeotype(Zeotype):
 
         # handle cluster maker
         if isinstance(symbols, self.__class__) and cluster_maker is None:
-            self.cluster_maker = symbols.cluster_maker
+            self.cluster_maker = copy.deepcopy(symbols.cluster_maker)
         elif cluster_maker is None:
-            self.cluster_maker = DefaultClusterMaker
+            self.cluster_maker = DefaultClusterMaker()
         else:
             self.cluster_maker = cluster_maker
 
@@ -476,74 +476,59 @@ class ImperfectZeotype(Zeotype):
         :return: index of the cluster in the MAZE-sim cluster array
         """
         if cluster_indices is None:
-            cluster_indices = Cluster.get_cluster_indices(self, index, max_size, max_neighbors)
+            self_2 = self
+            cluster_indices = self.cluster_maker.get_cluster_indices(self_2, start_index, **kwargs)
 
-        new_cluster = Cluster(self)
-        indices_to_delete = self.get_indices_compliment(self, cluster_indices)
-        new_cluster = new_cluster.delete_atoms(indices_to_delete)
-        od = OpenDefect.build_from_indices(self, cluster_indices)
-        # iz = self.get_imperfect_zeolite()
-        # iz.delete_atoms(cluster_indices)
-        # self.clusters.append(new_cluster)
-        return new_cluster, od
+        cluster = self.cluster_maker.get_cluster(self, cluster_indices)
+        open_defect = self.cluster_maker.get_open_defect(self, cluster_indices)
+        return cluster, open_defect
 
 
-class OpenDefect(ImperfectZeotype):
-    def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
-                 charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
-                 additions=None):
-        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
-                         charges, scaled_positions, cell, pbc, celldisp, constraint,
-                         calculator, info, velocities, site_to_atom_indices,
-                         atom_indices_to_site, additions)
-
-    @classmethod
-    def build_from_indices(cls, parent_zeotype: Zeotype, indices_to_delete: Iterable[int]) -> 'OpenDefect':
-        new_od = cls(parent_zeotype)
-        new_od.set_attrs_source(new_od, parent_zeotype)
-
-        old_to_new_map = Zeotype._get_old_to_new_map(parent_zeotype, new_od)
-        new_od.index_mapper.add_name(new_od.name, parent_zeotype.name, old_to_new_map)
-        new_od = new_od.delete_atoms(indices_to_delete)
-        return new_od
+from abc import ABC
+from maze.perfect_zeotype import Zeotype
+from maze.zeotypes import ImperfectZeotype
+from typing import Iterable
+from ase.neighborlist import natural_cutoffs, NeighborList
+from typing import List
 
 
-class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
-
-    def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
-                 charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
-                 calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
-                 additions=None):
-
-        super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
-                         charges, scaled_positions, cell, pbc, celldisp, constraint,
-                         calculator, info, velocities, site_to_atom_indices,
-                         atom_indices_to_site, additions)
+class ClusterMaker(ABC):
+    def get_cluster_indices(self, zeotype: Zeotype, start_site: int, **kwargs):
+        raise NotImplementedError
 
     @staticmethod
-    def build_from_zeolite(parent_zeotype: Zeotype, index: int, max_cluster_size: int, max_neighbors: int,
-                           cluster_indices: Iterable[int] = None) -> "Cluster":
-        if cluster_indices is None:
-            cluster_indices = Cluster.get_cluster_indices(parent_zeotype, index, max_cluster_size, max_neighbors)
-        cluster = Cluster(parent_zeotype)
-        to_delete = cluster.get_indices_compliment(cluster, cluster_indices)
+    def get_cluster(zeotype: Zeotype, indices: Iterable[int], name="Cluster"):
+        cluster = ImperfectZeotype(zeotype, ztype=name)
+        to_delete = cluster.get_indices_compliment(cluster, indices)
         cluster = cluster.delete_atoms(to_delete)
         return cluster
 
     @staticmethod
-    def get_oh_cluster_multi_t_sites(zeolite: Zeotype, t_sites: int) -> List[int]:
+    def get_open_defect(zeotype: Zeotype, indices: Iterable[int], name="Open Defect"):
+        new_od = ImperfectZeotype(zeotype, ztype=name)
+        new_od = new_od.delete_atoms(indices)
+        return new_od
+
+
+class DefaultClusterMaker(ClusterMaker):
+    def __init__(self):
+        pass
+
+    def get_cluster_indices(self, zeotype: Zeotype, start_site: int, **kwargs):
+        return self.get_oh_cluster_indices(zeotype, start_site)
+
+    @classmethod
+    def get_oh_cluster_multi_t_sites(cls, zeolite: Zeotype, t_sites: Iterable[int]) -> List[int]:
         """
         get an OH cluster with multiple T sites
         :param zeolite: The MAZE-sim from which to extract the cluster
         :param t_sites: the central t site
         :return: A list of indices of the cluster
         """
-        all_indces = set()
+        all_indices = set()
         for t_site in t_sites:
-            all_indces.update(Cluster.get_oh_cluster_indices(zeolite, t_site))
-
-        return list(all_indces)
+            all_indices.update(cls.get_oh_cluster_indices(zeolite, t_site))
+        return list(all_indices)
 
     @staticmethod
     def get_oh_cluster_indices(zeolite: Zeotype, t_site: int) -> List[int]:
@@ -559,7 +544,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
         nl.update(zeolite)
 
-        all_indices = set([t_site])
+        all_indices = {t_site}
         oxygen_indices = set()
         for index in nl.get_neighbors(t_site)[0]:
             if zeolite[index].symbol == "O":
@@ -581,7 +566,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         return list(all_indices)
 
     @staticmethod
-    def get_cluster_indices(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
+    def get_cluster_indices_all_atoms(zeolite, index: int, max_size: int, max_neighbors: int) -> List[int]:
         """
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
@@ -604,7 +589,7 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         #
         nl.update(zeolite)
         cluster_indices = set()
-        new_cluster_indices = set([index])
+        new_cluster_indices = {index}
 
         for _ in range(max_neighbors):
             current_cluster_indices = set()
@@ -625,6 +610,8 @@ class Cluster(ImperfectZeotype):  # TODO include dynamic inheritance and
         get the indices of a cluster from a zeolite when specifying the
         center atom index and size of the cluster
 
+        :param T_indices: Indices of the T site
+        :type T_indices: Iterable[int]
         :param zeolite: the zeolite from which to build the cluster
         :param index: the centeral atom index
         :param max_size: the max number of atoms in the final cluster
