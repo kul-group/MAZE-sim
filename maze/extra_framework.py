@@ -66,63 +66,81 @@ class ExtraFramework(ImperfectZeotype):
 '''
 
 
-class ExtraFrameworkMaker(object):
-    def __init__(self, cif_dir):
+class ExtraFramework(object):
+    def __init__(self, cif_dir=None):
         self.EFzeolite = ImperfectZeotype.make(cif_dir)
+        self.dict_t_sites_1Al_replaced = {}
         self.traj_1Al = []
         self.traj_2Al = []
-        self.count = 0
+        self.count_all_Al_pairs = 0
 
+    ## need correction
     def make_extra_frameworks(self):
-        self.create_1Al_replacements()
-        self.create_2Al_replacements()
+        self.replace_1Al()
+        self.replace_2Al_unique_pairs()
         # add in Cu here
 
-    def get_unique_t_sites(self) -> dict:
-        # return a dictionary containing all unique T site names and indices
-        unique_t_site_indices = {}
+    def get_t_sites(self) -> dict:
+        # get all unique T sites and corresponding atom indices
+        t_site_indices = {}
         for site_name, value in self.EFzeolite.site_to_atom_indices.items():
             if 'T' in site_name:
-                unique_t_site_indices[site_name] = value[1]
-        return unique_t_site_indices
+                t_site_indices[site_name] = value
+        return t_site_indices
 
-    def create_1Al_replacements(self):
-        # create structures with 1 Al replacement for all unique T sites
-        unique_t_site_indices = self.get_unique_t_sites()
-        for site_name, t_site in unique_t_site_indices.items():
-            position = self.EFzeolite.get_positions()[t_site]
-            new_zeolite = self.EFzeolite.delete_atoms([t_site])
-            new_zeolite = new_zeolite.add_atoms(Atoms('Al', positions=[position]), 'Al')
-            self.traj_1Al.append(new_zeolite)
+    def replace_1Al(self):
+        # create a dictionary of trajectories for each unique t sites
+        t_site_indices = self.get_t_sites()
+        for site_name, t_site in t_site_indices.items():
+            traj_t_sites = []
+            for index in t_site:
+                pos = self.EFzeolite.get_positions()[index]
+                new_zeo = self.EFzeolite.delete_atoms([index])
+                new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
+                self.traj_1Al.append(new_zeo)
+                traj_t_sites.append(new_zeo)
+            self.dict_t_sites_1Al_replaced[site_name] = traj_t_sites
 
-    def create_2Al_replacements(self):
-        # make the second Al replacement
+    def replace_2Al_unique_pairs(self, cutoff_radius=9):
+        # make the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since even though energy
+        # might be the same, the geometric properties, such as, Al-Al distance, are different)
+        count = 0
+        traj_2Al_replacement = []
         done_indices = []
-        for atoms in self.traj_1Al:
-            ini_atoms = atoms
-            index_Al = [a.index for a in atoms if a.symbol == 'Al']
 
+        for zeolite in self.traj_1Al:
+            atoms = ImperfectZeotype(zeolite)  # already have neighbor_list
+            ini_atoms = copy.deepcopy(atoms)
+            index_Al = [a.index for a in atoms if a.symbol == 'Al']
+            '''
             # skip process if there are already 2 Al replacement
             if len(index_Al) != 1:
                 print('Error: No more than 1 Al in the structure.')
                 atoms[index_Al[len(index_Al) - 1]].symbol = 'Si'
                 index_Al = [a.index for a in atoms if a.symbol == 'Al']
+            '''
+            neighboring_Si = []
+            neigh_o_indices, offsets = atoms.neighbor_list.get_neighbors(index_Al[0])
+            for each_neigh_o_index in neigh_o_indices:
+                neigh_si_indices, offsets = atoms.neighbor_list.get_neighbors(each_neigh_o_index)
+                for each_neigh_si_index in neigh_si_indices:
+                    if each_neigh_si_index != index_Al[0]:
+                        neighboring_Si.append(each_neigh_si_index)
 
-            T_index = [a.index for a in atoms if a.symbol in ['Al', 'Si']]
-            for index in range(len(T_index)):
-                # atoms = copy.deepcopy(ini_atoms)
-                indices, offsets = atoms.neighbor_list.get_neighbors(T_index[index])
-                if len(indices) != 4:
-                    continue
-                else:
-                    if T_index[index] != index_Al and [T_index[index], index_Al] not in done_indices:
-                        if 3.3 < atoms.get_distance(index_Al, T_index[index]) < 9.0:
-                            new_atoms = copy.copy(atoms)
-                            new_atoms[T_index[index]].symbol = 'Al'
-                            self.traj_2Al.append(new_atoms)
-                            self.count += 1
-                            done_indices.append([index_Al, T_index[index]])
-                            done_indices.append([T_index[index], index_Al])
+            if len(neighboring_Si) != 4:
+                continue
+            else:
+                Si_index = [a.index for a in atoms if a.symbol in ['Si']]
+                for index in Si_index:
+                    if index not in neighboring_Si and [index, index_Al] not in done_indices:
+                        # first condition is the Lowenstein's rule
+                        if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
+                            atoms = copy.deepcopy(ini_atoms)
+                            atoms[index].symbol = 'Al'
+                            self.traj_2Al.append(atoms)
+                            self.count_all_Al_pairs += 1
+                            done_indices.append([index_Al, index])
+                            done_indices.append([index, index_Al])
 
     @staticmethod
     def get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
@@ -133,18 +151,18 @@ class ExtraFrameworkMaker(object):
                 close_framework_atom_positions.append(atoms[count].position)
         return close_framework_atom_positions
 
-    def _get_reference_with_S_in_between_Al_pairs(self, zeotype):
-        Al_index = [a.index for a in zeotype if a.symbol in ['Al']]
-        vec_Al = zeotype.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        mid_Al = vec_Al / 2 + zeotype.get_positions()[Al_index[0]]
-        zeotype = zeotype.add_atoms(Atoms('S', positions=[mid_Al]))
+    def _get_reference_with_S_in_between_Al_pairs(self, atoms):
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        mid_Al = vec_Al / 2 + atoms.get_positions()[Al_index[0]]
+        atoms = atoms + Atoms('S', positions=[mid_Al])
 
-        index_S = [a.index for a in zeotype if a.symbol == 'S'][0]
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
         d_thres = 10.0  # might need to scale it with respect to the zeolite size
 
-        close_framework_atom_positions = self.get_close_framework_atom_positions(index_S, zeotype, d_thres)
+        close_framework_atom_positions = self.get_close_framework_atom_positions(index_S, atoms, d_thres)
         # print(close_framework_atom_positions)
-        zeotype = zeotype.delete_atoms([atom.index for atom in zeotype if atom.symbol == 'S'])  # remove reference point
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]  # remove reference point
 
         max_iter = 100
         num_iter = 0
@@ -172,7 +190,7 @@ class ExtraFrameworkMaker(object):
                 final_pos = trial_pos
                 break
 
-        cell_dimension = np.matmul(np.ones(3), zeotype.get_cell())
+        cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
         mic_constrained_pos = []
         for index, item in enumerate(final_pos):
             if item > cell_dimension[index]:
@@ -181,23 +199,22 @@ class ExtraFrameworkMaker(object):
                 item += cell_dimension[index]
             mic_constrained_pos.append(item)
 
-        zeotype = zeotype.add_atoms(Atoms('S', positions=[mic_constrained_pos]))
-        return zeotype
+        atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
+        return atoms
 
-    def insert_CuOCu(self, zeotype):
-        zeotype = self._get_reference_with_S_in_between_Al_pairs(zeotype)
+    def insert_CuOCu(self, atoms):
+        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
 
-        index_S = [a.index for a in zeotype if a.symbol == 'S'][0]
-        pos_centering_O = zeotype.get_positions()[index_S]
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+        pos_centering_O = atoms.get_positions()[index_S]
 
-        zeotype = zeotype.delete_atoms([atom.index for atom in zeotype if atom.symbol == 'S'])
-        zeotype = zeotype.add_atoms(Atoms('O', positions=[pos_centering_O]))
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+        atoms = atoms + Atoms('O', positions=[pos_centering_O])
         d_CuO = 2
-        Al_index = [a.index for a in zeotype if a.symbol in ['Al']]
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         for count in range(len(Al_index)):
-            dir_Cu = zeotype.get_distance(index_S, Al_index[count], mic=True, vector=True)
+            dir_Cu = atoms.get_distance(index_S, Al_index[count], mic=True, vector=True)
             dir_Cu = dir_Cu / np.linalg.norm(dir_Cu)
             pos_Cu = dir_Cu * d_CuO + pos_centering_O
-            zeotype = zeotype.add_atoms(Atoms('Cu', positions=[pos_Cu]))
-        return zeotype
-
+            atoms = atoms + Atoms('Cu', positions=[pos_Cu])
+        return atoms
