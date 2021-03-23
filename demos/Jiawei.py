@@ -9,77 +9,71 @@ import copy as copy
 from ase.io import write, read
 
 
-def get_unique_t_sites(zeolite):
-    # get all unique T sites
-    unique_t_site_indices = {}
-    indices_only = []
-    for site_name, value in zeolite._site_to_atom_indices.items():
+def get_t_sites(zeolite):
+    # get all unique T sites and corresponding atom indices
+    t_site_indices = {}
+    for site_name, value in zeolite.site_to_atom_indices.items():
         if 'T' in site_name:
-            unique_t_site_indices[site_name] = value[1]
-            indices_only.append(value[1])
-    return unique_t_site_indices
+            t_site_indices[site_name] = value
+    return t_site_indices
 
 
-def create_1Al_replacement(unique_t_site_indices, EFzeolite):
-    # create structures with 1 Al replacement for all unique T sites
-    traj_1Al = []
-    for site_name, t_site in unique_t_site_indices.items():
-        pos = EFzeolite.get_positions()[t_site]
-        new_zeo = EFzeolite.delete_atoms([t_site])
-        new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
-        traj_1Al.append(new_zeo)
-    # view(traj_1Al)
-    return traj_1Al
+def replace_1Al(t_site_indices, EFzeolite):
+    # create a dictionary of trajectories for each unique t sites
+    dict_t_sites_1Al_replaced = {}
+    for site_name, t_site in t_site_indices.items():
+        traj_t_sites = []
+        for index in t_site:
+            pos = EFzeolite.get_positions()[index]
+            new_zeo = EFzeolite.delete_atoms([index])
+            new_zeo = new_zeo + Atoms('Al', positions=[pos])
+            traj_t_sites.append(new_zeo)
+        dict_t_sites_1Al_replaced[site_name] = traj_t_sites
+    return dict_t_sites_1Al_replaced
 
 
-def create_2Al_replacement(zeolite):
-    # make the second Al replacement
-    atoms = ImperfectZeotype(zeolite)  # already have neighbor_list
-    ini_atoms = atoms
-    index_Al = [a.index for a in atoms if a.symbol == 'Al']
-
-    # skip process if there are already 2 Al replacement
-    if len(index_Al) != 1:
-        print('Error: No more than 1 Al in the structure.')
-        atoms[index_Al[len(index_Al) - 1]].symbol = 'Si'
-        index_Al = [a.index for a in atoms if a.symbol == 'Al']
-
+def replace_2Al_unique_pairs(traj_1Al, cutoff_radius=9):
+    # make the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since even though energy
+    # might be the same, the geometric properties, such as, Al-Al distance, are different)
     count = 0
-    done_indices = []
     traj_2Al_replacement = []
-    T_index = [a.index for a in atoms if a.symbol in ['Al', 'Si']]
-    for index in np.arange(len(T_index)):
-        atoms = copy.deepcopy(ini_atoms)
-        indices, offsets = atoms.neighbor_list.get_neighbors(T_index[index])
-        if len(indices) != 4:
+    done_indices = []
+
+    for zeolite in traj_1Al:
+        atoms = ImperfectZeotype(zeolite)  # already have neighbor_list
+        ini_atoms = copy.deepcopy(atoms)
+        index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        '''
+        # skip process if there are already 2 Al replacement
+        if len(index_Al) != 1:
+            print('Error: No more than 1 Al in the structure.')
+            atoms[index_Al[len(index_Al) - 1]].symbol = 'Si'
+            index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        '''
+        neighboring_Si = []
+        neigh_o_indices, offsets = atoms.neighbor_list.get_neighbors(index_Al[0])
+        for each_neigh_o_index in neigh_o_indices:
+            neigh_si_indices, offsets = atoms.neighbor_list.get_neighbors(each_neigh_o_index)
+            for each_neigh_si_index in neigh_si_indices:
+                if each_neigh_si_index != index_Al[0]:
+                    neighboring_Si.append(each_neigh_si_index)
+
+        if len(neighboring_Si) != 4:
             continue
         else:
-            if T_index[index] != index_Al and [T_index[index], index_Al] not in done_indices:
-                if 3.3 < atoms.get_distance(index_Al, T_index[index]) < 9.0:
-                    atoms[T_index[index]].symbol = 'Al'
-                    traj_2Al_replacement.append(atoms)
-                    count = count + 1
-                    done_indices.append([index_Al, T_index[index]])
-                    done_indices.append([T_index[index], index_Al])
+            Si_index = [a.index for a in atoms if a.symbol in ['Si']]
+            for index in Si_index:
+                if index not in neighboring_Si and [index, index_Al] not in done_indices:
+                    # first condition is the Lowenstein's rule
+                    if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
+                        atoms = copy.deepcopy(ini_atoms)
+                        atoms[index].symbol = 'Al'
+                        traj_2Al_replacement.append(atoms)
+                        count += 1
+                        done_indices.append([index_Al, index])
+                        done_indices.append([index, index_Al])
 
     return count, traj_2Al_replacement
-
-
-def main():
-    cif_dir = 'MFI.cif'
-    zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
-    EFzeolite = ImperfectZeotype(zeolite)
-    unique_t_site_indices = get_unique_t_sites(zeolite)
-    # print(indices_only)
-    # print(len(unique_t_site_indices))
-
-    traj_1Al_replacement = create_1Al_replacement(unique_t_site_indices, EFzeolite)
-    # view(traj_1Al_replacement)
-
-    sample_zeolite = traj_1Al_replacement[0]
-    count, traj_2Al_replacement = create_2Al_replacement(sample_zeolite)
-    # view(traj_2Al_replacement)
-    print(count)
 
 
 def get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
@@ -126,13 +120,13 @@ def _get_reference_with_S_in_between_Al_pairs(atoms):
         d_min = min(np.linalg.norm(distance_from_close_atoms, axis=1))
 
         num_iter += 1
-        print(num_iter)
+        # print(num_iter)
         if closest_distance <= d_min <= d_thres:
             final_pos = trial_pos
             break
 
     cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
-    print(cell_dimension)
+    # print(cell_dimension)
     mic_constrained_pos = []
     for index, item in enumerate(final_pos):
         if item > cell_dimension[index]:
@@ -163,13 +157,78 @@ def insert_CuOCu(atoms):
     return atoms
 
 
+def insert_TM(atoms, metal_type):
+    # find metal sites and insert in between Al and reference S atoms (which will be converted to O later)
+    atoms = _get_reference_with_S_in_between_Al_pairs(atoms)
+
+    index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+    pos = atoms.get_positions()[index_S]
+
+    del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+    atoms = atoms + Atoms(metal_type, positions=[pos])
+    return atoms
+
+
+def test_replace_1Al():
+    cif_dir = 'MFI.cif'
+    zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
+    EFzeolite = ImperfectZeotype(zeolite)
+
+    t_site_indices = {}
+    indices_only = []
+    for site_name, value in zeolite.site_to_atom_indices.items():
+        if 'T' in site_name:
+            t_site_indices[site_name] = value
+    print(t_site_indices)
+
+    dict_t_sites_1Al_replaced = {}
+    for site_name, t_site in t_site_indices.items():
+        traj_t_sites = []
+        for index in t_site:
+            pos = EFzeolite.get_positions()[index]
+            new_zeo = EFzeolite.delete_atoms([index])
+            new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
+            traj_t_sites.append(new_zeo)
+        dict_t_sites_1Al_replaced[site_name] = traj_t_sites
+    view(dict_t_sites_1Al_replaced['T4'])
+
+
+def test_replace_2Al():
+    cif_dir = 'MFI.cif'
+    zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
+    EFzeolite = ImperfectZeotype(zeolite)
+
+    t_site_indices = get_t_sites(zeolite)
+    dict_traj_1Al = replace_1Al(t_site_indices, EFzeolite)
+
+    all_traj_1Al = []
+    for site_name, traj_1Al in dict_traj_1Al.items():
+        for atoms in traj_1Al:
+            all_traj_1Al.append(atoms)
+
+    count, all_unique_traj_2Al = replace_2Al_unique_pairs(all_traj_1Al)
+    print(count)
+
+
 def main1():
     traj = read('MFI_2Al_replaced.traj', ':')
-    # view(traj)
-    atoms = traj[0]
-    atoms = insert_CuOCu(atoms)
-    view(atoms)
+    traj_CuOCu = []
+    for atoms in traj:
+        inserted_atoms = insert_CuOCu(atoms)
+        traj_CuOCu.append(inserted_atoms)
+    view(traj_CuOCu)
+
+
+def main2():
+    traj = read('MFI_2Al_replaced.traj', ':')
+    traj_EF = []
+    for atoms in traj:
+        inserted_atoms = insert_TM(atoms, 'Co')
+        traj_EF.append(inserted_atoms)
+    write('MFI_Co.traj', traj_EF)
 
 
 if __name__ == '__main__':
-    main1()
+    # test_replace_1Al()
+    # test_replace_2Al()
+    main2()
