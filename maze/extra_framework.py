@@ -9,7 +9,6 @@ from ase.visualize import view
 import copy as copy
 from ase.io import write, read
 
-
 '''
 #TODO: At some point make a common ABC for the ExtraFrameworkAtoms and Adsorbate
 class ExtraFrameworkAtoms(Atoms):
@@ -157,11 +156,13 @@ class ExtraFramework(object):
                             done_indices.append([index, index_Al])
 
     @staticmethod
-    def get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
-        """
-        :param centering_index:
-        :param atoms:
-        :param radius_cutoff:
+    def _get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
+        """ This function detects all atoms on the input zeolite named "atoms" within certain "radius_cutoff" around the
+        "centering_index" atom, and save all atoms positions into a list.
+        :param centering_index: reference position of the extra-framework cluster to be inserted (currently placed with
+        an S atom)
+        :param atoms: the zeolite backbone
+        :param radius_cutoff: 6 angstrom by default
         :return:
         """
         close_framework_atom_positions = []
@@ -171,27 +172,28 @@ class ExtraFramework(object):
                 close_framework_atom_positions.append(atoms[count].position)
         return close_framework_atom_positions
 
-    def _get_reference_with_S_in_between_Al_pairs(self, atoms):
-        """
-
-        :param atoms:
+    def _get_reference_with_S_in_between_Al_pairs(self, atoms, cluster_radius):
+        """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
+        The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
+        into account from input "cluster_radius".
+        :param atoms: zeolite framework with 2 Al atoms adjacent to each other
+        :param cluster_radius: the approximated cluster radius
         :return:
         """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        mid_Al = vec_Al / 2 + atoms.get_positions()[Al_index[0]]
+        mid_Al = 0.5 * (atoms.get_positions()[Al_index[0]] + atoms.get_positions()[Al_index[1]])
         atoms = atoms + Atoms('S', positions=[mid_Al])
 
+        closest_distance = 1.5 + cluster_radius  # radius of Si atom = 1.5 Ang
+
         index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        d_thres = 10.0  # might need to scale it with respect to the zeolite size
+        d_thres = 6.0  # might need to scale it with respect to the zeolite size
+        close_framework_atom_positions = self._get_close_framework_atom_positions(index_S, atoms, d_thres)
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
 
-        close_framework_atom_positions = self.get_close_framework_atom_positions(index_S, atoms, d_thres)
-        # print(close_framework_atom_positions)
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]  # remove reference point
-
-        max_iter = 100
+        max_iter = 500
         num_iter = 0
-        closest_distance = 1.5  # radius of Si atom = 1.5 Ang
+        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
         u_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
 
         final_pos = []
@@ -199,11 +201,10 @@ class ExtraFramework(object):
         while num_iter <= max_iter:
             rand_vec = np.array([2.0 * np.random.random() - 1 for i in np.arange(3)])
             u_rand = rand_vec / np.linalg.norm(rand_vec)  # random unit vector
-            u_dir = np.cross(u_Al, u_rand) / np.linalg.norm(
-                np.cross(u_Al, u_rand))  # some random vector perpendicular to the Al-Al vector
+            u_dir = np.cross(u_Al, u_rand) / np.linalg.norm(np.cross(u_Al, u_rand))
+            # some random vector perpendicular to the Al-Al vector
             u_dir = int(2 * np.round(np.random.random()) - 1) * u_dir
             # This takes a random number between 0 and 1, rounds it (0 or 1) and then shifts it to (-1 or 1)
-
             step_size = 0.5 * np.random.random_sample() * d_thres  # Pick step size randomly from 0 to half radius
             trial_pos = np.array(mid_Al + u_dir * step_size)
 
@@ -211,8 +212,9 @@ class ExtraFramework(object):
             d_min = min(np.linalg.norm(distance_from_close_atoms, axis=1))
 
             num_iter += 1
-            if closest_distance <= d_min <= d_thres:
+            if closest_distance <= d_min:
                 final_pos = trial_pos
+                # closest_distance = d_min
                 break
 
         cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
@@ -245,7 +247,7 @@ class ExtraFramework(object):
             atoms = atoms + Atoms('Cu', positions=[pos_Cu])
         return atoms
 
-    # no longer needed 
+    # no longer needed
     def insert_TM(self, atoms, metal_type):
         # find metal sites and insert in between Al and reference S atoms (which will be converted to O later)
         atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
@@ -257,6 +259,20 @@ class ExtraFramework(object):
         atoms = atoms + Atoms(metal_type, positions=[pos])
         return atoms
 
+    @staticmethod
+    def get_cluster_radius(EF_atoms):
+        """ This function returns the averaged distance between atoms on the extra-framework cluster and the
+        center-of-mass coordinate, which is used to represent/approximate the cluster size.
+        :param EF_atoms: extra-framework cluster
+        :return:
+        """
+        EF_center = EF_atoms.get_center_of_mass()
+        all_position = EF_atoms.get_positions()
+        radius_list = []
+        for vector in abs(all_position - EF_center):
+            radius_list.append(np.linalg.norm(vector))
+        return np.mean(radius_list)
+
     def insert_ExtraFrameworkAtoms(self, my_zeolite, EF_atoms):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
@@ -266,14 +282,20 @@ class ExtraFramework(object):
         :param EF_atoms: the extra-framework cluster to be inserted in between the Al pair
         :return:
         """
-        atoms = self._get_reference_with_S_in_between_Al_pairs(my_zeolite)
-        cell = atoms.get_cell()
+        cluster_radius = self.get_cluster_radius(EF_atoms)
+        atoms = self._get_reference_with_S_in_between_Al_pairs(my_zeolite, 0)  # cluster_radius = 0
 
-        EF_center = EF_atoms.get_center_of_mass()
+        ## move S to the center of frame to aviod complicatio when inserting
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+        com_cell = np.matmul([0.5, 0.5, 0.5], atoms.get_cell())
+        translate_vector = com_cell - atoms.get_positions()[index_S]
+        atoms.translate(translate_vector)
+        atoms.wrap()
+
+        EF_atoms.set_cell(atoms.get_cell())
         index_S = [a.index for a in atoms if a.symbol == 'S'][0]
         ref_center = atoms.get_positions()[index_S]
-        translate_vector = ref_center - EF_center
-        EF_atoms.translate(translate_vector)
+        EF_atoms.translate(ref_center - EF_atoms.get_center_of_mass())
         EF_atoms.wrap()
 
         TM_index = [atom.index for atom in EF_atoms if atom.symbol in self.TM_list]
@@ -282,26 +304,45 @@ class ExtraFramework(object):
         if len(TM_index) == 2:
             ini_TM_vec = EF_atoms.get_positions()[TM_index[0]] - EF_atoms.get_positions()[TM_index[1]]
             final_vec = atoms.get_positions()[Al_index[0]] - atoms.get_positions()[Al_index[1]]
-            EF_atoms.rotate(ini_TM_vec, final_vec, center=EF_center)
+            EF_atoms.rotate(ini_TM_vec, final_vec, center=EF_atoms.get_center_of_mass())
             # ini_TM_vec is rotated into final_vec
 
         pos = EF_atoms.get_positions()
         atom_name = ''.join(EF_atoms.get_chemical_symbols())
-        atoms = atoms + Atoms(atom_name, positions=pos, cell=cell)
-
+        atoms = atoms + Atoms(atom_name, positions=pos, cell=atoms.get_cell())
         del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+
+        # Move the atoms back to the original position
+        atoms.translate(-1 * translate_vector)
+        atoms.wrap()
         return atoms
 
 
 def main():
-    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '0')
+    zeolite_traj = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', ':')
     EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+    EF_atoms = Atoms('Co', positions=[[0, 0, 0]])
 
-    EFzeolite = ExtraFramework()
-    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
-    view(inserted_atoms)
+    count = 0
+    inserted_traj = []
+    for zeolite in zeolite_traj:
+        try:
+            EFzeolite = ExtraFramework()
+            inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
+            inserted_traj.append(inserted_atoms)
+            count += 1
+            print(count)
+        except AttributeError:
+            print('Error!')
+
+    view(inserted_traj)
 
     # write('MFI_Co.traj', inserted_atoms)
+    '''
+    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '20')
+    EFzeolite = ExtraFramework()
+    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
+    '''
 
 
 if __name__ == '__main__':
