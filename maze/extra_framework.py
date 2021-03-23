@@ -7,6 +7,7 @@ from ase import Atoms
 import numpy as np
 from ase.visualize import view
 import copy as copy
+from ase.io import write, read
 
 
 '''
@@ -68,20 +69,27 @@ class ExtraFramework(ImperfectZeotype):
 
 class ExtraFramework(object):
     def __init__(self, cif_dir=None):
-        self.EFzeolite = ImperfectZeotype.make(cif_dir)
+        """ #TODO: Add descriptions here
+        :param cif_dir: cif file directory of the zeolite structures (IZA database)
+        """
+        if cif_dir is not None:
+            self.EFzeolite = ImperfectZeotype.make(cif_dir)
         self.dict_t_sites_1Al_replaced = {}
         self.traj_1Al = []
         self.traj_2Al = []
         self.count_all_Al_pairs = 0
+        self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
 
-    ## need correction
+    ## need checking
     def make_extra_frameworks(self):
         self.replace_1Al()
         self.replace_2Al_unique_pairs()
         # add in Cu here
 
     def get_t_sites(self) -> dict:
-        # get all unique T sites and corresponding atom indices
+        """ This function gets all unique T sites and corresponding atom indices for each T sites
+        :return: dictionary mapping each unique T site tags with all atom indices with the same tag
+        """
         t_site_indices = {}
         for site_name, value in self.EFzeolite.site_to_atom_indices.items():
             if 'T' in site_name:
@@ -89,7 +97,9 @@ class ExtraFramework(object):
         return t_site_indices
 
     def replace_1Al(self):
-        # create a dictionary of trajectories for each unique t sites
+        """ This function takes in a perfect zeolite and replace one Si atom with an Al for every T site
+        :return: a dictionary of trajectories for each T site tags
+        """
         t_site_indices = self.get_t_sites()
         for site_name, t_site in t_site_indices.items():
             traj_t_sites = []
@@ -102,10 +112,14 @@ class ExtraFramework(object):
             self.dict_t_sites_1Al_replaced[site_name] = traj_t_sites
 
     def replace_2Al_unique_pairs(self, cutoff_radius=9):
-        # make the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since even though energy
-        # might be the same, the geometric properties, such as, Al-Al distance, are different)
-        count = 0
-        traj_2Al_replacement = []
+        """ This function makes the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since
+        even though the binding energies might be the same, the geometric properties, such as, Al-Al distance, are
+        different). Replacement obeys the Lowenstein's rule, and Al pairs with distance greater than the "cutoff_radius"
+        are ignored.
+        :param cutoff_radius: replace the second Si site within some cutoff radius (9 Angstrom by default) around the
+        first replacement site which is done using function "replace_1Al".
+        :return:
+        """
         done_indices = []
 
         for zeolite in self.traj_1Al:
@@ -144,6 +158,12 @@ class ExtraFramework(object):
 
     @staticmethod
     def get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
+        """
+        :param centering_index:
+        :param atoms:
+        :param radius_cutoff:
+        :return:
+        """
         close_framework_atom_positions = []
         for count in range(len(atoms)):
             dist = atoms.get_distance(centering_index, count, mic=True)
@@ -152,6 +172,11 @@ class ExtraFramework(object):
         return close_framework_atom_positions
 
     def _get_reference_with_S_in_between_Al_pairs(self, atoms):
+        """
+
+        :param atoms:
+        :return:
+        """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
         mid_Al = vec_Al / 2 + atoms.get_positions()[Al_index[0]]
@@ -202,6 +227,7 @@ class ExtraFramework(object):
         atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
         return atoms
 
+    # no longer needed
     def insert_CuOCu(self, atoms):
         atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
 
@@ -218,3 +244,65 @@ class ExtraFramework(object):
             pos_Cu = dir_Cu * d_CuO + pos_centering_O
             atoms = atoms + Atoms('Cu', positions=[pos_Cu])
         return atoms
+
+    # no longer needed 
+    def insert_TM(self, atoms, metal_type):
+        # find metal sites and insert in between Al and reference S atoms (which will be converted to O later)
+        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
+
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+        pos = atoms.get_positions()[index_S]
+
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+        atoms = atoms + Atoms(metal_type, positions=[pos])
+        return atoms
+
+    def insert_ExtraFrameworkAtoms(self, my_zeolite, EF_atoms):
+        """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
+        the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
+        there are more than one TMs in the cluster, the cluster is rotated so that the TM-TM vector is aligned with the
+        Al-Al vector. Last, insert the cluster into "my_zeolite".
+        :param my_zeolite: zeolite backbone with 2 Al atoms close to each other
+        :param EF_atoms: the extra-framework cluster to be inserted in between the Al pair
+        :return:
+        """
+        atoms = self._get_reference_with_S_in_between_Al_pairs(my_zeolite)
+        cell = atoms.get_cell()
+
+        EF_center = EF_atoms.get_center_of_mass()
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+        ref_center = atoms.get_positions()[index_S]
+        translate_vector = ref_center - EF_center
+        EF_atoms.translate(translate_vector)
+        EF_atoms.wrap()
+
+        TM_index = [atom.index for atom in EF_atoms if atom.symbol in self.TM_list]
+        Al_index = [atom.index for atom in atoms if atom.symbol == 'Al']
+
+        if len(TM_index) == 2:
+            ini_TM_vec = EF_atoms.get_positions()[TM_index[0]] - EF_atoms.get_positions()[TM_index[1]]
+            final_vec = atoms.get_positions()[Al_index[0]] - atoms.get_positions()[Al_index[1]]
+            EF_atoms.rotate(ini_TM_vec, final_vec, center=EF_center)
+            # ini_TM_vec is rotated into final_vec
+
+        pos = EF_atoms.get_positions()
+        atom_name = ''.join(EF_atoms.get_chemical_symbols())
+        atoms = atoms + Atoms(atom_name, positions=pos, cell=cell)
+
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+        return atoms
+
+
+def main():
+    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '0')
+    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+
+    EFzeolite = ExtraFramework()
+    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
+    view(inserted_atoms)
+
+    # write('MFI_Co.traj', inserted_atoms)
+
+
+if __name__ == '__main__':
+    main()
