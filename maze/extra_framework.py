@@ -8,6 +8,7 @@ import numpy as np
 from ase.visualize import view
 import copy as copy
 from ase.io import write, read
+import itertools
 
 '''
 #TODO: At some point make a common ABC for the ExtraFrameworkAtoms and Adsorbate
@@ -231,7 +232,7 @@ class ExtraFramework(object):
 
     # no longer needed
     def insert_CuOCu(self, atoms):
-        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
+        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms, 0)
 
         index_S = [a.index for a in atoms if a.symbol == 'S'][0]
         pos_centering_O = atoms.get_positions()[index_S]
@@ -250,7 +251,7 @@ class ExtraFramework(object):
     # no longer needed
     def insert_TM(self, atoms, metal_type):
         # find metal sites and insert in between Al and reference S atoms (which will be converted to O later)
-        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms)
+        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms, 0)
 
         index_S = [a.index for a in atoms if a.symbol == 'S'][0]
         pos = atoms.get_positions()[index_S]
@@ -258,6 +259,39 @@ class ExtraFramework(object):
         del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
         atoms = atoms + Atoms(metal_type, positions=[pos])
         return atoms
+
+    def sample_Z_TM(self, d_Z_TM):
+        """
+
+        :param:
+        :return:
+        """
+        self.replace_1Al()
+        # d_Z_TM = 2.6  # Al-Cu
+        dict_Z_TM = {}
+        for site_name, all_zeo_with_same_T in self.dict_t_sites_1Al_replaced.items():
+            atoms = all_zeo_with_same_T[0]
+            nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+            nl.update(atoms)
+            index_Al = [a.index for a in atoms if a.symbol == 'Al']
+            indices, offsets = nl.get_neighbors(index_Al[0])
+            assert len(indices) == 4
+
+            traj = []
+            pairs = list(itertools.combinations(indices, 2))
+            for i, pair in enumerate(pairs):
+                index_o1 = pair[0]
+                index_o2 = pair[1]
+                v1 = atoms.get_distance(index_Al[0], index_o1, vector=True, mic=True)
+                v2 = atoms.get_distance(index_Al[0], index_o2, vector=True, mic=True)
+                v = (v1 + v2) / np.linalg.norm(v1 + v2)
+                atoms_Cu = Atoms('Cu', positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
+                atoms = atoms + atoms_Cu
+                traj.append(atoms)
+            dict_Z_TM[site_name] = traj
+
+        return dict_Z_TM
+
 
     @staticmethod
     def get_cluster_radius(EF_atoms):
@@ -338,11 +372,15 @@ def main():
     view(inserted_traj)
 
     # write('MFI_Co.traj', inserted_atoms)
-    '''
-    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '20')
-    EFzeolite = ExtraFramework()
-    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
-    '''
+
+
+def main1():
+    EFzeolite = ExtraFramework("//data/BEA.cif")
+    dict_Z_TM = EFzeolite.sample_Z_TM(2.6)
+    all_traj = []
+    for site_name, traj in dict_Z_TM.items():
+        all_traj.append(traj)
+    view(all_traj)
 
 
 if __name__ == '__main__':
