@@ -106,8 +106,13 @@ class IndexMapper:
         note that additional atoms in new will be added to the index
         :return:
         """
-        assert new_name not in self.names, f'Error: {new_name} has already been registered'
-        assert old_name in self.names, f'Error: {old_name} has not been registered'
+        already_registered = f'Error: {new_name} has already been registered'
+        not_registered = f'Error: {old_name} has not been registered'
+        if new_name in self.names:
+            print(f'old name is {old_name}, new name is {new_name}')
+            raise ValueError(already_registered)
+
+        assert old_name in self.names, not_registered
         self.names.append(new_name)
 
         old_name_to_main_dict = self._reverse_main_index(old_name)

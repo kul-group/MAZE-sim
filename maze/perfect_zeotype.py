@@ -76,7 +76,7 @@ class Zeotype(Atoms):
                     self.ztype = type(self).__name__  # use type for ztype by default
 
                 self.name = self.index_mapper.get_unique_name(self.ztype)  # use name
-                self.index_mapper.register(self.name, parent.name, self._get_old_to_new_map(parent, self))
+                self.index_mapper.register(parent.name, self.name, self._get_old_to_new_map(parent, self))
 
             self._site_to_atom_indices = site_to_atom_indices
             self._atom_indices_to_site = atom_indices_to_site

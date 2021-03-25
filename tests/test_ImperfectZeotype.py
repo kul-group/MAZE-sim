@@ -76,19 +76,20 @@ class TestImperfectZeotype(TestCase):
             self.assertTrue(od.index_mapper.get_reverse_main_index(iz.name))
 
 
-    def test_integrate_zeotype(self):
+    def test_integrate(self):
         iz = ImperfectZeotype.make('BEA')
         cluster, od = iz.get_cluster(174)
         with self.subTest(msg='integrate other zeotype'):
             new_iz = cluster.integrate(od)
-            # for atom1 in iz:
-            #     #self.assertEqual(atom1.symbol, atom2.symbol)
-            #     print(atom1.symbol)
-            #     #self.assertEqual(atom1.position, atom2.position)
-            #
+            self.assertEqual(len(new_iz), len(iz))
+            # this should be fixed eventually
+                #new_iz_index = iz.index_mapper.get_index(iz.name, new_iz.name, atom.index)
+                #print(new_iz_index)
+                #print(atom.symbol, new_iz[new_iz_index].symbol)
+                #print()
+                #self.assertEqual(atom.symbol, new_iz[new_iz_index].symbol)
+                #self.assertEqual(atom.position, new_iz[new_iz_index].position)
 
-    def test_remove_caps(self):
-        self.fail()
 
     def test_integrate_adsorbate(self):
         self.fail()
