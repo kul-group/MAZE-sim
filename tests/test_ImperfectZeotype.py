@@ -3,6 +3,8 @@ from maze.zeotypes import ImperfectZeotype, Zeotype
 from maze.index_mapper import IndexMapper
 from ase import Atoms
 import numpy as np
+from ase.visualize import view
+
 
 class TestImperfectZeotype(TestCase):
     def test_build_cap_atoms(self):
@@ -33,7 +35,7 @@ class TestImperfectZeotype(TestCase):
                 self.assertTrue(array_in)
 
 
-    def test_cap_atoms(self):
+    def test_cap_atom(self):
         with self.subTest(msg="test hydrogen capping"):
             iz = ImperfectZeotype(Zeotype('O3SiOSi', positions=[[0,0,0], [0, 0, -1], [0, 0, 1]]))
             iz = iz.delete_atoms(2)  # delete Si
@@ -45,6 +47,13 @@ class TestImperfectZeotype(TestCase):
                     self.assertTrue(np.all(atom.position == np.array([0, 0, 1])))
                 if atom.symbol == "O":
                     self.assertTrue(np.all(atom.position == np.array([0, 0, -1])))
+
+    def test_get_cluster(self):
+        iz = ImperfectZeotype.make('BEA')
+        cluster, od = iz.get_cluster(174)
+        with self.subTest(msg='testing length is valid'):
+            self.assertEqual(len(cluster) + len(od), len(iz))
+        print(cluster.ztype)
 
     def test_remove_caps(self):
         self.fail()

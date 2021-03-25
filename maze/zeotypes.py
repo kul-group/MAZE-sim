@@ -1,6 +1,7 @@
 import copy
 from collections import defaultdict
 from typing import List, Dict, Tuple, Iterable, Optional, Union
+import warnings
 
 import ase
 import ase.data
@@ -9,7 +10,10 @@ from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from maze.adsorbate import Adsorbate
 from maze.perfect_zeotype import Zeotype
-#from maze.cluster_maker import DefaultClusterMaker
+from abc import ABC
+
+
+# from maze.cluster_maker import DefaultClusterMaker
 
 class ImperfectZeotype(Zeotype):
     """
@@ -29,13 +33,12 @@ class ImperfectZeotype(Zeotype):
                          additions, _is_zeotype=False, ztype=ztype)
 
         # handle cluster maker
-        if isinstance(symbols, self.__class__) and cluster_maker is None:
+        if isinstance(symbols, self.__class__) and cluster_maker is None:  # build from IZ
             self.cluster_maker = copy.deepcopy(symbols.cluster_maker)
-        elif cluster_maker is None:
+        elif cluster_maker is None: # cluster maker argument passed and not built from IZ
             self.cluster_maker = DefaultClusterMaker()
-        else:
+        else: # cluster maker argument passed
             self.cluster_maker = cluster_maker
-
 
     @staticmethod
     def build_cap_atoms(cap_atoms_dict: Dict[str, np.array]) -> Atoms:
@@ -281,6 +284,8 @@ class ImperfectZeotype(Zeotype):
         new_z.index_mapper = source.index_mapper
         new_z.additions = copy.deepcopy(source.additions)
         new_z.name = new_z.index_mapper.get_unique_name(type(new_z).__name__)
+        new_z.ztype = source.ztype
+        new_z.cluster_maker = copy.deepcopy(source.cluster_maker)
 
     def _change_atoms(self, operation, *args, **kwargs) -> 'ImperfectZeotype':
         """
@@ -462,7 +467,8 @@ class ImperfectZeotype(Zeotype):
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple["ImperfectZeotype", "ImperfectZeotype"]:
+    def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple[
+        "ImperfectZeotype", "ImperfectZeotype"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -482,14 +488,6 @@ class ImperfectZeotype(Zeotype):
         cluster = self.cluster_maker.get_cluster(self, cluster_indices)
         open_defect = self.cluster_maker.get_open_defect(self, cluster_indices)
         return cluster, open_defect
-
-
-from abc import ABC
-from maze.perfect_zeotype import Zeotype
-from maze.zeotypes import ImperfectZeotype
-from typing import Iterable
-from ase.neighborlist import natural_cutoffs, NeighborList
-from typing import List
 
 
 class ClusterMaker(ABC):
@@ -540,7 +538,10 @@ class DefaultClusterMaker(ClusterMaker):
         :param t_site: The index of the T site around which the cluster will be built
         :return: The indices of the new cluster
         """
-
+        if zeolite.parent_zeotype._site_to_atom_indices is not None and 'T' not in zeolite.get_site_type(t_site):
+            # short circuit to prevent get_site_type from throwing error
+            warnings.warn(f'Cluster indices generator requires a T site for the initial '
+                          f'start site. Index {t_site} might not be a T site')
         nl = NeighborList(natural_cutoffs(zeolite), self_interaction=False, bothways=True)
         nl.update(zeolite)
 

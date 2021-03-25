@@ -23,7 +23,6 @@ class Zeotype(Atoms):
     as methods to build an imperfect MAZE-sim from a parent Zeotype class. Imperfect zeotypes have additional
     functionality and are dependent on a parent MAZE-sim class.
     """
-
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
@@ -64,15 +63,17 @@ class Zeotype(Atoms):
                 self.name = 'parent'  # must be parent for code to work properly
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
-            else:
+            else:   # building a non-parent zeotype
                 # make a parent zeotype of self
                 parent = Zeotype(symbols)
                 self.parent_zeotype = parent
                 self.index_mapper = parent.index_mapper
-                if ztype is None:
-                    self.ztype = type(self).__name__  # use type for ztype by default
-                else:
+
+                if ztype is not None:
                     self.ztype = ztype
+                else:
+                    self.ztype = type(self).__name__  # use type for ztype by default
+
                 self.name = self.index_mapper.get_unique_name(self.ztype)  # use name
                 self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
@@ -405,7 +406,7 @@ class Zeotype(Atoms):
         self.index_mapper.pop(index)
         return super().pop(index)
 
-    def get_site_types(self, index: int) -> str:
+    def get_site_type(self, index: int) -> str:
         """
         Get the identity of a site
 
@@ -413,7 +414,7 @@ class Zeotype(Atoms):
         :return: Label for the site (comes from CIF) file
         """
         assert self.parent_zeotype._atom_indices_to_site is not None, 'atom_indices_to_site is None, cannot get label'
-        pz_index = self.index_mapper.get_index(self, self.parent_zeotype, index)
+        pz_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, index)
         return self.parent_zeotype._atom_indices_to_site[pz_index]
 
     @staticmethod
