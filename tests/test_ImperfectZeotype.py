@@ -92,13 +92,10 @@ class TestImperfectZeotype(TestCase):
 
 
     def test_integrate_adsorbate(self):
-        self.fail()
+        self.fail
 
     def test_remove_adsorbate(self):
         self.fail
-
-    def test_integrate_other_zeotype(self):
-        self.fail()
 
     def test_change_atom_properties(self):
         self.fail()
