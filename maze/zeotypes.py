@@ -121,7 +121,7 @@ class ImperfectZeotype(Zeotype):
         new_self.additions[ads_cat].remove(ads_name)
         return new_self
 
-    def integrate_other_zeotype(self, other: Zeotype):
+    def integrate(self, other: Zeotype) -> "ImperfectZeotype":
         """
         Integrate another MAZE-sim into the current MAZE-sim
 
@@ -265,7 +265,7 @@ class ImperfectZeotype(Zeotype):
         """
         new_self_a = ase.Atoms(self)
         del new_self_a[indices_to_delete]
-        new_self = self.__class__(new_self_a)
+        new_self = self.__class__(new_self_a, ztype=self.ztype)
         self.set_attrs_source(new_self, self)
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.register(self.name, new_self.name, old_to_new_map)
@@ -283,8 +283,6 @@ class ImperfectZeotype(Zeotype):
         new_z.parent_zeotype = source.parent_zeotype
         new_z.index_mapper = source.index_mapper
         new_z.additions = copy.deepcopy(source.additions)
-        new_z.name = new_z.index_mapper.get_unique_name(type(new_z).__name__)
-        new_z.ztype = source.ztype
         new_z.cluster_maker = copy.deepcopy(source.cluster_maker)
 
     def _change_atoms(self, operation, *args, **kwargs) -> 'ImperfectZeotype':
@@ -299,7 +297,7 @@ class ImperfectZeotype(Zeotype):
         new_self = self.__class__(self)
         operation(new_self, *args, **kwargs)
         old_to_new_map = self._get_old_to_new_map(self, new_self)
-        self.index_mapper.add_name(new_self.name, self.name, old_to_new_map)
+        self.index_mapper.register(new_self.name, self.name, old_to_new_map)
         return new_self
 
     def get_type(self, index: int) -> 'str':

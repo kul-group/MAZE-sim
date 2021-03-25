@@ -16,7 +16,7 @@ def main():
     for a in cluster:
         cluster[a.index].symbol = 'Xe'
     view(cluster)
-    repair = od.integrate_other_zeotype(cluster)
+    repair = od.integrate(cluster)
     view(repair)
     view(od.create_silanol_defect(164))
 

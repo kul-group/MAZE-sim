@@ -51,9 +51,41 @@ class TestImperfectZeotype(TestCase):
     def test_get_cluster(self):
         iz = ImperfectZeotype.make('BEA')
         cluster, od = iz.get_cluster(174)
+
         with self.subTest(msg='testing length is valid'):
             self.assertEqual(len(cluster) + len(od), len(iz))
-        print(cluster.ztype)
+
+        with self.subTest(msg='assert ztype correct'):
+            self.assertEqual(iz.ztype, 'ImperfectZeotype')
+            self.assertEqual(cluster.ztype, 'Cluster')
+            self.assertEqual(od.ztype, 'Open Defect')
+
+        with self.subTest(msg='assert name is correct'):
+            self.assertIn('Cluster', cluster.name)
+            self.assertIn('Open Defect', od.name)
+
+        with self.subTest(msg='test names registered with index mapper'):
+            # check names are in
+            self.assertIn(cluster.name, iz.index_mapper.names)
+            self.assertIn(od.name, iz.index_mapper.names)
+            self.assertIn(iz.name, iz.index_mapper.names)
+
+        with self.subTest(msg='test indices are in index mapper'):
+            self.assertTrue(iz.index_mapper.get_reverse_main_index(iz.name))
+            self.assertTrue(cluster.index_mapper.get_reverse_main_index(iz.name))
+            self.assertTrue(od.index_mapper.get_reverse_main_index(iz.name))
+
+
+    def test_integrate_zeotype(self):
+        iz = ImperfectZeotype.make('BEA')
+        cluster, od = iz.get_cluster(174)
+        with self.subTest(msg='integrate other zeotype'):
+            new_iz = cluster.integrate(od)
+            # for atom1 in iz:
+            #     #self.assertEqual(atom1.symbol, atom2.symbol)
+            #     print(atom1.symbol)
+            #     #self.assertEqual(atom1.position, atom2.position)
+            #
 
     def test_remove_caps(self):
         self.fail()

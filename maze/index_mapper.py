@@ -118,30 +118,6 @@ class IndexMapper:
         for i in self.main_index.keys():
             self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
 
-    def add_name(self, new_name: str, old_name: str, old_name_to_new_name: Dict[int, int],
-                 new_atom_indices: Iterable[int] = None) -> None:
-        """
-        If new_name already exist, this will still work well
-        :param new_name:
-        :param old_name:
-        :param old_name_to_new_name:
-        :param new_atom_indices:
-        :return:
-        """
-        if new_name not in self.names:
-            self.names.append(new_name)
-
-        old_name_to_main_dict = self._reverse_main_index(old_name)
-        main_to_new_name_dict = {}
-        for old_ind, main_ind in old_name_to_main_dict.items():
-            main_to_new_name_dict[main_ind] = old_name_to_new_name.get(old_ind, None)
-
-        for i in self.main_index.keys():
-            self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
-
-        if new_atom_indices is not None:
-            self.add_atoms(new_name, new_atom_indices)
-
     def _make_none_dict(self) -> Dict[str, None]:
         """
         Get a dictionary full of None for each name

@@ -55,7 +55,8 @@ class Zeotype(Atoms):
                 else:
                     self.ztype = ztype
                 self.name = self.index_mapper.get_unique_name(self.ztype)
-                self.index_mapper.add_name(self.name, symbols.name, self._get_old_to_new_map(self.parent_zeotype, self))
+                # add name and register with index mapper
+                self.index_mapper.register(symbols.name, self.name, self._get_old_to_new_map(symbols, self))
 
         else:  # if symbols is not a Zeotype or Zeotype child class
             if _is_zeotype:  # if Zeotype object is being built  # TODO: get rid of _is_zeotype attribute
@@ -75,7 +76,7 @@ class Zeotype(Atoms):
                     self.ztype = type(self).__name__  # use type for ztype by default
 
                 self.name = self.index_mapper.get_unique_name(self.ztype)  # use name
-                self.index_mapper.add_name(self.name, parent.name, self._get_old_to_new_map(parent, self))
+                self.index_mapper.register(self.name, parent.name, self._get_old_to_new_map(parent, self))
 
             self._site_to_atom_indices = site_to_atom_indices
             self._atom_indices_to_site = atom_indices_to_site
