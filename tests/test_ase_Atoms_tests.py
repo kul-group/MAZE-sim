@@ -3,15 +3,14 @@ This file involves using the built in ase tests for atoms to check each class th
 """
 
 from unittest import TestCase
-from maze.zeotypes import Zeotype, ImperfectZeotype, Cluster, OpenDefect
+from maze.zeotypes import ImperfectZeotype
+from maze.perfect_zeotype import Zeotype
 from maze.adsorbate import Adsorbate
-import os
-from pathlib import Path
 from ase import Atoms
 import numpy as np
 
 class test_atoms_subclasses(TestCase):
-    atoms_subclass_list = [Atoms, Zeotype, ImperfectZeotype, Cluster, OpenDefect, Adsorbate]
+    atoms_subclass_list = [Atoms, Zeotype, ImperfectZeotype, Adsorbate]
     class_names = ['Atoms', 'Zeotype', 'ImperfectZeotype', 'Cluster', 'OpenDefect', 'Adsorbate']
     def test_atoms_angles(self):
         for Atoms, class_name in zip(self.atoms_subclass_list, self.class_names):

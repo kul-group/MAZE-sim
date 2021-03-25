@@ -391,7 +391,12 @@ class Zeotype(Atoms):
         :rtype: None
         """
         self_length = len(self)
-        other_indices = [self_length + i for i in range(0, len(other))]
+        try:
+            other_indices = [self_length + i for i in range(0, len(other))]
+        except TypeError:
+            other_indices = [self_length + 1]
+
+
         self.index_mapper.extend(self.name, other_indices)
         super().extend(other)
 
