@@ -111,15 +111,14 @@ class TestImperfectZeotype(TestCase):
         iz2, n3_ads2 = iz.integrate_adsorbate(n3_ads)
         iz3 = iz2.remove_adsorbate(n3_ads2)
         with self.subTest(msg='test that adsorbate is still in index map'):
-            self.assertIn(n3_ads2.name, iz2.index_mapper.names)
+            self.assertIn(n3_ads2.name, iz3.index_mapper.names)
         with self.subTest(msg='test length back to original length'):
-            self.assertEqual(len(iz2), len(iz))
+            self.assertEqual(len(iz3), len(iz))
         with self.subTest(msg='Test that adsorbate name is not in additions adsorbate list'):
-            self.assertNotIn(n3_ads2.name, list(iz2.additions['adsorbate']))
+            self.assertNotIn(n3_ads2.name, list(iz3.additions['adsorbate']))
 
     def test_change_atom_properties(self):
         self.fail()
-
     def test_build_h_atoms_cap_dict(self):
         self.fail()
 
@@ -136,7 +135,26 @@ class TestImperfectZeotype(TestCase):
         self.fail()
 
     def test_delete_atoms(self):
-        self.fail()
+        iz = ImperfectZeotype.make('BEA')
+        sites_to_delete = iz.site_to_atom_indices['T1']
+        iz2 = iz.delete_atoms(sites_to_delete)
+        with self.subTest(msg='Test that the lengths are correct'):
+            self.assertEqual(len(iz2) + len(sites_to_delete), len(iz))
+        with self.subTest(msg='Test that the T sites are removed'):
+            self.assertFalse(iz2.site_to_atom_indices['T1'])
+        with self.subTest(msg='test that all sites in iz2 are mappable to iz1'):
+            for atom in iz2:
+                iz_index = iz2.index_mapper.get_index(iz2.name, iz.name, atom.index)
+                self.assertIsNotNone(iz_index)
+                for p1, p2 in zip(atom.position, iz[iz_index].position):
+                    self.assertEqual(p1, p2)
+                self.assertEqual(atom.symbol, iz[iz_index].symbol)
+                self.assertEqual(atom.tag, iz[iz_index].tag)
+        with self.subTest(msg='test that T sites map to None'):
+            for T1_site in iz.site_to_atom_indices['T1']:
+                self.assertIsNone(iz.index_mapper.get_index(iz.name, iz2.name, T1_site))
+
+
 
     def test_set_attrs_source(self):
         self.fail()
@@ -145,13 +163,26 @@ class TestImperfectZeotype(TestCase):
         self.fail()
 
     def test_add_atoms(self):
-        self.fail()
-
-    def test_remove_addition(self):
-        self.fail()
-
-    def test_create_silanol_defect(self):
-        self.fail()
+        iz = ImperfectZeotype.make('BEA')
+        iz_name_index = int( str(iz.name.split('_')[-1]))
+        n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
+        addition_type = 'fish'
+        addition_name = addition_type + '_' + str(iz_name_index + 1)
+        iz2 = iz.add_atoms(n3, addition_type)
+        with self.subTest(msg='test that added atom is in the index map'):
+            self.assertIn(addition_name, iz2.index_mapper.names) # this should be the second addition
+        with self.subTest(msg='test that added atoms is in additions'):
+            self.assertIn(addition_name, iz2.additions[addition_type])
+        with self.subTest(msg='test that the length is correct'):
+            self.assertEqual(len(iz2), len(iz) + len(n3))
+        with self.subTest(msg='test mapping between n3 and iz'):
+            for atom in n3:
+                iz_index = iz2.index_mapper.get_index(addition_name, iz2.name, atom.index)
+                self.assertIsNotNone(iz_index)
+                for p1, p2 in zip(atom.position, iz2[iz_index].position):
+                    self.assertEqual(p1, p2)
+                self.assertEqual(atom.symbol, iz2[iz_index].symbol)
+                self.assertEqual(atom.tag, iz2[iz_index].tag)
 
     def test_needs_cap(self):
         self.fail()
