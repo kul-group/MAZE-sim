@@ -13,19 +13,20 @@ from maze.perfect_zeolite import PerfectZeolite
 from abc import ABC
 
 
-# from maze.cluster_maker import DefaultClusterMaker
-
 class Zeolite(PerfectZeolite):
     """
-    This imperfect MAZE-sim inherits from Zeotype and requires a parent MAZE-sim to function properly.
-    This represents an imperfect Zeotype such as MAZE-sim with some modification like an adsorbate addition
-    or the removal a cluster.
+    This Zeolite object inherits from PerfectZeolite. It represents a zeolite and consists of additional functionality
+    for adding, removing and integrating other atoms.
     """
 
     def __init__(self, symbols=None, positions=None, numbers=None, tags=None, momenta=None, masses=None, magmoms=None,
                  charges=None, scaled_positions=None, cell=None, pbc=None, celldisp=None, constraint=None,
                  calculator=None, info=None, velocities=None, site_to_atom_indices=None, atom_indices_to_site=None,
                  additions=None, ztype=None, cluster_maker=None):
+        """
+        Constructor for Zeolite object. The majority of the functionality comes from ase.Atoms object
+        # TODO: write out docstring
+        """
 
         super().__init__(symbols, positions, numbers, tags, momenta, masses, magmoms,
                          charges, scaled_positions, cell, pbc, celldisp, constraint,
@@ -52,7 +53,7 @@ class Zeolite(PerfectZeolite):
 
     def cap_atoms(self, cap_description: str = '') -> 'Zeolite':
         """
-        Cap all of the atoms in the ImpefectZeotype
+        Cap all of the atoms in the zeolite
 
         :param cap_description: A short description for the caps that will be added
         :return: A copy of self with the correct parameters added
