@@ -1,5 +1,5 @@
 from unittest import TestCase
-from maze.zeotypes import ImperfectZeotype, Zeotype
+from maze.zeolite import Zeolite, PerfectZeolite
 from maze.index_mapper import IndexMapper
 from ase import Atoms
 import numpy as np
@@ -12,14 +12,14 @@ class TestImperfectZeotype(TestCase):
             cap_atoms_dict = {'H': [np.array([0, 0, 0])],
                               'O': [np.array([1, 2, 3])],
                               'N': [np.array([1, 3, 5])]}
-            cap_atoms = ImperfectZeotype.build_cap_atoms(cap_atoms_dict)
+            cap_atoms = Zeolite.build_cap_atoms(cap_atoms_dict)
             for atom in cap_atoms:
                 self.assertIn(atom.symbol, cap_atoms_dict)
                 self.assertCountEqual(cap_atoms_dict[atom.symbol][0], atom.position)
         with self.subTest(msg="testing multi atoms of same type"):
             cap_atoms_dict = {'H': [np.array([0, 0, 0]), np.array([1, 1, 1])],
                               'O': [np.array([3, 3, 3]), np.array([3, 4, 5])]}
-            cap_atoms = ImperfectZeotype.build_cap_atoms(cap_atoms_dict)
+            cap_atoms = Zeolite.build_cap_atoms(cap_atoms_dict)
             # this complicated for loop checks that the position is in the
             for atom in cap_atoms:
                 array_in = False
@@ -37,7 +37,7 @@ class TestImperfectZeotype(TestCase):
 
     def test_cap_atom(self):
         with self.subTest(msg="test hydrogen capping"):
-            iz = ImperfectZeotype(Zeotype('O3SiOSi', positions=[[0,0,0], [0, 0, -1], [0, 0, 1]]))
+            iz = Zeolite(PerfectZeolite('O3SiOSi', positions=[[0, 0, 0], [0, 0, -1], [0, 0, 1]]))
             iz = iz.delete_atoms(2)  # delete Si
             iz = iz.cap_atoms()
             x = 0
@@ -49,14 +49,14 @@ class TestImperfectZeotype(TestCase):
                     self.assertTrue(np.all(atom.position == np.array([0, 0, -1])))
 
     def test_get_cluster(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         cluster, od = iz.get_cluster(174)
 
         with self.subTest(msg='testing length is valid'):
             self.assertEqual(len(cluster) + len(od), len(iz))
 
         with self.subTest(msg='assert ztype correct'):
-            self.assertEqual(iz.ztype, 'ImperfectZeotype')
+            self.assertEqual(iz.ztype, 'Zeolite')
             self.assertEqual(cluster.ztype, 'Cluster')
             self.assertEqual(od.ztype, 'Open Defect')
 
@@ -77,7 +77,7 @@ class TestImperfectZeotype(TestCase):
 
 
     def test_integrate(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         cluster, od = iz.get_cluster(174)
         with self.subTest(msg='integrate other zeotype'):
             new_iz = cluster.integrate(od)
@@ -92,7 +92,7 @@ class TestImperfectZeotype(TestCase):
 
 
     def test_integrate_adsorbate(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
         n3_ads = Adsorbate(n3, name='n3')
         iz2, n3_ads2 = iz.integrate_adsorbate(n3_ads)
@@ -105,7 +105,7 @@ class TestImperfectZeotype(TestCase):
 
 
     def test_remove_adsorbate(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
         n3_ads = Adsorbate(n3, name='n3')
         iz2, n3_ads2 = iz.integrate_adsorbate(n3_ads)
@@ -135,7 +135,7 @@ class TestImperfectZeotype(TestCase):
         self.fail()
 
     def test_delete_atoms(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         sites_to_delete = iz.site_to_atom_indices['T1']
         iz2 = iz.delete_atoms(sites_to_delete)
         with self.subTest(msg='Test that the lengths are correct'):
@@ -163,7 +163,7 @@ class TestImperfectZeotype(TestCase):
         self.fail()
 
     def test_add_atoms(self):
-        iz = ImperfectZeotype.make('BEA')
+        iz = Zeolite.make('BEA')
         iz_name_index = int( str(iz.name.split('_')[-1]))
         n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
         addition_type = 'fish'

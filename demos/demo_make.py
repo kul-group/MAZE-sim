@@ -1,4 +1,4 @@
-from maze.zeotypes import ImperfectZeotype, Cluster
+from maze.zeolite import Zeolite, Cluster
 
 
 if __name__ == "__main__":

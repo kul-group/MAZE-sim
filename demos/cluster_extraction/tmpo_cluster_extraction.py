@@ -1,5 +1,5 @@
 from ase.io import read, write
-from maze.zeotypes import Zeotype, Cluster
+from maze.zeolite import PerfectZeolite, Cluster
 import os
 from pathlib import Path
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -40,7 +40,7 @@ def main():
     traj_files = glob.glob(glob_cmd, recursive=True)
     print(traj_files)
     for traj_file in traj_files:
-        z = Zeotype(read(traj_file))
+        z = PerfectZeolite(read(traj_file))
         tmpo = find_tmpo(z)
         tin_index = [a.index for a in z if a.symbol == 'Sn'][0]
         cluster_indices = Cluster.get_oh_cluster_multi_t_sites(z, [tin_index])

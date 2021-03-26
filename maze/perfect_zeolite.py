@@ -14,9 +14,9 @@ import pkg_resources
 from maze.index_mapper import IndexMapper
 from maze.cif_download import download_cif
 
-class Zeotype(Atoms):
+class PerfectZeolite(Atoms):
     """
-    A class that inherits from ase.Atoms, which represents an unmodified MAZE-sim. If a MAZE-sim is built from a cif
+    A class that inherits from ase.Atoms, which represents an 'perfect' zeolite. If a zeolite is built from a cif
     file from the zeolite structure database, then the atoms are tagged according to their unique site and the
     dictionaries site_to_atom_indices and atom_indices_to_site are filled. If not these dictionaries are set to none.
     This class contains a bunch of static methods for identifying different types of atoms in the zeolite as well as
@@ -35,7 +35,7 @@ class Zeotype(Atoms):
         # an atom's object, a Zeotype object, or a sub class of a Zeotype object
         # The following if statements take care of this functionality depending on
         # if the object being built is a Zeotype or if symbols is a Zeotype (there are four unique paths)
-        if isinstance(symbols, Zeotype):  # if symbols is Zeotype or Zeotype subclass
+        if isinstance(symbols, PerfectZeolite):  # if symbols is Zeotype or Zeotype subclass
             self.additions = copy.deepcopy(symbols.additions)
             if _is_zeotype:  # if the object being built is a Zeotype
                 self._site_to_atom_indices = symbols._site_to_atom_indices
@@ -66,7 +66,7 @@ class Zeotype(Atoms):
                 self.parent_zeotype = self
             else:   # building a non-parent zeotype
                 # make a parent zeotype of self
-                parent = Zeotype(symbols)
+                parent = PerfectZeolite(symbols)
                 self.parent_zeotype = parent
                 self.index_mapper = parent.index_mapper
 
@@ -124,7 +124,7 @@ class Zeotype(Atoms):
         return available_chem_symbols
 
     @classmethod
-    def build_from_cif_with_labels(cls, filepath: str, **kwargs) -> "Zeotype":
+    def build_from_cif_with_labels(cls, filepath: str, **kwargs) -> "PerfectZeolite":
         """
         Takes a filepath/fileobject of a cif file and returns a Zeotype or child class with T-sites
         labeled as specified in the cif file. The dictionaries for T site labels are also filled in
@@ -185,7 +185,7 @@ class Zeotype(Atoms):
         # replace elements with replacement symbol
         element_to_T_site = {}
         sym_to_original_element = {}
-        possible_syms = Zeotype._get_available_symbols(
+        possible_syms = PerfectZeolite._get_available_symbols(
             cif._tags["_atom_site_type_symbol"])  # only get symbols not in CIF file
         for i in range(len(cif._tags["_atom_site_label"])):  # label all atoms
             sym = possible_syms.pop()
@@ -237,7 +237,7 @@ class Zeotype(Atoms):
         # replace elements with replacement symbol
         element_to_T_site = {}
         sym_to_original_element = {}
-        possible_syms = Zeotype._get_available_symbols(
+        possible_syms = PerfectZeolite._get_available_symbols(
             b_dict["_atom_site_type_symbol"])  # only get symbols not in CIF file
         for i in range(len(b_dict["_atom_site_label"])):  # label all atoms
             sym = possible_syms.pop()
@@ -362,7 +362,7 @@ class Zeotype(Atoms):
         return indices, count  # TODO: Combine with count_elements method
 
     @staticmethod
-    def get_indices_compliment(zeotype: 'Zeotype', indices: Iterable[int]) -> List[int]:
+    def get_indices_compliment(zeotype: 'PerfectZeolite', indices: Iterable[int]) -> List[int]:
         """
         Gets the compliment of indices in a Zeotype
 
@@ -460,7 +460,7 @@ class Zeotype(Atoms):
     @classmethod
     def make(cls, iza_code: str, data_dir='data'):
         """
-        Builds an ImperfectZeotype from iza code
+        Builds an Zeolite from iza code
         :param iza_zeolite_code: zeolite iza code
         :type iza_zeolite_code: str
         :return: An imperfect zeotype class or subclass
@@ -470,5 +470,5 @@ class Zeotype(Atoms):
         cif_path = os.path.join('data', iza_code + '.cif')
         if not os.path.exists(cif_path):
             download_cif(iza_code, data_dir)
-        parent = Zeotype.build_from_cif_with_labels(cif_path)
+        parent = PerfectZeolite.build_from_cif_with_labels(cif_path)
         return cls(parent)

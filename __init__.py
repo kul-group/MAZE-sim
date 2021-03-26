@@ -1,2 +1,2 @@
 import maze
-from maze import zeotypes, adsorbate, cif_download, index_mapper, io_zeotype
+from maze import zeolite, adsorbate, cif_download, index_mapper, io_zeotype

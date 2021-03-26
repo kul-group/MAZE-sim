@@ -9,13 +9,13 @@ import numpy as np
 from ase import Atoms
 from ase.neighborlist import natural_cutoffs, NeighborList
 from maze.adsorbate import Adsorbate
-from maze.perfect_zeotype import Zeotype
+from maze.perfect_zeolite import PerfectZeolite
 from abc import ABC
 
 
 # from maze.cluster_maker import DefaultClusterMaker
 
-class ImperfectZeotype(Zeotype):
+class Zeolite(PerfectZeolite):
     """
     This imperfect MAZE-sim inherits from Zeotype and requires a parent MAZE-sim to function properly.
     This represents an imperfect Zeotype such as MAZE-sim with some modification like an adsorbate addition
@@ -50,7 +50,7 @@ class ImperfectZeotype(Zeotype):
                 position_list.append(pos)
         return ase.Atoms(symbol_list, positions=position_list)
 
-    def cap_atoms(self, cap_description: str = '') -> 'ImperfectZeotype':
+    def cap_atoms(self, cap_description: str = '') -> 'Zeolite':
         """
         Cap all of the atoms in the ImpefectZeotype
 
@@ -75,7 +75,7 @@ class ImperfectZeotype(Zeotype):
 
         return new_self
 
-    def remove_caps(self, cap_type: str = 'h_cap', cap_name: str = "cap") -> 'ImperfectZeotype':
+    def remove_caps(self, cap_type: str = 'h_cap', cap_name: str = "cap") -> 'Zeolite':
         """
         Remove caps from an imperfect MAZE-sim
 
@@ -89,7 +89,7 @@ class ImperfectZeotype(Zeotype):
         new_self.additions[cap_type].remove(cap_name)
         return new_self
 
-    def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['ImperfectZeotype', Adsorbate]:
+    def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['Zeolite', Adsorbate]:
         """
         Add an adsorbate into the imperfect MAZE-sim
 
@@ -103,9 +103,9 @@ class ImperfectZeotype(Zeotype):
         ads.name = new_self.additions[ads_name][-1]
         return new_self, ads
 
-    def remove_adsorbate(self, adsorbate: Union[Adsorbate, str]) -> "ImperfectZeotype":
+    def remove_adsorbate(self, adsorbate: Union[Adsorbate, str]) -> "Zeolite":
         """
-        Removes an existing adsorbate from the ImperfectZeotype
+        Removes an existing adsorbate from the Zeolite
         :param adsorbate: adsorbate object or str
         :return: new imperfect MAZE-sim with item removed
         """
@@ -121,7 +121,7 @@ class ImperfectZeotype(Zeotype):
         new_self.additions[ads_cat].remove(ads_name)
         return new_self
 
-    def integrate(self, other: Zeotype) -> "ImperfectZeotype":
+    def integrate(self, other: PerfectZeolite) -> "Zeolite":
         """
         Integrate another MAZE-sim into the current MAZE-sim
 
@@ -257,7 +257,7 @@ class ImperfectZeotype(Zeotype):
                 if self.parent_zeotype[atom_index].symbol in atom_symbol_list:
                     return atom_index
 
-    def delete_atoms(self, indices_to_delete) -> 'ImperfectZeotype':
+    def delete_atoms(self, indices_to_delete) -> 'Zeolite':
         """Delete atoms from imperfect MAZE-sim by returning a copy with atoms deleted
 
         :param indices_to_delete: Indices of atoms in current MAZE-sim to delete
@@ -272,7 +272,7 @@ class ImperfectZeotype(Zeotype):
         return new_self
 
     @staticmethod
-    def set_attrs_source(new_z: 'ImperfectZeotype', source: Zeotype) -> None:
+    def set_attrs_source(new_z: 'Zeolite', source: PerfectZeolite) -> None:
         """
         Set the attributes of a new imperfect MAZE-sim to that of its source
 
@@ -285,7 +285,7 @@ class ImperfectZeotype(Zeotype):
         new_z.additions = copy.deepcopy(source.additions)
         new_z.cluster_maker = copy.deepcopy(source.cluster_maker)
 
-    def _change_atoms(self, operation, *args, **kwargs) -> 'ImperfectZeotype':
+    def _change_atoms(self, operation, *args, **kwargs) -> 'Zeolite':
         """
         Applies a custom function to the atoms and returns a new self
 
@@ -342,7 +342,7 @@ class ImperfectZeotype(Zeotype):
 
         return self_list
 
-    def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'ImperfectZeotype':
+    def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'Zeolite':
         """
         Adds additional atoms to current imperfect MAZE-sim
 
@@ -390,7 +390,7 @@ class ImperfectZeotype(Zeotype):
 
         return new_self
 
-    def remove_addition(self, addition_name, addition_type) -> 'ImperfectZeotype':
+    def remove_addition(self, addition_name, addition_type) -> 'Zeolite':
         """
         Removes an addition to the MAZE-sim
 
@@ -404,7 +404,7 @@ class ImperfectZeotype(Zeotype):
         new_self.additions[addition_type].remove(addition_name)
         return new_self
 
-    def create_silanol_defect(self, site_index) -> 'ImperfectZeotype':
+    def create_silanol_defect(self, site_index) -> 'Zeolite':
         """
         Creates a silanol defect by deleting an atom and capping the resulting imperfect MAZE-sim
 
@@ -466,7 +466,7 @@ class ImperfectZeotype(Zeotype):
         return hydrogen_pos
 
     def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple[
-        "ImperfectZeotype", "ImperfectZeotype"]:
+        "Zeolite", "Zeolite"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -489,19 +489,19 @@ class ImperfectZeotype(Zeotype):
 
 
 class ClusterMaker(ABC):
-    def get_cluster_indices(self, zeotype: Zeotype, start_site: int, **kwargs):
+    def get_cluster_indices(self, zeotype: PerfectZeolite, start_site: int, **kwargs):
         raise NotImplementedError
 
     @staticmethod
-    def get_cluster(zeotype: Zeotype, indices: Iterable[int], name="Cluster"):
-        cluster = ImperfectZeotype(zeotype, ztype=name)
+    def get_cluster(zeotype: PerfectZeolite, indices: Iterable[int], name="Cluster"):
+        cluster = Zeolite(zeotype, ztype=name)
         to_delete = cluster.get_indices_compliment(cluster, indices)
         cluster = cluster.delete_atoms(to_delete)
         return cluster
 
     @staticmethod
-    def get_open_defect(zeotype: Zeotype, indices: Iterable[int], name="Open Defect"):
-        new_od = ImperfectZeotype(zeotype, ztype=name)
+    def get_open_defect(zeotype: PerfectZeolite, indices: Iterable[int], name="Open Defect"):
+        new_od = Zeolite(zeotype, ztype=name)
         new_od = new_od.delete_atoms(indices)
         return new_od
 
@@ -510,11 +510,11 @@ class DefaultClusterMaker(ClusterMaker):
     def __init__(self):
         pass
 
-    def get_cluster_indices(self, zeotype: Zeotype, start_site: int, **kwargs):
+    def get_cluster_indices(self, zeotype: PerfectZeolite, start_site: int, **kwargs):
         return self.get_oh_cluster_indices(zeotype, start_site)
 
     @classmethod
-    def get_oh_cluster_multi_t_sites(cls, zeolite: Zeotype, t_sites: Iterable[int]) -> List[int]:
+    def get_oh_cluster_multi_t_sites(cls, zeolite: PerfectZeolite, t_sites: Iterable[int]) -> List[int]:
         """
         get an OH cluster with multiple T sites
         :param zeolite: The MAZE-sim from which to extract the cluster
@@ -527,7 +527,7 @@ class DefaultClusterMaker(ClusterMaker):
         return list(all_indices)
 
     @staticmethod
-    def get_oh_cluster_indices(zeolite: Zeotype, t_site: int) -> List[int]:
+    def get_oh_cluster_indices(zeolite: PerfectZeolite, t_site: int) -> List[int]:
         """
         Create a cluster that only includes one central T site and then Oxygen
         and Hydrogen atoms. This is different than the other cluster selection

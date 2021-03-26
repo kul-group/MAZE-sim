@@ -6,16 +6,15 @@ from typing import Dict, Optional
 import ase
 from ase.db import connect
 
-from maze.zeotypes import Zeotype, Cluster, OpenDefect, ImperfectZeotype
+from maze.zeolite import PerfectZeolite,  Zeolite
 
 
-class ZeotypeDatabase:
-    zeotype_dict = {'Zeotype': Zeotype, 'Cluster': Cluster, 'OpenDefect': OpenDefect,
-                    'ImperfectZeotype': ImperfectZeotype}
+class ZeoliteDatabase:
+    zeotype_dict = {'PerfectZeolite': PerfectZeolite, 'Zeolite': Zeolite}
 
     def __init__(self, ase_db_name: str, datajson_name: str):
         """
-        Initializes a ZeotypeDatabase object. If ase_db_name and datajson_name exist, they are loaded. If they do not
+        Initializes a ZeoliteDatabase object. If ase_db_name and datajson_name exist, they are loaded. If they do not
         exist they are created.
         :param ase_db_name: filepath (including name) of the ase database (must end in db)
         :type ase_db_name: str
@@ -76,11 +75,11 @@ class ZeotypeDatabase:
         data['atoms'] = atoms
         return data
 
-    def _write(self, zeotype: Zeotype, data: Dict) -> int:
+    def _write(self, zeotype: PerfectZeolite, data: Dict) -> int:
         """
         Write a Zeotype to the ase db and jsondata dict
         :param zeotype: Zeotype object to write to the database
-        :type zeotype: Zeotype
+        :type zeotype: PerfectZeolite
         :param data: data corresponding to Zeotype
         :type data: Dict
         :return: id of added Zeotype in both dbs
@@ -102,11 +101,11 @@ class ZeotypeDatabase:
             json.dump(self.data_dict, f, indent=4)
 
 
-    def make_parent_dict(self, zeotype: Zeotype) -> Dict:
+    def make_parent_dict(self, zeotype: PerfectZeolite) -> Dict:
         """
         Make a dictionary for the parent zeotype
         :param zeotype: Parent zeotype to make dictionary from
-        :type zeotype: Zeotype
+        :type zeotype: PerfectZeolite
         :return: Dict of zeotype's data
         :rtype: Dict
         """
@@ -124,11 +123,11 @@ class ZeotypeDatabase:
 
         return data
 
-    def write_parent(self, zeotype: Zeotype) -> int:
+    def write_parent(self, zeotype: PerfectZeolite) -> int:
         """
         Write parent zeotype to both databases
         :param zeotype: parent zeotype to write to database
-        :type zeotype: Zeotype
+        :type zeotype: PerfectZeolite
         :return: id of added zeotype
         :rtype: int
         """
@@ -138,11 +137,11 @@ class ZeotypeDatabase:
         self.parent_zeotype_dict[zeotype.unique_id] = db_index
         return db_index
 
-    def update_parent(self, zeotype: Zeotype, key: int) -> None:
+    def update_parent(self, zeotype: PerfectZeolite, key: int) -> None:
         """
         Update the parent zeotype
         :param zeotype: Parent zeotype with the data to update
-        :type zeotype: Zeotype
+        :type zeotype: PerfectZeolite
         :param key: key of the parent zeotype
         :type key: int
         :return: None
@@ -151,11 +150,11 @@ class ZeotypeDatabase:
         data = self.make_parent_dict(zeotype)
         self.add_data(key, data)
 
-    def write(self, zeotype: Zeotype) -> int:
+    def write(self, zeotype: PerfectZeolite) -> int:
         """
         Write a Zeotype to both databases
         :param zeotype: Zeotype to write to database
-        :type zeotype: Zeotype
+        :type zeotype: PerfectZeolite
         :return: index of zeotype that was added to db
         :rtype: int
         """
@@ -186,13 +185,13 @@ class ZeotypeDatabase:
             db_index = self._write(zeotype, data)
             return db_index
 
-    def build_parent_zeotype(self, data: Dict) -> Zeotype:
+    def build_parent_zeotype(self, data: Dict) -> PerfectZeolite:
         """
         Build a parent zeotype from data dict
         :param data: data dict containing atoms object and metadata for zeotype
         :type data: Dict
         :return: parent Zeotype
-        :rtype: Zeotype
+        :rtype: PerfectZeolite
         """
         assert data['type'] == 'Zeotype', 'only use build_parent_zeotype for building Zeotypes'
         zeotype = self.zeotype_dict[data['type']](data['atoms'])
@@ -205,7 +204,7 @@ class ZeotypeDatabase:
 
         return zeotype
 
-    def get(self, key: int, default=None) -> Optional[Zeotype]:
+    def get(self, key: int, default=None) -> Optional[PerfectZeolite]:
         """
         Get a zeotype from the database
         :param key: zeotype key
@@ -231,27 +230,27 @@ class ZeotypeDatabase:
             return zeotype
 
     @classmethod
-    def connect(cls, db_name: str) -> "ZeotypeDatabase":
+    def connect(cls, db_name: str) -> "ZeoliteDatabase":
         """
         This is a connect method for the ZeotypeDatabase
         :param db_name: name of database
         :type db_name: str
         :return: zeotype database with that name
-        :rtype: ZeotypeDatabase
+        :rtype: ZeoliteDatabase
         """
         path = Path(db_name)
         if path.suffix != '.db':
             raise ValueError('db_name must end in .db')
         ase_db_path = db_name
         jsondata_path = str(path.with_suffix('.json'))
-        return ZeotypeDatabase(ase_db_path, jsondata_path)
+        return ZeoliteDatabase(ase_db_path, jsondata_path)
 
 
 if __name__ == "__main__":
     # testing script for databse
     import pandas as pd
-    db = ZeotypeDatabase.connect('test4.db') #ZeotypeDatabase('test.db', 'test.json')
-    bea = ImperfectZeotype.make('BEA')
+    db = ZeoliteDatabase.connect('test4.db') #ZeoliteDatabase('test.db', 'test.json')
+    bea = Zeolite.make('BEA')
     cluster = bea.get_cluster(cluster_indices=[0,2,13])
     index = db.write(bea)
     print(index)

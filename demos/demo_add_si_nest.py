@@ -7,7 +7,7 @@ def main():
     cif_dir = os.path.join(data_dir, 'GOO.cif')
     zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
     print(issubclass(Zeotype, zeolite))
-    #iz = ImperfectZeotype(zeolite)
+    #iz = Zeolite(zeolite)
     # iz.name = "fred"
     # iz.parent_zeotype = zeolite
     # iz.index_mapper = iz.parent_zeotype.index_mapper

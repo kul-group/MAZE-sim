@@ -1,7 +1,7 @@
 import copy
 import glob
 from ase.io import read, write
-from maze.perfect_zeotype import Zeotype
+from maze.perfect_zeolite import PerfectZeolite
 import os
 from pathlib import Path
 import json
@@ -27,7 +27,7 @@ def unpack_zeo_file(filename) -> str:
     return output_path
 
 
-def save_zeotypes(folder_path: str, zeotype_list: List[Zeotype], ase_ext: str = '.traj'):
+def save_zeotypes(folder_path: str, zeotype_list: List[PerfectZeolite], ase_ext: str = '.traj'):
     assert '.' not in folder_path, 'do not add file extension when saving zeolites'
     my_path = Path(folder_path)
     my_path.mkdir(parents=True, exist_ok=True)
@@ -104,7 +104,7 @@ def read_zeotypes(file_path, str_ext: str = '.traj'):
         json_path = os.path.join(folder, name + '.json')
         binary_path = os.path.join(folder, name + str_ext)
         with open(json_path, 'r') as f:
-            my_zeotype = Zeotype(read(binary_path))
+            my_zeotype = PerfectZeolite(read(binary_path))
             attr_dict = json.load(f)
             my_zeotype.name = name
             my_zeotype.additions = attr_dict['additions']
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     data_path = '/Users/dda/Code/MAZE-sim/data/'
     cif_path = os.path.join(data_path, 'BEA.cif')
     output_path = os.path.join(data_path, 'my_first_zeotype')
-    my_zeotype = Zeotype.build_from_cif_with_labels(cif_path)
+    my_zeotype = PerfectZeolite.build_from_cif_with_labels(cif_path)
     cluster, od = my_zeotype.get_cluster(1,10,10)
     # data_dir = os.path.join(Path(os.getcwd()).parent, 'data')
     # output_traj = os.path.join(data_dir, 'test.traj')

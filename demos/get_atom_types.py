@@ -1,8 +1,8 @@
-from maze.zeotypes import Zeotype
+from maze.zeolite import PerfectZeolite
 
 def main():
     cif_dir = "/Users/dda/Code/MAZE-sim/data/BEA.cif"
-    zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
+    zeolite = PerfectZeolite.build_from_cif_with_labels(cif_dir)
     print('t_site_to_atom_indices', zeolite._site_to_atom_indices)
     print('atom_indices_to_t_site', zeolite._atom_indices_to_site)
     atom_types = zeolite.get_atom_types()

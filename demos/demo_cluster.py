@@ -1,9 +1,9 @@
-from maze.zeotypes import ImperfectZeotype
+from maze.zeolite import Zeolite
 from ase.visualize import view
 
 
 def main():
-    cha = ImperfectZeotype.make('CHA')
+    cha = Zeolite.make('CHA')
     cluster, od = cha.get_cluster(10)
     # print(cluster.additions)
     # cluster = cluster.remove_caps('h_caps', 'h_caps_6_')

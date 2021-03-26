@@ -109,6 +109,22 @@ First, we import the MAZE package.
 
     >>> import maze
     >>> from maze.cif_download import download_cif
+    >>> from maze.zeotypes import PerfectZeolite
+
+Then we download a cif file using the
+
+First, we import the MAZE package.
+
+    >>> import maze
+    >>> from maze.cif_download import download_cif
+    >>> from maze.zeotypes import PerfectZeolite
+
+Then we download a cif file using the
+
+First, we import the MAZE package.
+
+    >>> import maze
+    >>> from maze.cif_download import download_cif
     >>> from maze.zeotypes import Zeotype
 
 Then we download a cif file using the ``download_cif`` function.

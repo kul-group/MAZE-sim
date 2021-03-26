@@ -1,7 +1,7 @@
 import copy
 import glob
 from ase.io import read, write
-from maze.zeotypes import Zeotype
+from maze.zeolite import PerfectZeolite
 import os
 from pathlib import Path
 import json
@@ -51,13 +51,13 @@ def unpack_zeo_file(filename) -> str:
     return output_path
 
 
-def save_zeotypes(folder_path: str, zeotype_list: Iterable[Zeotype], ase_ext: str = '.traj') -> None:
+def save_zeotypes(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_ext: str = '.traj') -> None:
     """
     This saves a list of Zeotypes to a .zeo file
     :param folder_path: path and name of the zeo file without the zeo extension
     :type folder_path: str
     :param zeotype_list: an iterable collection of Zeotype objects (or subclasses)
-    :type zeotype_list: Iterable[Zeotype]
+    :type zeotype_list: Iterable[PerfectZeolite]
     :param ase_ext: extension to save the Zeotype files (default .traj)
     :type ase_ext: str
     :return: None
@@ -155,7 +155,7 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, Zeotype]:
+def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, PerfectZeolite]:
     """
     Read the zeotypes from a .zeo file
     :param file_path: path to .zeo file with or without .zeo extension
@@ -163,7 +163,7 @@ def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, Zeotype]:
     :param str_ext: type of files in .zeo zip file
     :type str_ext: str
     :return: Dictionary of Zeotypes loaded from the files
-    :rtype: Dict[str, Zeotype]
+    :rtype: Dict[str, PerfectZeolite]
     """
 
     if '.' not in file_path:
@@ -176,7 +176,7 @@ def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, Zeotype]:
         json_path = os.path.join(folder, name + '.json')
         binary_path = os.path.join(folder, name + str_ext)
         with open(json_path, 'r') as f:
-            my_zeotype = Zeotype(read(binary_path))
+            my_zeotype = PerfectZeolite(read(binary_path))
             attr_dict = json.load(f)
             my_zeotype.name = name
             my_zeotype.additions = attr_dict['additions']
