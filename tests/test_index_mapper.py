@@ -95,7 +95,7 @@ class TestIndexMapper(TestCase):
         fish_indices = [i for i in range(30, 20, -1)]
         index_mapper = IndexMapper(parent_indices)
         old_to_new_map = dict(zip(parent_indices, fish_indices))
-        index_mapper.add_name('fish', 'parent', old_to_new_map)
+        index_mapper.register('fish', 'parent', old_to_new_map)
         with self.subTest(msg='test main index keys'):
             self.assertCountEqual(range(0, len(parent_indices)), index_mapper.main_index.keys())
 
@@ -141,7 +141,7 @@ class TestIndexMapper(TestCase):
         fish_indices = [i for i in range(30, 20, -1)]
         index_mapper = IndexMapper(parent_indices)
         old_to_new_map = dict(zip(parent_indices, fish_indices))
-        index_mapper.add_name('fish', 'parent', old_to_new_map)
+        index_mapper.register('fish', 'parent', old_to_new_map)
         indices_to_delete = [27, 28, 29]
         index_mapper.delete_atoms('fish', indices_to_delete)
         with self.subTest(msg='test main index keys'):
@@ -159,7 +159,7 @@ class TestIndexMapper(TestCase):
         fish_indices = [i for i in range(30, 20, -1)]
         index_mapper = IndexMapper(parent_indices)
         old_to_new_map = dict(zip(parent_indices, fish_indices))
-        index_mapper.add_name('fish', 'parent', old_to_new_map)
+        index_mapper.register('fish', 'parent', old_to_new_map)
         with self.subTest(msg='test mapping between indices'):
             self.assertEqual(30, index_mapper.get_index('parent', 'fish', 0))
 
@@ -168,7 +168,7 @@ class TestIndexMapper(TestCase):
         fish_indices = [i for i in range(30, 20, -1)]
         index_mapper = IndexMapper(parent_indices)
         old_to_new_map = dict(zip(parent_indices, fish_indices))
-        index_mapper.add_name('fish', 'parent', old_to_new_map)
+        index_mapper.register('fish', 'parent', old_to_new_map)
         self.assertIn('fish', index_mapper.names)
         index_mapper.delete_name('fish')
         self.assertNotIn('fish', index_mapper.names)

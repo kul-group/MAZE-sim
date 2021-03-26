@@ -1,12 +1,12 @@
 import os
-from maze.zeotypes import Zeotype
+from maze.zeolite import PerfectZeolite
 from maze.io_zeotype import *
 
 if __name__ == "__main__":
     data_path = '/Users/dda/Code/MAZE-sim/data/'
     cif_path = os.path.join(data_path, 'BEA.cif')
     output_path = os.path.join(data_path, 'my_first_zeotype')
-    my_zeotype = Zeotype.build_from_cif_with_labels(cif_path)
+    my_zeotype = PerfectZeolite.build_from_cif_with_labels(cif_path)
     print(my_zeotype.index_mapper.main_index)
     cluster, od = my_zeotype.get_cluster(1,10,10)
     # data_dir = os.path.join(Path(os.getcwd()).parent, 'data')

@@ -106,8 +106,13 @@ class IndexMapper:
         note that additional atoms in new will be added to the index
         :return:
         """
-        assert new_name not in self.names, f'Error: {new_name} has already been registered'
-        assert old_name in self.names, f'Error: {old_name} has not been registered'
+        already_registered = f'Error: {new_name} has already been registered'
+        not_registered = f'Error: {old_name} has not been registered'
+        if new_name in self.names:
+            print(f'old name is {old_name}, new name is {new_name}')
+            raise ValueError(already_registered)
+
+        assert old_name in self.names, not_registered
         self.names.append(new_name)
 
         old_name_to_main_dict = self._reverse_main_index(old_name)
@@ -117,30 +122,6 @@ class IndexMapper:
 
         for i in self.main_index.keys():
             self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
-
-    def add_name(self, new_name: str, old_name: str, old_name_to_new_name: Dict[int, int],
-                 new_atom_indices: Iterable[int] = None) -> None:
-        """
-        If new_name already exist, this will still work well
-        :param new_name:
-        :param old_name:
-        :param old_name_to_new_name:
-        :param new_atom_indices:
-        :return:
-        """
-        if new_name not in self.names:
-            self.names.append(new_name)
-
-        old_name_to_main_dict = self._reverse_main_index(old_name)
-        main_to_new_name_dict = {}
-        for old_ind, main_ind in old_name_to_main_dict.items():
-            main_to_new_name_dict[main_ind] = old_name_to_new_name.get(old_ind, None)
-
-        for i in self.main_index.keys():
-            self.main_index[i][new_name] = main_to_new_name_dict.get(i, None)
-
-        if new_atom_indices is not None:
-            self.add_atoms(new_name, new_atom_indices)
 
     def _make_none_dict(self) -> Dict[str, None]:
         """
@@ -171,7 +152,6 @@ class IndexMapper:
             none_dict[name] = index
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
-
 
     def pop(self, name: str, atom_index_to_delete: int) -> int:
         """
@@ -214,7 +194,6 @@ class IndexMapper:
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
 
-
     def delete_atoms(self, name: str, atom_indices_to_delete: Iterable[int]) -> None:
         """
 
@@ -242,7 +221,6 @@ class IndexMapper:
             if name_dict[sender_name] == sender_index:
                 return name_dict[receiver_name]
 
-
     def delete_name(self, name: str) -> None:
         """
         Delete zeolite from the index
@@ -261,3 +239,17 @@ class IndexMapper:
                 new_row[key] = old_row[key]
 
             self.main_index[index] = new_row
+
+    def get_overlap(self, name1: str, name2: str) -> List[int]:
+        """
+        Get the list of names that overlap
+        :param name1: name of object 1
+        :param name2: name of object 2
+        :return: overlapping indices
+        """
+        overlap_indices_name1 = []
+        for name_dict in self.main_index.values():
+            if name_dict[name1] is not None and name_dict[name2] is not None:
+                overlap_indices_name1.append(name_dict[name1])
+
+        return overlap_indices_name1

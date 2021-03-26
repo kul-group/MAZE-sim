@@ -1,4 +1,4 @@
-from maze.extra_framework import ExtraFramework
+from maze.extra_framework_maker import ExtraFramework
 from ase.io import write, read
 from ase.visualize import view
 

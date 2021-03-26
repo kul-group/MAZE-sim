@@ -4,8 +4,9 @@ from sklearn.cluster import MeanShift
 from ase import Atom, Atoms
 from ase.neighborlist import NeighborList, natural_cutoffs
 from ase.data import atomic_numbers, covalent_radii
-import maze.zeotypes
-from maze.zeotypes import Zeotype, ImperfectZeotype
+import maze.zeolite
+from maze.zeolite import Zeolite
+from maze.perfect_zeolite import PerfectZeolite
 import ase
 import warnings
 
@@ -305,7 +306,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from ase.build import molecule
 
-    iz = ImperfectZeotype.make('BEA')
+    iz = Zeolite.make('BEA')
     iz[186].symbol = 'Sn'
 
     # Test 1

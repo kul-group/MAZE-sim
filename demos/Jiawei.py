@@ -1,5 +1,5 @@
-from maze.zeotypes import Zeotype, ImperfectZeotype
-from maze.extra_framework import ExtraFramework
+from maze.zeolite import PerfectZeolite, Zeolite
+from maze.extra_framework_maker import ExtraFramework
 from collections import defaultdict
 from ase.neighborlist import natural_cutoffs, NeighborList
 from ase import Atoms
@@ -34,7 +34,7 @@ def create_1Al_replacement(unique_t_site_indices, EFzeolite):
 
 def create_2Al_replacement(zeolite):
     # make the second Al replacement
-    atoms = ImperfectZeotype(zeolite)  # already have neighbor_list
+    atoms = Zeolite(zeolite)  # already have neighbor_list
     ini_atoms = atoms
     index_Al = [a.index for a in atoms if a.symbol == 'Al']
 
@@ -67,8 +67,8 @@ def create_2Al_replacement(zeolite):
 
 def main():
     cif_dir = 'MFI.cif'
-    zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
-    EFzeolite = ImperfectZeotype(zeolite)
+    zeolite = PerfectZeolite.build_from_cif_with_labels(cif_dir)
+    EFzeolite = Zeolite(zeolite)
     unique_t_site_indices = get_unique_t_sites(zeolite)
     # print(indices_only)
     # print(len(unique_t_site_indices))
