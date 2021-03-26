@@ -101,50 +101,29 @@ A cif file contains the crystallographic information that defines a zeolite stru
 
 
 
-An important piece of information in each cif file is the _atom_site_label (01, 02, ... t1, t2.. ect.) that is located in the first column near the atom position information. This information about the atoms identities is lost when the ``ase.io.read`` function is used to build an atoms object from a cif file. Because the identity of the T-sites is critical for zeolite simulation experiments, this issue inspired the creation of a custom constructor of the ``Zeotype`` object: ``build_from_cif_with_labels``. This static method creates a ``Zeotype`` object, labels the unique atoms by tagging them, and then stores the mapping between the ``atom_site_label`` and the atom indices in the dictionaries ``self.site_to_atom_indices`` and ``self.atom_indices_to_site``.
+An important piece of information in each cif file is the _atom_site_label (01, 02, ... t1, t2.. ect.) that is located in the first column near the atom position information. This information about the atoms identities is lost when the ``ase.io.read`` function is used to build an atoms object from a cif file. Because the identity of the T-sites is critical for zeolite simulation experiments, this issue inspired the creation of a custom constructor of the ``Zeolite`` object: ``make``. This static method creates a ``Zeolite`` object, labels the unique atoms by tagging them, and then stores the mapping between the ``atom_site_label`` and the atom indices in the dictionaries ``site_to_atom_indices`` and ``atom_indices_to_site``.
 
-To demonstrate this feature, let us try building a ``Zeotype`` object from a cif file.
-
-First, we import the MAZE package.
-
-    >>> import maze
-    >>> from maze.cif_download import download_cif
-    >>> from maze.zeotypes import PerfectZeolite
-
-Then we download a cif file using the
+To demonstrate this feature, let us try building a ``Zeolite`` object from a cif file.
 
 First, we import the MAZE package.
 
     >>> import maze
     >>> from maze.cif_download import download_cif
-    >>> from maze.zeotypes import PerfectZeolite
-
-Then we download a cif file using the
-
-First, we import the MAZE package.
-
-    >>> import maze
-    >>> from maze.cif_download import download_cif
-    >>> from maze.zeotypes import Zeotype
+    >>> from maze import Zeolite
 
 Then we download a cif file using the ``download_cif`` function.
 
     >>> download_cif('cha', data_dir='data') # download cha.cif
 
-Now we can use the static method ``build_from_cif_with_labels`` to build a ``Zeotype`` with labeled atoms.
+Now we can use the static ``make`` method to ``Zeolite`` with labeled atoms.
 
->>> my_zeolite = Zeotype.build_from_cif_with_labels('data/cha.cif')  # build from code
+.. code-block::python
+    >>> my_zeolite = Zeolite.make('CHA', data_dir='data')
 
-Our ``Zeotype`` has been built. The atom identity information is now stored in two dictionaries. Let's take a look at them:
+Our ``Zeolite`` object has been built. The atom identity information is now stored in two dictionaries. Let's take a look at them:
 
-    >>> print('site_to_atom_indices map', my_zeolite._site_to_atom_indices, sep='\n\n')
-    site_to_atom_indices map
-
-    >>> print('site_to_atom_indices map', my_zeolite._site_to_atom_indices, sep='\n\n')
-    site_to_atom_indices map
-
-    >>> print('site_to_atom_indices map', my_zeolite.site_to_atom_indices, sep='\n\n')
-    site_to_atom_indices map
+.. code-block:: python
+    print(cha_zeolite.site_to_atom_indices)
 
 .. code-block:: json
 

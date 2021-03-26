@@ -1,2 +1,5 @@
-__all__ = ['adsorbate', 'zeolite', 'index_mapper', 'cif_download', 'io_zeotype']
-from maze import adsorbate, zeolite, index_mapper, cif_download
+__all__ = ['adsorbate', 'cif_download', 'extra_framework_maker', 'index_mapper', 'io_zeotype', 'perfect_zeolite',
+           'silanol', 'zeolite', 'zeolite_db']
+from maze import adsorbate, cif_download, extra_framework_maker, index_mapper, io_zeotype, perfect_zeolite, silanol
+from maze import zeolite, zeolite_db
+from maze.zeolite import Zeolite
