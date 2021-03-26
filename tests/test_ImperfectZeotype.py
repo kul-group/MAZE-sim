@@ -4,7 +4,7 @@ from maze.index_mapper import IndexMapper
 from ase import Atoms
 import numpy as np
 from ase.visualize import view
-
+from maze.adsorbate import Adsorbate
 
 class TestImperfectZeotype(TestCase):
     def test_build_cap_atoms(self):
@@ -92,10 +92,30 @@ class TestImperfectZeotype(TestCase):
 
 
     def test_integrate_adsorbate(self):
-        self.fail
+        iz = ImperfectZeotype.make('BEA')
+        n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
+        n3_ads = Adsorbate(n3, name='n3')
+        iz2, n3_ads2 = iz.integrate_adsorbate(n3_ads)
+        with self.subTest(msg='test index map integration'):
+            self.assertIn(n3_ads2.name, iz2.index_mapper.names)
+        with self.subTest(msg='test lengths make sense'):
+            self.assertEqual(len(iz2), len(iz) + len(n3_ads))
+        with self.subTest(msg='Test that adsorbate name is in additions adsorbate list'):
+            self.assertIn(n3_ads2.name, list(iz2.additions['adsorbate']))
+
 
     def test_remove_adsorbate(self):
-        self.fail
+        iz = ImperfectZeotype.make('BEA')
+        n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
+        n3_ads = Adsorbate(n3, name='n3')
+        iz2, n3_ads2 = iz.integrate_adsorbate(n3_ads)
+        iz3 = iz2.remove_adsorbate(n3_ads2)
+        with self.subTest(msg='test that adsorbate is still in index map'):
+            self.assertIn(n3_ads2.name, iz2.index_mapper.names)
+        with self.subTest(msg='test length back to original length'):
+            self.assertEqual(len(iz2), len(iz))
+        with self.subTest(msg='Test that adsorbate name is not in additions adsorbate list'):
+            self.assertNotIn(n3_ads2.name, list(iz2.additions['adsorbate']))
 
     def test_change_atom_properties(self):
         self.fail()

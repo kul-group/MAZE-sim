@@ -153,7 +153,6 @@ class IndexMapper:
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
 
-
     def pop(self, name: str, atom_index_to_delete: int) -> int:
         """
         Deletes a single atom index
@@ -195,7 +194,6 @@ class IndexMapper:
             self.i_max += 1
             self.main_index[self.i_max] = none_dict
 
-
     def delete_atoms(self, name: str, atom_indices_to_delete: Iterable[int]) -> None:
         """
 
@@ -223,7 +221,6 @@ class IndexMapper:
             if name_dict[sender_name] == sender_index:
                 return name_dict[receiver_name]
 
-
     def delete_name(self, name: str) -> None:
         """
         Delete zeolite from the index
@@ -242,3 +239,17 @@ class IndexMapper:
                 new_row[key] = old_row[key]
 
             self.main_index[index] = new_row
+
+    def get_overlap(self, name1: str, name2: str) -> List[int]:
+        """
+        Get the list of names that overlap
+        :param name1: name of object 1
+        :param name2: name of object 2
+        :return: overlapping indices
+        """
+        overlap_indices_name1 = []
+        for name_dict in self.main_index.values():
+            if name_dict[name1] is not None and name_dict[name2] is not None:
+                overlap_indices_name1.append(name_dict[name1])
+
+        return overlap_indices_name1
