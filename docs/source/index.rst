@@ -14,6 +14,7 @@ This project aims to extend ASE to more naturally represent the properties of ze
    installation
    background
    tutorials
+   intro_tutorial/intro_tutorial
    design_pattern
    key_classes
    source

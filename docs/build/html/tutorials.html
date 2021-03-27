@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MAZE Index Mapper" href="design_pattern.html" />
+    <link rel="next" title="Introductory MAZE Tutorial" href="intro_tutorial/intro_tutorial.html" />
     <link rel="prev" title="Background" href="background.html" /> 
 </head>
 
@@ -90,9 +90,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#extracting-adding-and-capping-clusters">Extracting, Adding and Capping Clusters</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="intro_tutorial/intro_tutorial.html">Introductory MAZE Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source.html">MAZE Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="adsorbate.html">Adsorbate Class</a></li>
 </ul>
 
             
@@ -245,35 +247,20 @@ _atom_site_fract_z
     t1    si    0.9997    0.2264    0.1051
 </pre></div>
 </div>
-<p>An important piece of information in each cif file is the _atom_site_label (01, 02, … t1, t2.. ect.) that is located in the first column near the atom position information. This information about the atoms identities is lost when the <code class="docutils literal notranslate"><span class="pre">ase.io.read</span></code> function is used to build an atoms object from a cif file. Because the identity of the T-sites is critical for zeolite simulation experiments, this issue inspired the creation of a custom constructor of the <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object: <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code>. This static method creates a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object, labels the unique atoms by tagging them, and then stores the mapping between the <code class="docutils literal notranslate"><span class="pre">atom_site_label</span></code> and the atom indices in the dictionaries <code class="docutils literal notranslate"><span class="pre">self.site_to_atom_indices</span></code> and <code class="docutils literal notranslate"><span class="pre">self.atom_indices_to_site</span></code>.</p>
-<p>To demonstrate this feature, let us try building a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object from a cif file.</p>
+<p>An important piece of information in each cif file is the _atom_site_label (01, 02, … t1, t2.. ect.) that is located in the first column near the atom position information. This information about the atoms identities is lost when the <code class="docutils literal notranslate"><span class="pre">ase.io.read</span></code> function is used to build an atoms object from a cif file. Because the identity of the T-sites is critical for zeolite simulation experiments, this issue inspired the creation of a custom constructor of the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object: <code class="docutils literal notranslate"><span class="pre">make</span></code>. This static method creates a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, labels the unique atoms by tagging them, and then stores the mapping between the <code class="docutils literal notranslate"><span class="pre">atom_site_label</span></code> and the atom indices in the dictionaries <code class="docutils literal notranslate"><span class="pre">site_to_atom_indices</span></code> and <code class="docutils literal notranslate"><span class="pre">atom_indices_to_site</span></code>.</p>
+<p>To demonstrate this feature, let us try building a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object from a cif file.</p>
 <p>First, we import the MAZE package.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">maze</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.cif_download</span> <span class="kn">import</span> <span class="n">download_cif</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze</span> <span class="kn">import</span> <span class="n">Zeolite</span>
 </pre></div>
 </div>
 <p>Then we download a cif file using the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">download_cif</span><span class="p">(</span><span class="s1">&#39;cha&#39;</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span> <span class="c1"># download cha.cif</span>
 </pre></div>
 </div>
-<p>Now we can use the static method <code class="docutils literal notranslate"><span class="pre">build_from_cif_with_labels</span></code> to build a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> with labeled atoms.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_zeolite</span> <span class="o">=</span> <span class="n">Zeotype</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="s1">&#39;data/cha.cif&#39;</span><span class="p">)</span>  <span class="c1"># build from code</span>
-</pre></div>
-</div>
-<p>Our <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> has been built. The atom identity information is now stored in two dictionaries. Let’s take a look at them:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;site_to_atom_indices map&#39;</span><span class="p">,</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">_site_to_atom_indices</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="go">site_to_atom_indices map</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;site_to_atom_indices map&#39;</span><span class="p">,</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">_site_to_atom_indices</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="go">site_to_atom_indices map</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;site_to_atom_indices map&#39;</span><span class="p">,</span> <span class="n">my_zeolite</span><span class="o">.</span><span class="n">site_to_atom_indices</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="go">site_to_atom_indices map</span>
-</pre></div>
-</div>
+<p>Now we can use the static <code class="docutils literal notranslate"><span class="pre">make</span></code> method to <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> with labeled atoms.</p>
+<p>Our <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object has been built. The atom identity information is now stored in two dictionaries. Let’s take a look at them:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span>{&#39;o1&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
 &#39;o2&#39;: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
 &#39;o3&#39;: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53],
@@ -397,7 +384,7 @@ _atom_site_fract_z
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="design_pattern.html" class="btn btn-neutral float-right" title="MAZE Index Mapper" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="intro_tutorial/intro_tutorial.html" class="btn btn-neutral float-right" title="Introductory MAZE Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="background.html" class="btn btn-neutral float-left" title="Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

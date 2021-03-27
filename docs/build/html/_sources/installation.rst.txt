@@ -23,5 +23,5 @@ Finally, verify that the install was successful by running a python shell in you
 
     python
     >>> import maze
-    >>> maze.zeotypes.Zeotype()
-    Zeotype(symbols='', pbc=False)
+    >>> maze.Zeolite()
+    Zeolite(symbols='', pbc=False)
