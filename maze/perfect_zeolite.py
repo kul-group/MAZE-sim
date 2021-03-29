@@ -472,3 +472,10 @@ class PerfectZeolite(Atoms):
             download_cif(iza_code, data_dir)
         parent = PerfectZeolite.build_from_cif_with_labels(cif_path)
         return cls(parent)
+
+    def retag_self(self) -> None:
+        assert self.index_mapper is not None, 'cannot retag when index mapper is None'
+        self_to_main_index_map = self.index_mapper.get_reverse_main_index(self.name)
+        for atom in self:
+            atom.tag = self_to_main_index_map[atom.index]
+
