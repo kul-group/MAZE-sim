@@ -87,7 +87,7 @@ The above example demonstrated some unusual behavior, now we will examine why th
     #. Integrate the optimized structure back into the original Zeolite Atoms object
     #. Save the altered Zeolite object as a .traj file with a unique name
 
-Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the ``Zeolite.build_from_cif_with_labels`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.
+Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the ``Zeolite.make`` method, which reads a ``cif`` file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.
 
 In the sub-steps of part 3, the problem with "on-the-fly" object creation emerges. Part a,b c are can be completed with the base ASE package. However, part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping problem with the use of a custom Index Mapper.
 
@@ -95,11 +95,11 @@ In the sub-steps of part 3, the problem with "on-the-fly" object creation emerge
 The Index Mapper Solution
 *********************************************************
 
-Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. MAZE solves the identity storage problem by creating an ``IndexMapper`` object, which is a table that stores the mapping between indices of a ``Zeolite`` object and all ``ImperfectZeolite`` objects derived from the parent ``Zeotype``. The IndexMapper.main_index can be thought of as a table that looks like this:
+Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. MAZE solves the identity storage problem by creating an ``IndexMapper`` object, which is a table that stores the mapping between indices of a parent ``PerfectZeolite`` object and all ``Zeolite`` objects derived from the parent ``PerfectZeolite``. The IndexMapper.main_index can be thought of as a table that looks like this:
 
 
 +------+---------+-------------------+----------+
-| main | parent  |  ImperfectZeotype1| Cluster2 |
+| main | parent  |  Zeolite_2        |Cluster_3 |
 +======+=========+===================+==========+
 | 0    | 0       | 0                 |     0    |
 +------+---------+-------------------+----------+
@@ -113,77 +113,41 @@ Zeotype simulation workflows frequently involve extracting atoms and adding atom
 +------+---------+-------------------+----------+
  
 
-The implementation of the ``IndexMapper.main_index`` is a dictionary of dictionaries, where the keys for the parent dictionary are the main indices, and the keys for the sub-dictionaries are the names of the ``ImperfectZeolites``. The values of the sub-dictionaries are the indices of the parent. For example, the above table would be represented as the following nested dictionary:
+The implementation of the ``IndexMapper.main_index`` is a dictionary of dictionaries, where the keys for the parent dictionary are the main indices, and the keys for the sub-dictionaries are the names of the ``Zeolite`` objects. The values of the sub-dictionaries are the indices of the parent. For example, the above table would be represented as the following nested dictionary:
 
 .. code-block:: json
 
-	{0: {‘parent’:0, ‘ImperfectZeotype1’:0, ‘Cluster2’:None},
-	1: {‘parent’:1, ‘ImperfectZeotype1’:1, ‘Cluster2’:None},
-	2: {‘parent’:2, ‘ImperfectZeotype1’:2, ‘Cluster2’:None},
+	{0: {‘parent’:0, 'Zeolite_2':0, ‘Cluster_3’:None},
+	1: {‘parent’:1, 'Zeolite_2':1, ‘Cluster_3’:None},
+	2: {‘parent’:2, 'Zeolite_2':2, ‘Cluster_3’:None},
 	….
-	100: {‘parent’: None, ‘ImperfectZeotype1’:99, ‘Cluster2’:None}}
+	100: {‘parent’: None, ‘Zeolite_2’:99, ‘Cluster_3’:None}}
 
 
-To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a ``Zeolite`` object. When atoms are added or removed from the ``Zeolite`` object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the ``add_atoms`` and ``delete_atoms`` methods of the ``ImperfectZeolite`` class return new ``ImperfectZeolite`` objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created ``ImperfectZeolite``.
+To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a ``Zeolite`` object. When atoms are added or removed from the ``Zeolite`` object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the ``add_atoms`` and ``delete_atoms`` methods of the ``Zeolite`` class return new ``Zeolite`` objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created ``Zeolite``.
 
-Note that when Python's garbage collector deletes an ImperfectZeolite object, the object is deregistered from the ``main_index`` table.
+Note that when Python's garbage collector deletes an ``Zeolite`` object, the object is deregistered from the ``main_index`` table.
 
-The additional functionality of the Zeolite code builds on the ``add_atoms`` method and the ``delete_atoms`` method. The ``delete_atoms`` method is described in detail in the following section.
+The additional functionality of the MAZE code builds on the ``add_atoms`` method and the ``delete_atoms`` method. The ``delete_atoms`` method is described in detail in the following section.
 
 
 *********************************************************
 The ``delete_atoms`` Method
 *********************************************************
-
-The delete_atoms method returns a copy of the original ``ImpefectZeolite`` with the specified atoms deleted. An example of the delete method is shown below:
+Z
+The delete_atoms method returns a copy of the original ``Zeolite`` with the specified atoms deleted. An example of the delete method is shown below:
 
 .. code-block:: bash
 
    >>> import maze
-   >>> from maze.zeotypes import Zeotype
-   >>> from maze.cif_download import download_cif
-   >>> download_cif('BEA', data_dir='data') # Download BEA.cif
-   >>> my_zeolite = Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
-   >>> my_iz = my_zeolite.get_imperfect_zeotype()  # get an imperfect zeolite that you can add and remove atoms from
+   >>> from maze import Zeolite
+   >>> my_z = Zeolite.make('BEA')
    >>> atom_indices_to_delete = [i for i in range(0, 50)]  # make a list from 0 to 49
-   >>> my_new_iz = my_iz.delete_atoms(atom_indices_to_delete)  # make a new iz with the first 50 atoms deleted
-   >>> print('my_iz has', len(my_iz), 'atoms in it')
-    my_iz has 192 atoms in it
-   >>> print('my_new_iz has', len(my_new_iz), 'atoms in it')
-    my_new_iz has 142 atoms in it
-
-
-
-The
-   >>> import maze
-   >>> from maze.zeotypes import Zeotype
-   >>> from maze.cif_download import download_cif
-   >>> download_cif('BEA', data_dir='data') # Download BEA.cif
-   >>> my_zeolite = Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
-   >>> my_iz = my_zeolite.get_imperfect_zeotype()  # get an imperfect zeolite that you can add and remove atoms from
-   >>> atom_indices_to_delete = [i for i in range(0, 50)]  # make a list from 0 to 49
-   >>> my_new_iz = my_iz.delete_atoms(atom_indices_to_delete)  # make a new iz with the first 50 atoms deleted
-   >>> print('my_iz has', len(my_iz), 'atoms in it')
-    my_iz has 192 atoms in it
-   >>> print('my_new_iz has', len(my_new_iz), 'atoms in it')
-    my_new_iz has 142 atoms in it
-
-
-
-The
-   >>> import maze
-   >>> from maze.zeotypes import Zeotype
-   >>> from maze.cif_download import download_cif
-   >>> download_cif('BEA', data_dir='data') # Download BEA.cif
-   >>> my_zeolite = Zeotype.build_from_cif_with_labels('data/BEA.cif')  # build zeolite code
-   >>> my_iz = my_zeolite.get_imperfect_zeolite()  # get an imperfect zeolite that you can add and remove atoms from
-   >>> atom_indices_to_delete = [i for i in range(0, 50)]  # make a list from 0 to 49
-   >>> my_new_iz = my_iz.delete_atoms(atom_indices_to_delete)  # make a new iz with the first 50 atoms deleted
-   >>> print('my_iz has', len(my_iz), 'atoms in it')
-    my_iz has 192 atoms in it
-   >>> print('my_new_iz has', len(my_new_iz), 'atoms in it')
-    my_new_iz has 142 atoms in it
-
+   >>> my_new_z = my_z.delete_atoms(atom_indices_to_delete)  # make a new iz with the first 50 atoms deleted
+   >>> print('my_z has', len(my_z), 'atoms in it')
+    my_z has 192 atoms in it
+   >>> print('my_new_z has', len(my_new_z), 'atoms in it')
+    my_new_z has 142 atoms in it
 
 
 The ``my_new_iz`` object has 50 less atoms than the original ``my_iz`` object. At first, this does not appear any different than using the ``del`` operator on an ase.Atoms object.

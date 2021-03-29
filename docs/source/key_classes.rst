@@ -1,30 +1,16 @@
 MAZE Key Classes
 =================
 
-Zeotype class
+Zeolite class
 ----------------------------
-.. autoclass:: zeotypes.Zeotype
+.. autoclass:: zeolite.Zeolite
    :members:
    :private-members:
    :special-members:
 
-ImperfectZeotype class
+PerfectZeolite class
 ----------------------------
-.. autoclass:: zeotypes.ImperfectZeotype
-   :members:
-   :private-members:
-   :special-members:
-
-Cluster class
-----------------------------
-.. autoclass:: zeotypes.Cluster
-   :members:
-   :private-members:
-   :special-members:
-
-OpenDefect class
-----------------------------
-.. autoclass:: zeotypes.OpenDefect
+.. autoclass:: perfect_zeolite.PerfectZeolite
    :members:
    :private-members:
    :special-members:
