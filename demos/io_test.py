@@ -1,6 +1,6 @@
 import os
 from maze.zeolite import PerfectZeolite
-from maze.io_zeotype import *
+from maze.io_zeolite import *
 
 if __name__ == "__main__":
     data_path = '/Users/dda/Code/MAZE-sim/data/'
