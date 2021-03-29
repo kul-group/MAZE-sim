@@ -1,5 +1,5 @@
-Adsorbate Class
-================
+Adsorbate Class Tutorial 
+========================
 
 The Adsorbate module introduces a class specific to adsorbates which can be added and removed from the host zeolite.
 
@@ -9,18 +9,18 @@ Creating an Adsorbate Object
 For this example, we will begin with a BEA zeolite with a Sn atom.
 
  .. code:: python
-
-    # Create a zeotype from the BEA structure
-    iz = ImpefectZeotype.make('BEA')
+    from maze import zeolite
+    # Create a zeolite from the BEA structure
+    z = zeolite.make('BEA')
     # Change atom 186 to a Sn atom
-    iz[186].symbol = 'Sn'
+    z[186].symbol = 'Sn'
 
 Now we can create an adsorbate object, in this case using an ammonia molecule:
 
  .. code:: python
 
     mol = molecule('NH3')
-    ads = Adsorbate(mol, host_zeotype=iz)
+    ads = Adsorbate(mol, host_zeotype=z)
 
 Positioning Adsorbates
 ----------------------------------
@@ -47,13 +47,13 @@ With our adsorbate molecule properly positioned, we can now add it to the zeolit
 
  .. code:: python
 
-    iz.integrate_adsorbate(ads2)
+    z, ads2 = z.integrate_adsorbate(ads2)
 
 The adsorbate can be removed from the zeolite framework using the `remove_adsorbate()` function:
 
 
  .. code:: python
 
-    zeotype.remove_adsorbate(ads2)
+    z = z.remove_adsorbate(ads2)
 
 Note that multiple adsorbates can be added and removed independently of one another.

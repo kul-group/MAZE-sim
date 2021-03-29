@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Adsorbate Class &mdash; MAZE 0.1 documentation</title>
+  <title>Adsorbate Class Tutorial &mdash; MAZE 0.1 documentation</title>
   
 
   
@@ -85,7 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="tutorial_index.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="intro_tutorial/intro_tutorial.html">Introductory MAZE Tutorial</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Adsorbate Class</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Adsorbate Class Tutorial</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-an-adsorbate-object">Creating an Adsorbate Object</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#positioning-adsorbates">Positioning Adsorbates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#adding-and-removing-adsorbates">Adding and Removing Adsorbates</a></li>
@@ -143,7 +143,7 @@
         
           <li><a href="tutorial_index.html">Tutorials</a> &raquo;</li>
         
-      <li>Adsorbate Class</li>
+      <li>Adsorbate Class Tutorial</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -162,24 +162,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="adsorbate-class">
-<h1>Adsorbate Class<a class="headerlink" href="#adsorbate-class" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="adsorbate-class-tutorial">
+<h1>Adsorbate Class Tutorial<a class="headerlink" href="#adsorbate-class-tutorial" title="Permalink to this headline">¶</a></h1>
 <p>The Adsorbate module introduces a class specific to adsorbates which can be added and removed from the host zeolite.</p>
 <div class="section" id="creating-an-adsorbate-object">
 <h2>Creating an Adsorbate Object<a class="headerlink" href="#creating-an-adsorbate-object" title="Permalink to this headline">¶</a></h2>
 <p>For this example, we will begin with a BEA zeolite with a Sn atom.</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a zeotype from the BEA structure</span>
-<span class="n">iz</span> <span class="o">=</span> <span class="n">ImpefectZeotype</span><span class="o">.</span><span class="n">make</span><span class="p">(</span><span class="s1">&#39;BEA&#39;</span><span class="p">)</span>
-<span class="c1"># Change atom 186 to a Sn atom</span>
-<span class="n">iz</span><span class="p">[</span><span class="mi">186</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="s1">&#39;Sn&#39;</span>
-</pre></div>
-</div>
-</div></blockquote>
+<div></div></blockquote>
 <p>Now we can create an adsorbate object, in this case using an ammonia molecule:</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mol</span> <span class="o">=</span> <span class="n">molecule</span><span class="p">(</span><span class="s1">&#39;NH3&#39;</span><span class="p">)</span>
-<span class="n">ads</span> <span class="o">=</span> <span class="n">Adsorbate</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">host_zeotype</span><span class="o">=</span><span class="n">iz</span><span class="p">)</span>
+<span class="n">ads</span> <span class="o">=</span> <span class="n">Adsorbate</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">host_zeotype</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -204,13 +198,13 @@
 <h2>Adding and Removing Adsorbates<a class="headerlink" href="#adding-and-removing-adsorbates" title="Permalink to this headline">¶</a></h2>
 <p>With our adsorbate molecule properly positioned, we can now add it to the zeolite framework using the <cite>integrate_adsorbate()</cite> function.</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">iz</span><span class="o">.</span><span class="n">integrate_adsorbate</span><span class="p">(</span><span class="n">ads2</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">z</span><span class="p">,</span> <span class="n">ads2</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">integrate_adsorbate</span><span class="p">(</span><span class="n">ads2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>The adsorbate can be removed from the zeolite framework using the <cite>remove_adsorbate()</cite> function:</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">zeotype</span><span class="o">.</span><span class="n">remove_adsorbate</span><span class="p">(</span><span class="n">ads2</span><span class="p">)</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">remove_adsorbate</span><span class="p">(</span><span class="n">ads2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div></blockquote>
