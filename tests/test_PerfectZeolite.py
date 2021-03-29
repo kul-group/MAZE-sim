@@ -1,12 +1,12 @@
 from unittest import TestCase
-from maze.zeolite import PerfectZeolite, Zeolite, Cluster, OpenDefect
+from maze.zeolite import PerfectZeolite
 import ase
 import ase.data
 from ase import Atoms
 from ase.io import read
 import os
 
-class TestZeotype(TestCase):
+class TestPerfectZeolite(TestCase):
 
     # testing init methods
     def test_init_with_no_arguments(self):
@@ -26,7 +26,7 @@ class TestZeotype(TestCase):
         my_zeotype = PerfectZeolite(symbols='H', positions=[[0, 0, 10]], numbers=None, tags=[3], momenta=None,
                                     masses=None, magmoms=None, charges=None, scaled_positions=None, cell=None,
                                     pbc=None, celldisp=None, constraint=None, calculator=None, info=None,
-                                    velocities=None, silent=True, zeolite_type='friendly',
+                                    velocities=None, zeolite_type='friendly',
                                     site_to_atom_indices={'T1': 0}, atom_indices_to_site={0: 'T1'}, ztype='good_friend')
         # TODO: Add in reasonable numbers, tags, momenta, ect.
         # tests inheritance
@@ -232,6 +232,12 @@ class TestZeotype(TestCase):
     def test__del__(self):
         pass
 
-
-
+    def test_retag_self(self):
+        with self.subTest(msg="retag doesn't throw errrors"):
+            cha = PerfectZeolite.make('CHA')
+            cha.retag_self()
+        with self.subTest(msg='test main index matches tags'):
+            reverse_index_map = cha.index_mapper.get_reverse_main_index(cha.name)
+            for atom in cha:
+                self.assertEqual(atom.tag, reverse_index_map[atom.index])
 

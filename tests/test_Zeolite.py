@@ -192,3 +192,12 @@ class TestImperfectZeotype(TestCase):
 
     def test_get_hydrogen_cap_pos_simple(self):
         self.fail()
+
+    def test_retag_self(self):
+        with self.subTest(msg="retag doesn't throw errrors"):
+            cha = Zeolite.make('CHA')
+            cha.retag_self()
+        with self.subTest(msg='test main index matches tags'):
+            reverse_index_map = cha.index_mapper.get_reverse_main_index(cha.name)
+            for atom in cha:
+                self.assertEqual(atom.tag, reverse_index_map[atom.index])
