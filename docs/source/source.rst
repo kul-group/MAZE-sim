@@ -12,7 +12,14 @@ cif\_download module
 
 zeotypes module
 ---------------------
-.. automodule:: zeotypes
+.. automodule:: zeolite
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+zeotypes module
+---------------------
+.. automodule:: perfect_zeolite
    :members:
    :undoc-members:
    :show-inheritance:
