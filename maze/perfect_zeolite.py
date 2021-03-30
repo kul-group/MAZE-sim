@@ -473,9 +473,28 @@ class PerfectZeolite(Atoms):
         parent = PerfectZeolite.build_from_cif_with_labels(cif_path)
         return cls(parent)
 
+    def get_self_to_main_index_map(self):
+        self_to_main_dict = self.index_mapper.get_reverse_main_index(self.name)
+        addition_names = []
+        for ad_type in self.additions:
+            addition_names.extend(list(self.additions[ad_type]))
+
+        for name in addition_names:
+            tmp_dict = self.index_mapper.get_reverse_main_index(name)
+            self_to_main_dict.update(tmp_dict)
+
+        return self_to_main_dict
+
     def retag_self(self) -> None:
         assert self.index_mapper is not None, 'cannot retag when index mapper is None'
         self_to_main_index_map = self.index_mapper.get_reverse_main_index(self.name)
+        #for additions in
         for atom in self:
             atom.tag = self_to_main_index_map[atom.index]
 
+    def build_additions_map(self):
+        additions_map = defaultdict(dict)
+        for category, names in self.additions.items():
+            for name in names:
+                additions_map[category][name] = list(self.index_mapper.get_reverse_main_index(name).values())
+        return dict(additions_map)

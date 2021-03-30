@@ -1,12 +1,13 @@
 import copy
 import glob
 from ase.io import read, write
-from maze.zeolite import PerfectZeolite
+from maze.perfect_zeolite import PerfectZeolite
+from maze.zeolite import Zeolite
 import os
 from pathlib import Path
 import json
 from maze.index_mapper import IndexMapper
-from typing import List, Iterable, Dict
+from typing import List, Iterable, Dict, Optional
 import shutil
 
 
@@ -51,7 +52,8 @@ def unpack_zeo_file(filename) -> str:
     return output_path
 
 
-def save_zeotypes(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_ext: str = '.traj') -> None:
+def save_zeotypes(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_ext: str = '.traj',
+                  zip: bool = True) -> None:
     """
     This saves a list of Zeotypes to a .zeo file
     :param folder_path: path and name of the zeo file without the zeo extension
@@ -92,20 +94,25 @@ def save_zeotypes(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_
         Path(zeotype_folder).mkdir(parents=True, exist_ok=True)
         dict_json = {'name': z.name,
                      'type': str(type(z)),
-                     'additions': z.additions}
+                     'additions': z.additions,
+                     'additions_map': z.build_additions_map()}
+
         if z.name == 'parent':
-            additional_params = {'site_to_atom_indices': z._site_to_atom_indices,
-                                 'atom_indices_to_site': z._atom_indices_to_site}
+            additional_params = {'site_to_atom_indices': z.site_to_atom_indices,
+                                 'atom_indices_to_site': z.atom_indices_to_sites}
+
             dict_json.update(additional_params)
 
         binary_path = os.path.join(zeotype_folder, z.name + ase_ext)
         dict_path = os.path.join(zeotype_folder, z.name + '.json')
+        z.retag_self()
         write(binary_path, z)
         with open(dict_path, 'w') as f:
             json.dump(dict_json, f, indent=4, ensure_ascii=True)
 
-    make_folder_to_zeo(folder_path)
-    delete_folder(folder_path)
+    if zip:
+        make_folder_to_zeo(folder_path)
+        delete_folder(folder_path)
 
 
 def save_index_mapper(filepath, index_mapper: IndexMapper) -> None:
@@ -155,20 +162,23 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, PerfectZeolite]:
+def read_zeotypes(file_path: str, str_ext: str = '.traj', zipped: bool = True) -> Dict[str, PerfectZeolite]:
     """
-    Read the zeotypes from a .zeo file
-    :param file_path: path to .zeo file with or without .zeo extension
+    Read the zeotypes from a .zeo file or folder
+    :param file_path: path to .zeo file with or without .zeo extension or path to unzipped zeo folder
     :type file_path: str
     :param str_ext: type of files in .zeo zip file
     :type str_ext: str
     :return: Dictionary of Zeotypes loaded from the files
     :rtype: Dict[str, PerfectZeolite]
     """
+    if zipped:
+        if '.' not in file_path:
+            file_path = file_path + '.zeo'
+        folder_path = unpack_zeo_file(file_path)
+    else:
+        folder_path = file_path
 
-    if '.' not in file_path:
-        file_path = file_path + '.zeo'
-    folder_path = unpack_zeo_file(file_path)
     zeotype_dict = {}
     folder_list = glob.glob(os.path.join(folder_path, '*/'))
     for folder in folder_list:
@@ -191,7 +201,106 @@ def read_zeotypes(file_path: str, str_ext: str = '.traj') -> Dict[str, PerfectZe
         z.parent_zeotype = zeotype_dict['parent'].index_mapper
         z.index_mapper = index_mapper
 
-    delete_folder(folder_path)
+    if zipped:
+        delete_folder(folder_path)
+
     return zeotype_dict
 
 
+def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_filepath: str) -> PerfectZeolite:
+    perfect_zeolite = PerfectZeolite(read(binary_filepath))
+
+    with open(json_filepath, 'r') as f:
+        attr_dict = json.load(f)
+    perfect_zeolite.name = attr_dict['name']
+    perfect_zeolite.additions = attr_dict['additions']
+    perfect_zeolite._atom_indices_to_site = attr_dict['atom_indices_to_site']
+    perfect_zeolite._site_to_atom_indices = attr_dict['site_to_atom_indices']
+    with open(index_mapper_filepath, 'r') as f:
+        index_mapper_dict = json.load(f)
+    max_key = max([int(i) for i in index_mapper_dict['main_index'].keys()])
+    new_index_mapper = IndexMapper([i for i in range(0, max_key + 1)])
+
+    main_to_parent_map = {}
+    for atom in perfect_zeolite:
+        main_to_parent_map[atom.tag] = atom.index
+
+    new_index_mapper.reregister_parent(main_to_parent_map)
+    perfect_zeolite.index_mapper = new_index_mapper
+    return perfect_zeolite
+
+def read_zeolite(binary_filepath: str, parent_zeolite: PerfectZeolite, json_filepath: Optional[str] = None) -> Zeolite:
+    if json_filepath:
+        with open(json_filepath, 'r') as f:
+            attr_dict = json.load(f)
+        additions_map = attr_dict['additions_maps']
+    else:
+        additions_map = None
+
+    z = Zeolite(read(binary_filepath))
+    z.register_with_parent(parent_zeolite, additions_map)
+    return z
+
+
+# def read_
+
+def read_zeotypes_2(file_path: str, str_ext: str = '.traj', zipped: bool = True,
+                    glob_cmd: Optional[str] = None) -> Dict[str, PerfectZeolite]:
+    """
+    Read the zeotypes from a .zeo file or folder
+    :param file_path: path to .zeo file with or without .zeo extension or path to unzipped zeo folder
+    :type file_path: str
+    :param str_ext: type of files in .zeo zip file
+    :type str_ext: str
+    :return: Dictionary of Zeotypes loaded from the files
+    :rtype: Dict[str, PerfectZeolite]
+    """
+    if zipped:
+        if '.' not in file_path:
+            file_path = file_path + '.zeo'
+        folder_path = unpack_zeo_file(file_path)
+    else:
+        folder_path = file_path
+
+    zeotype_dict = {}
+    folder_list = glob.glob(os.path.join(folder_path, '*/'))
+
+    # read parent zeotype
+    try:
+        parent_folder = [folder for folder in folder_list if Path(folder).stem == 'parent'][0]
+    except IndexError as e:
+        raise FileExistsError('parent folder not found in specified directory') from e
+
+    # get parent zeolite binary file
+    # use regex binary command
+    if glob_cmd:
+        binary_glob_cmd = glob_cmd
+    else:
+        binary_glob_cmd = '*' + str_ext
+
+    binary_filepath = glob.glob(os.path.join(parent_folder, binary_glob_cmd))[0]
+    json_filepath = glob.glob(os.path.join(parent_folder, '*.json'))[0]
+    index_mapper_filepath = glob.glob(os.path.join(folder_path, 'index_mapper.json'))[0]
+    parent_zeolite = read_parent_zeolite(binary_filepath, json_filepath, index_mapper_filepath)
+    zeotype_dict['parent'] = parent_zeolite
+
+    for folder in folder_list:
+        if folder == parent_folder:
+            continue
+
+        name = Path(folder).stem
+        json_path = os.path.join(folder, name + '.json')
+        binary_path = os.path.join(folder, name + str_ext)
+        with open(json_path, 'r') as f:
+            my_zeotype = Zeolite(read(binary_path))
+            attr_dict = json.load(f)
+            my_zeotype.name = name
+            additions_map = attr_dict['additions_map']
+
+        my_zeotype.register_with_parent(parent_zeolite, additions_map)
+        zeotype_dict[name] = my_zeotype
+
+    if zipped:
+        delete_folder(folder_path)
+
+    return zeotype_dict

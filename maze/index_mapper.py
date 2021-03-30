@@ -253,3 +253,10 @@ class IndexMapper:
                 overlap_indices_name1.append(name_dict[name1])
 
         return overlap_indices_name1
+
+    def reregister_parent(self, main_to_parent_map):
+        for key, value in self.main_index.items():
+            if key in main_to_parent_map:
+                value['parent'] = main_to_parent_map[key]
+            else:
+                value['parent'] = None
