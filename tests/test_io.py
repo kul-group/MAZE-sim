@@ -1,6 +1,6 @@
 from unittest import TestCase
 from maze.zeolite import Zeolite
-from maze.io_zeolite import save_zeotypes, read_zeotypes_2
+from maze.io_zeolite import save_zeotypes, read_zeolites
 import glob
 import os
 from ase import Atoms
@@ -29,7 +29,7 @@ class IOZeolites(TestCase):
 
     def test_load_zeotypes_2(self):
         input_filepath = 'zeolite_output/test_zeo'
-        zeotype_dict = read_zeotypes_2(input_filepath, str_ext='.traj', zipped=False)
+        zeotype_dict = read_zeolites(input_filepath, str_ext='.traj', zipped=False)
         with self.subTest('test same index mapper and same parent'):
             zeotypes = list(zeotype_dict.values())
             for i in range(1, len(zeotypes)):

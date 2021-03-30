@@ -162,49 +162,6 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-def read_zeotypes(file_path: str, str_ext: str = '.traj', zipped: bool = True) -> Dict[str, PerfectZeolite]:
-    """
-    Read the zeotypes from a .zeo file or folder
-    :param file_path: path to .zeo file with or without .zeo extension or path to unzipped zeo folder
-    :type file_path: str
-    :param str_ext: type of files in .zeo zip file
-    :type str_ext: str
-    :return: Dictionary of Zeotypes loaded from the files
-    :rtype: Dict[str, PerfectZeolite]
-    """
-    if zipped:
-        if '.' not in file_path:
-            file_path = file_path + '.zeo'
-        folder_path = unpack_zeo_file(file_path)
-    else:
-        folder_path = file_path
-
-    zeotype_dict = {}
-    folder_list = glob.glob(os.path.join(folder_path, '*/'))
-    for folder in folder_list:
-        name = Path(folder).stem
-        json_path = os.path.join(folder, name + '.json')
-        binary_path = os.path.join(folder, name + str_ext)
-        with open(json_path, 'r') as f:
-            my_zeotype = PerfectZeolite(read(binary_path))
-            attr_dict = json.load(f)
-            my_zeotype.name = name
-            my_zeotype.additions = attr_dict['additions']
-
-            if name == 'parent':
-                my_zeotype._atom_indices_to_site = attr_dict['atom_indices_to_site']
-                my_zeotype._site_to_atom_indices = attr_dict['site_to_atom_indices']
-
-            zeotype_dict[name] = my_zeotype
-    index_mapper = load_index_mapper(os.path.join(folder_path, 'index_mapper.json'))
-    for name, z in zeotype_dict.items():
-        z.parent_zeotype = zeotype_dict['parent'].index_mapper
-        z.index_mapper = index_mapper
-
-    if zipped:
-        delete_folder(folder_path)
-
-    return zeotype_dict
 
 
 def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_filepath: str) -> PerfectZeolite:
@@ -244,10 +201,10 @@ def read_zeolite(binary_filepath: str, parent_zeolite: PerfectZeolite, json_file
 
 # def read_
 
-def read_zeotypes_2(file_path: str, str_ext: str = '.traj', zipped: bool = True,
-                    glob_cmd: Optional[str] = None) -> Dict[str, PerfectZeolite]:
+def read_zeolites(file_path: str, str_ext: str = '.traj', zipped: bool = True,
+                  glob_cmd: Optional[str] = None) -> Dict[str, PerfectZeolite]:
     """
-    Read the zeotypes from a .zeo file or folder
+    Read the zeolites from a .zeo file or folder or folder
     :param file_path: path to .zeo file with or without .zeo extension or path to unzipped zeo folder
     :type file_path: str
     :param str_ext: type of files in .zeo zip file
