@@ -170,12 +170,12 @@ class Zeolite(PerfectZeolite):
         self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
                 pos = self.get_H_pos(o_index)
-                cap_atoms_dict['H'].append(pos)
+                cap_atoms_dict['H'].append(np.array(pos))
 
         return dict(cap_atoms_dict)
 
@@ -190,15 +190,18 @@ class Zeolite(PerfectZeolite):
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
 
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
+        distict_positions = set()
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
                 for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
                     pos = self.get_oxygen_cap_pos(si_index)
-                    cap_atoms_dict['O'].append(pos)
+                    distict_positions.add(tuple(pos))
+        for pos in distict_positions:
+            cap_atoms_dict['O'].append(np.array(pos))
 
-        return cap_atoms_dict
+        return dict(cap_atoms_dict)
 
     def build_all_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None) -> Dict[str, np.array]:
         """
@@ -343,6 +346,27 @@ class Zeolite(PerfectZeolite):
 
         return self_list
 
+    @staticmethod
+    def _check_unique_positions(position_list):
+        """
+        A helper function to check that the positions of the atoms are unique. An error is thrown
+        if there are overlapping atoms. This slows down the code, because it is O(N^2).
+
+        :param position_list (np.array[np.array]):  an array of positions
+        :return: None
+
+        """
+        for i in range(0, len(position_list)):
+            for j in range(i, len(position_list)):
+                if i == j:
+                    continue
+                for x1, y1 in zip(position_list[i], position_list[j]):
+                    if x1 != y1:
+                        break
+                else:  # if break statement not called two vectors are equal (which means overlapping atoms)
+                    raise ValueError('An Atoms object with Overlapping atoms was passed to the add_atoms method. '
+                                     'Overlapping atoms cause trouble and thus are not allowed. ')
+
     def add_atoms(self, atoms_to_add: Atoms, atom_type: str, short_description: str = '') -> 'Zeolite':
         """
         Adds additional atoms to current imperfect MAZE-sim
@@ -354,6 +378,8 @@ class Zeolite(PerfectZeolite):
         """
         # add atoms to indexer
         # register atoms_to_add with index mapper
+        self._check_unique_positions(atoms_to_add.get_positions())
+
         atom_indices = [atom.index for atom in atoms_to_add]
         # TODO: Find a way to map new atoms back to parent zeotype if that mapping exists
         if short_description:
@@ -466,8 +492,7 @@ class Zeolite(PerfectZeolite):
         hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
         return hydrogen_pos
 
-    def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple[
-        "Zeolite", "Zeolite"]:
+    def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple["Zeolite", "Zeolite"]:
         """
         Generates a Cluster of atoms around the specified index. The number of atoms in the cluster
         is given by the size parameter.
@@ -487,6 +512,36 @@ class Zeolite(PerfectZeolite):
         cluster = self.cluster_maker.get_cluster(self, cluster_indices)
         open_defect = self.cluster_maker.get_open_defect(self, cluster_indices)
         return cluster, open_defect
+
+    def add_additions_map_to_self(self, additions_map):
+        for key in additions_map:
+            self.additions[key].extend(list(additions_map[key].keys()))
+
+    def register_with_parent(self, parent_zeolite: PerfectZeolite, additions_map: Optional[Dict] = None):
+        # test that all tags are unique
+        if len(self.get_tags()) != len(set(self.get_tags())):
+            raise RuntimeError('Tags must be unique to register self with parent_zeolite')
+
+        main_to_new_map = {}
+        for atom in self:
+            main_to_new_map[atom.tag] = atom.index
+
+        parent_zeolite.index_mapper.register_with_main(self.name, main_to_new_map)
+        self.index_mapper = parent_zeolite.index_mapper
+        self.parent_zeotype = parent_zeolite
+
+
+        if additions_map is not None: # register additions
+            self.add_additions_map_to_self(additions_map)
+            for key in additions_map:
+                addition_main_to_new_map = {}
+                for name, main_indices in additions_map[key].items():
+                    addition_index = 0
+                    for atom in self:
+                        if atom.tag in main_indices:
+                            addition_main_to_new_map[atom.tag] = addition_index
+                            addition_index += 1
+                    self.index_mapper.register_with_main(name, addition_main_to_new_map)
 
 
 class ClusterMaker(ABC):
