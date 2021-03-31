@@ -1,6 +1,6 @@
 from unittest import TestCase
 from maze.zeolite import Zeolite
-from maze.io_zeolite import save_zeotypes, read_zeolites
+from maze.io_zeolite import save_zeolites, read_zeolites
 import glob
 import os
 from ase import Atoms
@@ -17,17 +17,17 @@ class IOZeolites(TestCase):
 
         cha3 = cha2.add_atoms(water, 'water')
         zeolite_list = [cha, cha2, cha3, cha3.parent_zeotype]
-        save_zeotypes(output_filepath, zeolite_list, zip=False)
+        save_zeolites(output_filepath, zeolite_list, zip=False)
         folder_file_list = glob.glob(output_filepath + '/**')
 
         with self.subTest('test that folders have been made'):
             for z in zeolite_list:
                 self.assertIn(os.path.join(output_filepath, z.name), folder_file_list)
 
-        import pandas as pd
-        print(pd.DataFrame(cha.index_mapper.main_index).T.to_string())
+        # import pandas as pd
+        # print(pd.DataFrame(cha.index_mapper.main_index).T.to_string())
 
-    def test_load_zeotypes_2(self):
+    def test_read_zeolites(self):
         input_filepath = 'zeolite_output/test_zeo'
         zeotype_dict = read_zeolites(input_filepath, str_ext='.traj', zipped=False)
         with self.subTest('test same index mapper and same parent'):
@@ -46,8 +46,7 @@ class IOZeolites(TestCase):
                     self.assertEqual(item_index, zeotypes[0].index_mapper.main_index[int(row_index)][name],
                                      msg=f'testing main index {row_index}, name {name}, item_index {item_index}')
 
-
-
+        # TODO: Add in glob cmd
         #import pandas as pd
         #print(pd.DataFrame(zeotypes[0].index_mapper.main_index).T.to_string())
 

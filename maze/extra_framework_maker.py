@@ -17,6 +17,7 @@ class ExtraFrameworkMaker(object):
         self.traj_2Al = []
         self.count_all_Al_pairs = 0
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
+        self.dict_t_sites_1Al_replaced = {}
 
     ## need checking
     def make_extra_frameworks(self):
@@ -45,6 +46,8 @@ class ExtraFrameworkMaker(object):
                 pos = self.EFzeolite.get_positions()[index]
                 new_zeo = self.EFzeolite.delete_atoms([index])
                 new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
+                new_ztype = new_zeo.ztype + site_name + '->Al'
+                new_zeo = Zeolite(new_zeo, ztype=new_ztype)
                 self.traj_1Al.append(new_zeo)
                 traj_t_sites.append(new_zeo)
             self.dict_t_sites_1Al_replaced[site_name] = traj_t_sites
@@ -61,8 +64,8 @@ class ExtraFrameworkMaker(object):
         done_indices = []
 
         for zeolite in self.traj_1Al:
-            atoms = ImperfectZeotype(zeolite)  # already have neighbor_list
-            ini_atoms = copy.deepcopy(atoms)
+            atoms = Zeolite(zeolite)  # already have neighbor_list
+            ini_atoms = copy.copy(atoms)
             index_Al = [a.index for a in atoms if a.symbol == 'Al']
             '''
             # skip process if there are already 2 Al replacement
@@ -87,7 +90,10 @@ class ExtraFrameworkMaker(object):
                     if index not in neighboring_Si and [index, index_Al] not in done_indices:
                         # first condition is the Lowenstein's rule
                         if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
-                            atoms = copy.deepcopy(ini_atoms)
+                            T_site_name = ini_atoms.atom_indices_to_sites[index]
+                            z_type_current = atoms.ztype
+                            new_z_type = atoms.ztype + 'AND'+ T_site_name + '->Al'
+                            atoms = Zeolite(ini_atoms, ztype=new_z_type)
                             atoms[index].symbol = 'Al'
                             self.traj_2Al.append(atoms)
                             self.count_all_Al_pairs += 1

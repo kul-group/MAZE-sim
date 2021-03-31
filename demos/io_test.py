@@ -13,7 +13,7 @@ if __name__ == "__main__":
     # output_traj = os.path.join(data_dir, 'test.traj')
     # cif_dir = os.path.join(data_dir, 'BEA.cif')
     # zeolite = Zeotype.build_from_cif_with_labels(cif_dir)
-    save_zeotypes(output_path, [my_zeotype, cluster, od])
+    save_zeolites(output_path, [my_zeotype, cluster, od])
     new_dict = read_zeotypes(output_path + '.zeo')
     print(new_dict)
     print(new_dict['parent'])

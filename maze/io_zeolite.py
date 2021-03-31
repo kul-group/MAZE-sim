@@ -52,7 +52,7 @@ def unpack_zeo_file(filename) -> str:
     return output_path
 
 
-def save_zeotypes(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_ext: str = '.traj',
+def save_zeolites(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_ext: str = '.traj',
                   zip: bool = True) -> None:
     """
     This saves a list of Zeotypes to a .zeo file
@@ -209,6 +209,8 @@ def read_zeolites(file_path: str, str_ext: str = '.traj', zipped: bool = True,
     :type file_path: str
     :param str_ext: type of files in .zeo zip file
     :type str_ext: str
+    :param glob_cmd: regular expression to select from folder structure
+    :type glob_cmd: str
     :return: Dictionary of Zeotypes loaded from the files
     :rtype: Dict[str, PerfectZeolite]
     """
