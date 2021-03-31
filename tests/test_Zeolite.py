@@ -58,6 +58,7 @@ class TestImperfectZeotype(TestCase):
             for atom in cha:
                 if atom.symbol == 'O':
                     atom.symbol = 'Po'
+
             cha = cha.cap_atoms()
             view(cha)
 
