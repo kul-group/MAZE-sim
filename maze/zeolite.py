@@ -170,12 +170,12 @@ class Zeolite(PerfectZeolite):
         self.update_nl()
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
         for o_index in indices['O']:
             if self.needs_cap(o_index, bonds_needed['O']):
                 pos = self.get_H_pos(o_index)
-                cap_atoms_dict['H'].append(pos)
+                cap_atoms_dict['H'].append(np.array(pos))
 
         return dict(cap_atoms_dict)
 
@@ -190,15 +190,18 @@ class Zeolite(PerfectZeolite):
         if bonds_needed is None:
             bonds_needed = {'O': 2, 'Si': 4, 'Sn': 4, 'Al': 4, 'Ga': 4, 'B': 4}
 
-        cap_atoms_dict: Dict[str, List[int]] = defaultdict(list)
+        cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
+        distict_positions = set()
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
                 for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
                     pos = self.get_oxygen_cap_pos(si_index)
-                    cap_atoms_dict['O'].append(pos)
+                    distict_positions.add(tuple(pos))
+        for pos in distict_positions:
+            cap_atoms_dict['O'].append(np.array(pos))
 
-        return cap_atoms_dict
+        return dict(cap_atoms_dict)
 
     def build_all_atoms_cap_dict(self, bonds_needed: Optional[Dict[str, int]] = None) -> Dict[str, np.array]:
         """
