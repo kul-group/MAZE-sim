@@ -2,19 +2,20 @@
 ========================================================
 Introduction
 ===============
-This project aims to extend the Atomic Simulation Environment (ASE) to more naturally represent the properties of zeolites and facilitate the calculations required to determine their properties. 
+This project aims to extend the Atomic Simulation Environment (ASE) to more naturally represent zeolites and facilitate the calculations required to determine their properties. 
 
-The main functionality of this code comes about by creating classes which represent zeolites. These zeolite classes inherit from the ASE Atoms object, and can be treated as ASE Atoms objects. The following code demonstrates how a zeotype object can be treated as an ASE Atoms object. 
+The `Zeolite` class, which contains the majority of the functionality of the MAZE code, inherits from the `ase.Atoms` class and thus contains all of the `ase.Atoms` class' familiar features and behaviors. The `Zeolite` class also has additional features that simplify the tracking of relationships between atoms in related zeolite structures. 
 
-Cif files downloaded from the iza structure database (http://www.iza-structure.org/databases/ ) contain additional 
-information about the unique sites in a zeolite. This information is lost when loading a cif file using
-ase.Atoms.io.read method. Thus, a new ```build_from_cif_with_labels``` static method was created, which loads a cif 
-file while retaining information about the atom labels. These labels can be accessed by using the Atom object tags or 
-the dictionaries ``site_to_atom_indices`` and ``atom_indices_to_site``. 
+A detailed and complete description of the features of the MAZE code can be found in the [official MAZE documentation](https://kul-group.github.io/MAZE-sim/). 
+
 
 Installation 
 =================
-
+~~The current stable, release of MAZE (v0.11)can now be installed via `pip` using the command 
+`pip install maze-sim` or conda~~
+ 
+The most recent developer version of the MAZE code is available on Github. To install it follow the following instructions: 
+ 
 1. Clone this git repository 
     ``` 
     git clone https://github.com/kul-group/MAZE-sim.git
@@ -31,7 +32,7 @@ Installation
     ```
     python
    >>> import maze 
-   >>> maze.zeotypes.Zeotype()
+   >>> maze.Zeolite() 
    Zeotype(symbols='', pbc=False)
     ```
 Documentation 
@@ -40,28 +41,28 @@ For complete class descriptions and tutorials check out the [official MAZE docum
 
 Features 
 =======
-This improved, unique atom site labeling is just one of the many features added by the Zeotype class. Additional features include
 
--	Support to easily extract clusters from zeotype objects and then reincorporate them in once they have been optimized 
--	Cap atoms in clusters so that calculations can be performed on them 
--	Identify different types of atoms in a zeotype 
--	Download cif files from the zeotype database by calling a python function 
--	Add adsorbate and remove adsorbate atoms into the zeotype 
-
-Check out the documentation here, for additional details on how to use this package. 
+- Complete compatibility with the Atomic Simulation Environment (ASE)
+- Automatic site labeling when building from CIF files from the iza structure database  
+-  Automatic downloading of CIF files from the IZA database
+-  Atom relationship tracking across related zeolite structures
+- Simple atom capping and uncapping 
+ - Simple cluster extraction and cluster reintegration  
+-	Interface for adding adsorbates, automatically positioning adsorbates and removing adsorbates 
+- Save collections of Zeolites and reload them while preserving their atomic relationships 
 
 
 Contribute
 ----------
 
+- Discussion Board: https://github.com/kul-group/MAZE-sim/discussions
 - Source Code: https://github.com/kul-group/MAZE-sim
 - Issue Tracker: https://github.com/kul-group/MAZE-sim/issues
 
 Support
 -------
 
-If you are having issues, please let us know.
-We have a mailing list located at: dexter.d.antonio@gmail.com
+If you are having issues, please let us know by posting on the [discussion board](https://github.com/kul-group/MAZE-sim/discussions). You can also submit an issue to the [Issue Tracker](https://github.com/kul-group/MAZE-sim/issues) if you encounter a specific, code related problem.  
 
 License
 -------
