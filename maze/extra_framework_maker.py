@@ -10,19 +10,31 @@ import copy as copy
 from ase.io import write, read
 import itertools
 
+
 class ExtraFrameworkMaker(object):
-    def __init__(self, cif_dir):
-        self.EFzeolite = Zeolite.make(cif_dir)
+    def __init__(self, iza_code=None):
+        """ This is an extra-framework class
+        :param iza_code: 3 letter code for the zeolite structures (IZA database)
+        """
+        if iza_code is not None:
+            self.EFzeolite = Zeolite.make(iza_code)
+        self.t_site_indices = {}
         self.traj_1Al = []
         self.traj_2Al = []
         self.count_all_Al_pairs = 0
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
         self.dict_t_sites_1Al_replaced = {}
 
-    ## need checking
-    def make_extra_frameworks(self):
+    def make_extra_frameworks(self, print_statement=False):
+        """
+        :param print_statement:
+        """
         self.replace_1Al()
+        if print_statement is True:
+            print('Single Al replacement is Done!')
         self.replace_2Al_unique_pairs()
+        if print_statement is True:
+            print('The second Al replacement is Done!')
         # add in Cu here
 
     def get_t_sites(self) -> dict:
@@ -39,8 +51,8 @@ class ExtraFrameworkMaker(object):
         """ This function takes in a perfect zeolite and replace one Si atom with an Al for every T site
         :return: a dictionary of trajectories for each T site tags
         """
-        t_site_indices = self.get_t_sites()
-        for site_name, t_site in t_site_indices.items():
+        self.t_site_indices = self.get_t_sites()
+        for site_name, t_site in self.t_site_indices.items():
             traj_t_sites = []
             for index in t_site:
                 pos = self.EFzeolite.get_positions()[index]
@@ -67,13 +79,12 @@ class ExtraFrameworkMaker(object):
             atoms = Zeolite(zeolite)  # already have neighbor_list
             ini_atoms = copy.copy(atoms)
             index_Al = [a.index for a in atoms if a.symbol == 'Al']
-            '''
-            # skip process if there are already 2 Al replacement
+
             if len(index_Al) != 1:
                 print('Error: No more than 1 Al in the structure.')
                 atoms[index_Al[len(index_Al) - 1]].symbol = 'Si'
                 index_Al = [a.index for a in atoms if a.symbol == 'Al']
-            '''
+
             neighboring_Si = []
             neigh_o_indices, offsets = atoms.neighbor_list.get_neighbors(index_Al[0])
             for each_neigh_o_index in neigh_o_indices:
@@ -92,7 +103,7 @@ class ExtraFrameworkMaker(object):
                         if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
                             T_site_name = ini_atoms.atom_indices_to_sites[index]
                             z_type_current = atoms.ztype
-                            new_z_type = atoms.ztype + 'AND'+ T_site_name + '->Al'
+                            new_z_type = atoms.ztype + 'AND' + T_site_name + '->Al'
                             atoms = Zeolite(ini_atoms, ztype=new_z_type)
                             atoms[index].symbol = 'Al'
                             self.traj_2Al.append(atoms)
@@ -118,6 +129,7 @@ class ExtraFrameworkMaker(object):
         return close_framework_atom_positions
 
     def _get_reference_with_S_in_between_Al_pairs(self, atoms, cluster_radius):
+        # TODO: write into smaller functions (check functions from the adsorbate class)
         """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
         The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
         into account from input "cluster_radius".
@@ -174,47 +186,22 @@ class ExtraFrameworkMaker(object):
         atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
         return atoms
 
-    # no longer needed
-    def insert_CuOCu(self, atoms):
-        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms, 0)
+    @staticmethod
+    def _get_direction_of_insertion(atoms, index1, index2, index3):
+        v1 = atoms.get_distance(index1, index2, vector=True, mic=True)
+        v2 = atoms.get_distance(index1, index3, vector=True, mic=True)
+        v = (v1 + v2) / np.linalg.norm(v1 + v2)
+        return v
 
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        pos_centering_O = atoms.get_positions()[index_S]
-
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
-        atoms = atoms + Atoms('O', positions=[pos_centering_O])
-        d_CuO = 2
-        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        for count in range(len(Al_index)):
-            dir_Cu = atoms.get_distance(index_S, Al_index[count], mic=True, vector=True)
-            dir_Cu = dir_Cu / np.linalg.norm(dir_Cu)
-            pos_Cu = dir_Cu * d_CuO + pos_centering_O
-            atoms = atoms + Atoms('Cu', positions=[pos_Cu])
-        return atoms
-
-    # no longer needed
-    def insert_TM(self, atoms, metal_type):
-        # find metal sites and insert in between Al and reference S atoms (which will be converted to O later)
-        atoms = self._get_reference_with_S_in_between_Al_pairs(atoms, 0)
-
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        pos = atoms.get_positions()[index_S]
-
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
-        atoms = atoms + Atoms(metal_type, positions=[pos])
-        return atoms
-
-    def sample_Z_TM(self, d_Z_TM):
+    def get_all_Z_TM(self, d_Z_TM, TM_type):
+        """ # TODO: add description
+        :param d_Z_TM: Z-TM distance with Z being the T sites on the zeolite framework and TM being extraframework atom
+        to be inserted
+        :return: a dictionary of structures for each T site name
         """
-
-        :param:
-        :return:
-        """
-        self.replace_1Al()
-        # d_Z_TM = 2.6  # Al-Cu
         dict_Z_TM = {}
         for site_name, all_zeo_with_same_T in self.dict_t_sites_1Al_replaced.items():
-            atoms = all_zeo_with_same_T[0]
+            atoms = copy.copy(all_zeo_with_same_T[0])
             nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
             nl.update(atoms)
             index_Al = [a.index for a in atoms if a.symbol == 'Al']
@@ -224,18 +211,38 @@ class ExtraFrameworkMaker(object):
             traj = []
             pairs = list(itertools.combinations(indices, 2))
             for i, pair in enumerate(pairs):
-                index_o1 = pair[0]
-                index_o2 = pair[1]
-                v1 = atoms.get_distance(index_Al[0], index_o1, vector=True, mic=True)
-                v2 = atoms.get_distance(index_Al[0], index_o2, vector=True, mic=True)
-                v = (v1 + v2) / np.linalg.norm(v1 + v2)
-                atoms_Cu = Atoms('Cu', positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
-                atoms = atoms + atoms_Cu
+                atoms = copy.copy(all_zeo_with_same_T[0])
+                v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1])
+                atoms = atoms + Atoms(TM_type, positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
                 traj.append(atoms)
             dict_Z_TM[site_name] = traj
 
         return dict_Z_TM
 
+    def get_all_Bronsted_sites(self):
+        traj_ZH = []
+        done_oxygen = []
+        for ref_atoms in self.traj_1Al:
+            atoms = copy.copy(ref_atoms)
+            nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+            nl.update(atoms)
+            index_Al = [a.index for a in atoms if a.symbol == 'Al']
+            indices, offsets = nl.get_neighbors(index_Al[0])
+            assert len(indices) == 4
+
+            for count, index in enumerate(indices):
+                if index not in done_oxygen:
+                    atoms = copy.copy(ref_atoms)
+                    indices_neigh, offset_neigh = nl.get_neighbors(index)
+                    assert len(indices_neigh) == 2  # oxygen index
+                    i_neigh_T = [val for val in indices_neigh if val != index_Al][0]
+                    assert atoms[i_neigh_T].symbol == 'Si'
+                    assert atoms[index].symbol == 'O'
+                    v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
+                    coord_O = atoms.get_positions()[index]
+                    traj_ZH.append(atoms.add_atoms(Atoms('H', positions=[coord_O + 0.97 * v]), 'H'))
+                    done_oxygen.append(index)
+        return traj_ZH
 
     @staticmethod
     def get_cluster_radius(EF_atoms):
@@ -294,38 +301,3 @@ class ExtraFrameworkMaker(object):
         atoms.translate(-1 * translate_vector)
         atoms.wrap()
         return atoms
-
-
-def main():
-    zeolite_traj = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', ':')
-    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
-    EF_atoms = Atoms('Co', positions=[[0, 0, 0]])
-
-    count = 0
-    inserted_traj = []
-    for zeolite in zeolite_traj:
-        try:
-            EFzeolite = ExtraFramework()
-            inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
-            inserted_traj.append(inserted_atoms)
-            count += 1
-            print(count)
-        except AttributeError:
-            print('Error!')
-
-    view(inserted_traj)
-
-    # write('MFI_Co.traj', inserted_atoms)
-
-
-def main1():
-    EFzeolite = ExtraFramework("//data/BEA.cif")
-    dict_Z_TM = EFzeolite.sample_Z_TM(2.6)
-    all_traj = []
-    for site_name, traj in dict_Z_TM.items():
-        all_traj.append(traj)
-    view(all_traj)
-
-
-if __name__ == '__main__':
-    main()
