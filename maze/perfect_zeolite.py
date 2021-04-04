@@ -474,6 +474,11 @@ class PerfectZeolite(Atoms):
         return cls(parent)
 
     def get_self_to_main_index_map(self):
+        """
+        Get a self to main indiex m
+        :return:
+        :rtype:
+        """
         self_to_main_dict = self.index_mapper.get_reverse_main_index(self.name)
         addition_names = []
         for ad_type in self.additions:
