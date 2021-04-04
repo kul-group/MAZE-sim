@@ -76,7 +76,7 @@ def save_zeolites(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_
             name_list.extend(names)
 
     print(name_list)
-    assert "parent" in name_list, 'parent must be in zeotype list'
+    assert "parent" in name_list, 'parent must be in zeolite list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
 
     for z in zeotype_list:
@@ -224,7 +224,7 @@ def read_zeolites(file_path: str, str_ext: str = '.traj', zipped: bool = True,
     zeotype_dict = {}
     folder_list = glob.glob(os.path.join(folder_path, '*/'))
 
-    # read parent zeotype
+    # read parent zeolite
     try:
         parent_folder = [folder for folder in folder_list if Path(folder).stem == 'parent'][0]
     except IndexError as e:

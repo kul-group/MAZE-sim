@@ -93,7 +93,7 @@ class TestImperfectZeotype(TestCase):
     def test_integrate(self):
         iz = Zeolite.make('BEA')
         cluster, od = iz.get_cluster(174)
-        with self.subTest(msg='integrate other zeotype'):
+        with self.subTest(msg='integrate other zeolite'):
             new_iz = cluster.integrate(od)
             self.assertEqual(len(new_iz), len(iz))
             # this should be fixed eventually

@@ -34,13 +34,13 @@ class TestIndexMapper(TestCase):
     def test_get_unique_name(self):
         atom_indices = [i for i in range(0, 10)]
         index_mapper = IndexMapper(atom_indices)
-        name1 = index_mapper.get_unique_name('zeotype')
-        name2 = index_mapper.get_unique_name('zeotype')
+        name1 = index_mapper.get_unique_name('zeolite')
+        name2 = index_mapper.get_unique_name('zeolite')
         name3 = index_mapper.get_unique_name('fish')
         with self.subTest(msg='testing that names are different'):
             self.assertNotEqual(name1, name2)
         with self.subTest(msg='testing that names contain input string'):
-            self.assertIn('zeotype', name1)
+            self.assertIn('zeolite', name1)
             self.assertIn('fish', name3)
 
 

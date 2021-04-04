@@ -38,7 +38,7 @@ def save_zeotypes(folder_path: str, zeotype_list: List[PerfectZeolite], ase_ext:
             name_list.extend(names)
 
     name_list = [z.name for z in zeotype_list]
-    assert "parent" in name_list, 'parent must be in zeotype list'
+    assert "parent" in name_list, 'parent must be in zeolite list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
 
     for z in zeotype_list:
