@@ -566,35 +566,60 @@ class ClusterMaker(ABC):
     This is an abstract class that selects indices from a Zeolite to return a cluster.
     Multiple implementations of a cluster maker are possible.
     """
-    def get_cluster_indices(self, zeolite: PerfectZeolite, start_site: int, **kwargs):
+    def get_cluster_indices(self, zeolite: PerfectZeolite, start_site: int, **kwargs) -> List[int]:
         """
         Get the cluster indices of a zeo
-        :param zeolite:
-        :type zeolite:
-        :param start_site:
-        :type start_site:
-        :param kwargs:
-        :type kwargs:
-        :return:
-        :rtype:
+        :param zeolite: zeolite to select the cluster from
+        :type zeolite: Zeolite
+        :param start_site: the start site (usually a T-site) from which to select the indices
+        :type start_site: int
+        :param kwargs: additional keyword arguments needed for other functions
+        :type kwargs: Dict
+        :return: list of indices
+        :rtype: List[int]
         """
         raise NotImplementedError
 
     @staticmethod
-    def get_cluster(zeotype: PerfectZeolite, indices: Iterable[int], name="Cluster"):
-        cluster = Zeolite(zeotype, ztype=name)
+    def get_cluster(zeolite: Zeolite, indices: Iterable[int], name="Cluster") -> Zeolite:
+        """
+        Get a cluster from a zeolite
+        :param zeolite: Zeolite from which to extract the cluster
+        :type zeolite: Zeolite
+        :param indices: the indices of the zeolite to construct the cluster
+        :type indices: Iterable[int]
+        :param name: the ztype of the created cluster
+        :type name: string
+        :return: The created cluster of type Zeolite
+        :rtype: Zeolite
+        """
+        cluster = Zeolite(zeolite, ztype=name)
         to_delete = cluster.get_indices_compliment(cluster, indices)
         cluster = cluster.delete_atoms(to_delete)
         return cluster
 
     @staticmethod
-    def get_open_defect(zeotype: PerfectZeolite, indices: Iterable[int], name="Open Defect"):
-        new_od = Zeolite(zeotype, ztype=name)
+    def get_open_defect(zeolite: PerfectZeolite, indices: Iterable[int], name="Open Defect") -> Zeolite:
+        """
+        Get an opendefect object from a zeolite
+        :param zeolite: zeolite from which to get the open defect
+        :type zeolite: Zeolite
+        :param indices: the indices of the cluster (these indices are going to be deleted)
+        :type indices: Iterable[int]
+        :param name: the ztype of the open defect that will be created
+        :type name: str
+        :return: The created opendefect Zeolite
+        :rtype: Zeolite
+        """
+        new_od = Zeolite(zeolite, ztype=name)
         new_od = new_od.delete_atoms(indices)
         return new_od
 
 
 class DefaultClusterMaker(ClusterMaker):
+    """
+    This is an implementation of a Cluster Maker that is used if no cluster maker object is specified
+    """
     def __init__(self):
         pass
 
