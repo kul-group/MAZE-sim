@@ -293,10 +293,8 @@ class Zeolite(PerfectZeolite):
         """
         Applies a custom function to the atoms and returns a new self
 
-        :param operation: applies a custom function to the atmos
-        :param args: operation to perform on the atoms
-        :param kwargs: keyword arguments
-        :return:
+        :param operation: applies a custom function to the atoms
+        :return: zeolite with applied modifications
         """
         new_self = self.__class__(self)
         operation(new_self, *args, **kwargs)

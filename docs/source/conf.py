@@ -12,6 +12,8 @@
 #
 import os
 import sys
+import typing
+from typing import List, Dict, Tuple, Iterable, Optional, Union, Callable
 
 # i needed to add the following lines to get the modules imported
 sys.path.insert(0,os.path.abspath('../../maze'))
