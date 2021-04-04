@@ -157,7 +157,7 @@
   <h1>Source code for zeolite</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">ase</span>
@@ -446,14 +446,12 @@
         <span class="n">new_z</span><span class="o">.</span><span class="n">additions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">additions</span><span class="p">)</span>
         <span class="n">new_z</span><span class="o">.</span><span class="n">cluster_maker</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">cluster_maker</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zeolite._change_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite._change_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">_change_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+<div class="viewcode-block" id="Zeolite.change_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.change_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">change_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Applies a custom function to the atoms and returns a new self</span>
 
-<span class="sd">        :param operation:</span>
-<span class="sd">        :param args:</span>
-<span class="sd">        :param kwargs:</span>
-<span class="sd">        :return:</span>
+<span class="sd">        :param operation: applies a custom function to the atoms</span>
+<span class="sd">        :return: zeolite with applied modifications</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">operation</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

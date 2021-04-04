@@ -12,6 +12,8 @@
 #
 import os
 import sys
+import typing
+from typing import List, Dict, Tuple, Iterable, Optional, Union, Callable
 
 # i needed to add the following lines to get the modules imported
 sys.path.insert(0,os.path.abspath('../../maze'))
@@ -33,6 +35,10 @@ release = '0.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+autodoc_default_flags = ['members', 'undoc-members', 'private-members', 'special-members',
+                         'inherited-members', 'show-inheritance']
+
+
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.intersphinx',

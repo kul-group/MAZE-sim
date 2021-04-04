@@ -1,6 +1,6 @@
 import copy
 from collections import defaultdict
-from typing import List, Dict, Tuple, Iterable, Optional, Union
+from typing import List, Dict, Tuple, Iterable, Optional, Union, Callable
 import warnings
 
 import ase
@@ -289,14 +289,12 @@ class Zeolite(PerfectZeolite):
         new_z.additions = copy.deepcopy(source.additions)
         new_z.cluster_maker = copy.deepcopy(source.cluster_maker)
 
-    def _change_atoms(self, operation, *args, **kwargs) -> 'Zeolite':
+    def change_atoms(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
         """
         Applies a custom function to the atoms and returns a new self
 
-        :param operation:
-        :param args:
-        :param kwargs:
-        :return:
+        :param operation: applies a custom function to the atoms
+        :return: zeolite with applied modifications
         """
         new_self = self.__class__(self)
         operation(new_self, *args, **kwargs)

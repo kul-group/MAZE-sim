@@ -411,7 +411,15 @@
 
         <span class="k">return</span> <span class="n">overlap_indices_name1</span></div>
 
-<div class="viewcode-block" id="IndexMapper.reregister_parent"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.reregister_parent">[docs]</a>    <span class="k">def</span> <span class="nf">reregister_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">main_to_parent_map</span><span class="p">):</span>
+<div class="viewcode-block" id="IndexMapper.reregister_parent"><a class="viewcode-back" href="../source.html#index_mapper.IndexMapper.reregister_parent">[docs]</a>    <span class="k">def</span> <span class="nf">reregister_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">main_to_parent_map</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a Zeolite as the parent using a main_to_parent_map</span>
+<span class="sd">        This is useful when building a Perfect Zeolite from a file.</span>
+<span class="sd">        :param main_to_parent_map: dict that maps between parent and the main indices</span>
+<span class="sd">        :type main_to_parent_map: Dict[int, int]</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">main_index</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">main_to_parent_map</span><span class="p">:</span>
                 <span class="n">value</span><span class="p">[</span><span class="s1">&#39;parent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">main_to_parent_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>

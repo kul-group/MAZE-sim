@@ -254,7 +254,15 @@ class IndexMapper:
 
         return overlap_indices_name1
 
-    def reregister_parent(self, main_to_parent_map):
+    def reregister_parent(self, main_to_parent_map) -> None:
+        """
+        Register a Zeolite as the parent using a main_to_parent_map
+        This is useful when building a Perfect Zeolite from a file.
+        :param main_to_parent_map: dict that maps between parent and the main indices
+        :type main_to_parent_map: Dict[int, int]
+        :return: None
+        :rtype: None
+        """
         for key, value in self.main_index.items():
             if key in main_to_parent_map:
                 value['parent'] = main_to_parent_map[key]
