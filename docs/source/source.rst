@@ -1,8 +1,8 @@
 MAZE Modules
 ==============
 
-cif\_download module
----------------------------
+Cif Download Module
+--------------------------------------------------
 .. automodule:: cif_download
    :members:
    :undoc-members:
@@ -11,14 +11,14 @@ cif\_download module
    :special-members:
 
 Zeolite and Cluster Maker Module
----------------------
+--------------------------------------------------
 .. automodule:: zeolite
    :members:
    :undoc-members:
    :show-inheritance:
 
 Perfect Zeolite Module
----------------------
+--------------------------------------------------
 .. automodule:: perfect_zeolite
    :members:
    :undoc-members:

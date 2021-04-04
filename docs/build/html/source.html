@@ -91,10 +91,10 @@
 <li class="toctree-l1"><a class="reference internal" href="design_pattern.html">MAZE Index Mapper</a></li>
 <li class="toctree-l1"><a class="reference internal" href="key_classes.html">MAZE Key Classes</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MAZE Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-cif_download">cif_download module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-zeolite">zeotypes module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">zeotypes module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-index_mapper">index_mapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-cif_download">Cif Download Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zeolite-and-cluster-maker-module">Zeolite and Cluster Maker Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#perfect-zeolite-module">Perfect Zeolite Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-index_mapper">Index Mapper Module</a></li>
 </ul>
 </li>
 </ul>
@@ -167,7 +167,7 @@
   <section id="maze-modules">
 <h1>MAZE Modules<a class="headerlink" href="#maze-modules" title="Permalink to this headline">¶</a></h1>
 <section id="module-cif_download">
-<span id="cif-download-module"></span><h2>cif_download module<a class="headerlink" href="#module-cif_download" title="Permalink to this headline">¶</a></h2>
+<span id="cif-download-module"></span><h2>Cif Download Module<a class="headerlink" href="#module-cif_download" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="cif_download.download_cif">
 <code class="sig-prename descclassname"><span class="pre">cif_download.</span></code><code class="sig-name descname"><span class="pre">download_cif</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cif_download.html#download_cif"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cif_download.download_cif" title="Permalink to this definition">¶</a></dt>
@@ -179,9 +179,9 @@ data_dir:</p>
 </dd></dl>
 
 </section>
-<section id="module-zeolite">
-<span id="zeotypes-module"></span><h2>zeotypes module<a class="headerlink" href="#module-zeolite" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<section id="zeolite-and-cluster-maker-module">
+<h2>Zeolite and Cluster Maker Module<a class="headerlink" href="#zeolite-and-cluster-maker-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-zeolite"></span><dl class="py class">
 <dt id="zeolite.ClusterMaker">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">zeolite.</span></code><code class="sig-name descname"><span class="pre">ClusterMaker</span></code><a class="reference internal" href="_modules/zeolite.html#ClusterMaker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.ClusterMaker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
@@ -327,24 +327,6 @@ for adding, removing and integrating other atoms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="zeolite.Zeolite._change_atoms">
-<code class="sig-name descname"><span class="pre">_change_atoms</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#zeolite.Zeolite" title="zeolite.Zeolite"><span class="pre">zeolite.Zeolite</span></a><a class="reference internal" href="_modules/zeolite.html#Zeolite._change_atoms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.Zeolite._change_atoms" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies a custom function to the atoms and returns a new self</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>operation</strong> – </p></li>
-<li><p><strong>args</strong> – </p></li>
-<li><p><strong>kwargs</strong> – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="zeolite.Zeolite._check_unique_positions">
 <em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">_check_unique_positions</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zeolite.html#Zeolite._check_unique_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.Zeolite._check_unique_positions" title="Permalink to this definition">¶</a></dt>
 <dd><p>A helper function to check that the positions of the atoms are unique. An error is thrown
@@ -463,6 +445,24 @@ This is useful in building a Zeolite from a saved file and reloading the additio
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="zeolite.Zeolite.change_atoms">
+<code class="sig-name descname"><span class="pre">change_atoms</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#zeolite.Zeolite" title="zeolite.Zeolite"><span class="pre">zeolite.Zeolite</span></a><a class="reference internal" href="_modules/zeolite.html#Zeolite.change_atoms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.Zeolite.change_atoms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies a custom function to the atoms and returns a new self</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation</strong> – applies a custom function to the atmos</p></li>
+<li><p><strong>args</strong> – operation to perform on the atoms</p></li>
+<li><p><strong>kwargs</strong> – keyword arguments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
 </dd>
 </dl>
 </dd></dl>
@@ -731,8 +731,8 @@ the tags of the current zeolite must be equal to the parent indices.
 </dd></dl>
 
 </section>
-<section id="id1">
-<h2>zeotypes module<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<section id="perfect-zeolite-module">
+<h2>Perfect Zeolite Module<a class="headerlink" href="#perfect-zeolite-module" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-perfect_zeolite"></span><dl class="py class">
 <dt id="perfect_zeolite.PerfectZeolite">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">perfect_zeolite.</span></code><code class="sig-name descname"><span class="pre">PerfectZeolite</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numbers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momenta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magmoms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaled_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">celldisp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">site_to_atom_indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_indices_to_site</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_is_zeotype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ztype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/perfect_zeolite.html#PerfectZeolite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#perfect_zeolite.PerfectZeolite" title="Permalink to this definition">¶</a></dt>
@@ -837,7 +837,10 @@ recored in two dictionaries.</p>
 <dl class="py method">
 <dt id="perfect_zeolite.PerfectZeolite.build_additions_map">
 <code class="sig-name descname"><span class="pre">build_additions_map</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/perfect_zeolite.html#PerfectZeolite.build_additions_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#perfect_zeolite.PerfectZeolite.build_additions_map" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Build a serializable additions map that can be used to rebuild the Zeolite from file
+:return: additions map
+:rtype: Dict</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="perfect_zeolite.PerfectZeolite.build_from_cif_with_labels">
@@ -948,11 +951,6 @@ category.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="perfect_zeolite.PerfectZeolite.get_self_to_main_index_map">
-<code class="sig-name descname"><span class="pre">get_self_to_main_index_map</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/perfect_zeolite.html#PerfectZeolite.get_self_to_main_index_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#perfect_zeolite.PerfectZeolite.get_self_to_main_index_map" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="perfect_zeolite.PerfectZeolite.get_site_type">
 <code class="sig-name descname"><span class="pre">get_site_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">str</span><a class="reference internal" href="_modules/perfect_zeolite.html#PerfectZeolite.get_site_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#perfect_zeolite.PerfectZeolite.get_site_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the identity of a site</p>
@@ -989,7 +987,10 @@ category.</p>
 <dl class="py method">
 <dt id="perfect_zeolite.PerfectZeolite.retag_self">
 <code class="sig-name descname"><span class="pre">retag_self</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="reference internal" href="_modules/perfect_zeolite.html#PerfectZeolite.retag_self"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#perfect_zeolite.PerfectZeolite.retag_self" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Add tags to the Zeolite that correspond to their main index in the index mapper
+:return: None
+:rtype: None</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="perfect_zeolite.PerfectZeolite.site_to_atom_indices">
@@ -1008,7 +1009,7 @@ category.</p>
 
 </section>
 <section id="module-index_mapper">
-<span id="index-mapper-module"></span><h2>index_mapper module<a class="headerlink" href="#module-index_mapper" title="Permalink to this headline">¶</a></h2>
+<span id="index-mapper-module"></span><h2>Index Mapper Module<a class="headerlink" href="#module-index_mapper" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="index_mapper.IndexMapper">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">index_mapper.</span></code><code class="sig-name descname"><span class="pre">IndexMapper</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_indices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/index_mapper.html#IndexMapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#index_mapper.IndexMapper" title="Permalink to this definition">¶</a></dt>
@@ -1175,8 +1176,14 @@ note that additional atoms in new will be added to the index
 
 <dl class="py method">
 <dt id="index_mapper.IndexMapper.reregister_parent">
-<code class="sig-name descname"><span class="pre">reregister_parent</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_to_parent_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/index_mapper.html#IndexMapper.reregister_parent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#index_mapper.IndexMapper.reregister_parent" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname"><span class="pre">reregister_parent</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_to_parent_map</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="reference internal" href="_modules/index_mapper.html#IndexMapper.reregister_parent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#index_mapper.IndexMapper.reregister_parent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a Zeolite as the parent using a main_to_parent_map
+This is useful when building a Perfect Zeolite from a file.
+:param main_to_parent_map: dict that maps between parent and the main indices
+:type main_to_parent_map: Dict[int, int]
+:return: None
+:rtype: None</p>
+</dd></dl>
 
 </dd></dl>
 

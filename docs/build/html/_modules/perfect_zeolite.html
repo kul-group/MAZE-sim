@@ -630,19 +630,12 @@
         <span class="n">parent</span> <span class="o">=</span> <span class="n">PerfectZeolite</span><span class="o">.</span><span class="n">build_from_cif_with_labels</span><span class="p">(</span><span class="n">cif_path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PerfectZeolite.get_self_to_main_index_map"><a class="viewcode-back" href="../source.html#perfect_zeolite.PerfectZeolite.get_self_to_main_index_map">[docs]</a>    <span class="k">def</span> <span class="nf">get_self_to_main_index_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">self_to_main_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_reverse_main_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">addition_names</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">ad_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">:</span>
-            <span class="n">addition_names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">ad_type</span><span class="p">]))</span>
-
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">addition_names</span><span class="p">:</span>
-            <span class="n">tmp_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_reverse_main_index</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-            <span class="n">self_to_main_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tmp_dict</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">self_to_main_dict</span></div>
-
 <div class="viewcode-block" id="PerfectZeolite.retag_self"><a class="viewcode-back" href="../source.html#perfect_zeolite.PerfectZeolite.retag_self">[docs]</a>    <span class="k">def</span> <span class="nf">retag_self</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add tags to the Zeolite that correspond to their main index in the index mapper</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;cannot retag when index mapper is None&#39;</span>
         <span class="n">self_to_main_index_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_reverse_main_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="c1">#for additions in</span>
@@ -650,6 +643,11 @@
             <span class="n">atom</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">self_to_main_index_map</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="PerfectZeolite.build_additions_map"><a class="viewcode-back" href="../source.html#perfect_zeolite.PerfectZeolite.build_additions_map">[docs]</a>    <span class="k">def</span> <span class="nf">build_additions_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a serializable additions map that can be used to rebuild the Zeolite from file</span>
+<span class="sd">        :return: additions map</span>
+<span class="sd">        :rtype: Dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">additions_map</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">names</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
