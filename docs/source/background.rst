@@ -6,7 +6,7 @@ Zeolites are microporous aluminosilicate materials with important applications i
 
 The Atomic Simulation Environment (ASE) is a set of tools that facilitates chemical simulations. ASE offers an object-oriented interface to represent and manipulate groups of atoms while providing an interface to other chemical simulation software. Many successful zeolite screening projects have been carried out with this ASE to date. However, existing chemical simulation software is not well suited to zeolite-specific tasks.
 
-The **M**\ ultiscale **A**\ tomistic **Z**\ eotype Simulation **E**\ nvironment (MAZE) aims to streamline zeolite simulation workflows, by building upon ASE. MAZE utilizes an object-oriented programming approach built around an "ImperfectZeolite" class that
+The **M**\ ultiscale **A**\ tomistic **Z**\ eotype Simulation **E**\ nvironment (MAZE) aims to streamline zeolite simulation workflows, by building upon ASE. MAZE utilizes an object-oriented programming approach built around an Zeolite class that
 
 1. overcomes the cumbersome indexing issues associated with adding and removing atoms (e.g., creating defects, inserting TMs),
 
@@ -16,4 +16,4 @@ The **M**\ ultiscale **A**\ tomistic **Z**\ eotype Simulation **E**\ nvironment 
 
 The third functionality is especially important for modern computational studies, as every calculation step (e.g. DFT, AIMD, force field etc.) can be easily traced back to the IZA CIF file.
 
-For examples on the MAZE package please see the Demos section.
+For examples on the MAZE package please see the Tutorials section.
