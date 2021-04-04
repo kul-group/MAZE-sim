@@ -1,0 +1,950 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>zeolite &mdash; MAZE 0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MAZE
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial_index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../design_pattern.html">MAZE Index Mapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../key_classes.html">MAZE Key Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source.html">MAZE Modules</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MAZE</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>zeolite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for zeolite</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">ase</span>
+<span class="kn">import</span> <span class="nn">ase.data</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
+<span class="kn">from</span> <span class="nn">ase.neighborlist</span> <span class="kn">import</span> <span class="n">natural_cutoffs</span><span class="p">,</span> <span class="n">NeighborList</span>
+<span class="kn">from</span> <span class="nn">maze.adsorbate</span> <span class="kn">import</span> <span class="n">Adsorbate</span>
+<span class="kn">from</span> <span class="nn">maze.perfect_zeolite</span> <span class="kn">import</span> <span class="n">PerfectZeolite</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
+
+
+<div class="viewcode-block" id="Zeolite"><a class="viewcode-back" href="../source.html#zeolite.Zeolite">[docs]</a><span class="k">class</span> <span class="nc">Zeolite</span><span class="p">(</span><span class="n">PerfectZeolite</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This Zeolite object inherits from PerfectZeolite. It represents a zeolite and consists of additional functionality</span>
+<span class="sd">    for adding, removing and integrating other atoms.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Zeolite.__init__"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">momenta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">magmoms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">charges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pbc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">celldisp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">constraint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">velocities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_to_atom_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_indices_to_site</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">additions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cluster_maker</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructor for Zeolite object. The majority of the functionality comes from ase.Atoms object</span>
+<span class="sd">        # TODO: write out docstring</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">numbers</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">momenta</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">magmoms</span><span class="p">,</span>
+                         <span class="n">charges</span><span class="p">,</span> <span class="n">scaled_positions</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">pbc</span><span class="p">,</span> <span class="n">celldisp</span><span class="p">,</span> <span class="n">constraint</span><span class="p">,</span>
+                         <span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">velocities</span><span class="p">,</span> <span class="n">site_to_atom_indices</span><span class="p">,</span> <span class="n">atom_indices_to_site</span><span class="p">,</span>
+                         <span class="n">additions</span><span class="p">,</span> <span class="n">_is_zeotype</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="n">ztype</span><span class="p">)</span>
+
+        <span class="c1"># handle cluster maker</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cluster_maker</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># build from IZ</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">symbols</span><span class="o">.</span><span class="n">cluster_maker</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cluster_maker</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># cluster maker argument passed and not built from IZ</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span> <span class="o">=</span> <span class="n">DefaultClusterMaker</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># cluster maker argument passed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span> <span class="o">=</span> <span class="n">cluster_maker</span></div>
+
+<div class="viewcode-block" id="Zeolite.build_cap_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.build_cap_atoms">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_cap_atoms</span><span class="p">(</span><span class="n">cap_atoms_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Atoms</span><span class="p">:</span>
+        <span class="n">symbol_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">position_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">pos_list</span> <span class="ow">in</span> <span class="n">cap_atoms_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">pos_list</span><span class="p">:</span>
+                <span class="n">symbol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+                <span class="n">position_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="n">symbol_list</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="n">position_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.cap_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.cap_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">cap_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cap_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cap all of the atoms in the zeolite</span>
+
+<span class="sd">        :param cap_description: A short description for the caps that will be added</span>
+<span class="sd">        :return: A copy of self with the correct parameters added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Find a way to map caps back to original</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>  <span class="c1"># might not be needed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">o_cap_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_O_atoms_cap_dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">o_cap_pos</span><span class="p">:</span>
+            <span class="n">o_caps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_cap_atoms</span><span class="p">(</span><span class="n">o_cap_pos</span><span class="p">)</span>
+            <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">o_caps</span><span class="p">,</span> <span class="s1">&#39;o_caps&#39;</span><span class="p">,</span> <span class="n">cap_description</span><span class="p">)</span>
+
+        <span class="n">new_self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>  <span class="c1"># might not be needed</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+        <span class="n">h_cap_pos</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">build_H_atoms_cap_dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">h_cap_pos</span><span class="p">:</span>
+            <span class="n">h_caps</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">build_cap_atoms</span><span class="p">(</span><span class="n">h_cap_pos</span><span class="p">)</span>
+            <span class="n">new_self</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">h_caps</span><span class="p">,</span> <span class="s1">&#39;h_caps&#39;</span><span class="p">,</span> <span class="n">cap_description</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.remove_caps"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.remove_caps">[docs]</a>    <span class="k">def</span> <span class="nf">remove_caps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cap_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;h_cap&#39;</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cap&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove caps from an imperfect MAZE-sim</span>
+
+<span class="sd">        :param cap_type: The type of cap (h_cap, o_cap)</span>
+<span class="sd">        :param cap_name: The name of the cap</span>
+<span class="sd">        :return: A copy of self with the caps removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">],</span> <span class="s1">&#39;cap not in additions&#39;</span>
+        <span class="n">indices_to_delete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">)</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices_to_delete</span><span class="p">)</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cap_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.integrate_adsorbate"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.integrate_adsorbate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_adsorbate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Zeolite&#39;</span><span class="p">,</span> <span class="n">Adsorbate</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an adsorbate into the imperfect MAZE-sim</span>
+
+<span class="sd">        :param adsorbate: Adsorbate object</span>
+<span class="sd">        :param ads_name: name of the adsorbate</span>
+<span class="sd">        :return: a copy of imperfect MAZE-sim with the adsorabte added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ads_name</span> <span class="o">=</span> <span class="s1">&#39;adsorbate&#39;</span>
+        <span class="n">ads</span> <span class="o">=</span> <span class="n">Adsorbate</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">)</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="n">ads_name</span><span class="p">,</span> <span class="n">short_description</span><span class="o">=</span><span class="n">ads</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+        <span class="n">ads</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">ads_name</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_self</span><span class="p">,</span> <span class="n">ads</span></div>
+
+<div class="viewcode-block" id="Zeolite.remove_adsorbate"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.remove_adsorbate">[docs]</a>    <span class="k">def</span> <span class="nf">remove_adsorbate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Adsorbate</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Zeolite&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes an existing adsorbate from the Zeolite</span>
+<span class="sd">        :param adsorbate: adsorbate object or str</span>
+<span class="sd">        :return: new imperfect MAZE-sim with item removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ads_cat</span> <span class="o">=</span> <span class="s1">&#39;adsorbate&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">):</span>
+            <span class="n">ads_name</span> <span class="o">=</span> <span class="n">adsorbate</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adsorbate</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="s1">&#39;adsorbate must have .name attr or be str&#39;</span>
+            <span class="n">ads_name</span> <span class="o">=</span> <span class="n">adsorbate</span>
+        <span class="k">assert</span> <span class="n">adsorbate</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">ads_cat</span><span class="p">],</span> <span class="s1">&#39;ads not in additions&#39;</span>
+        <span class="n">indices_to_delete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ads_name</span><span class="p">)</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices_to_delete</span><span class="p">)</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">ads_cat</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ads_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.integrate"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.integrate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Zeolite&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrate another MAZE-sim into the current MAZE-sim</span>
+
+<span class="sd">        :param other: the other MAZE-sim to integrate</span>
+<span class="sd">        :return: a new imperfect MAZE-sim with the other MAZE-sim integrated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">atoms_to_add</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">other</span><span class="p">:</span>
+            <span class="n">self_index</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">self_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_self</span><span class="o">.</span><span class="n">change_atom_properties</span><span class="p">(</span><span class="n">self_index</span><span class="p">,</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">atoms_to_add</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">atom</span><span class="p">)</span>
+
+        <span class="n">new_self</span> <span class="o">=</span> <span class="n">new_self</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">atoms_to_add</span><span class="p">,</span> <span class="n">atom_type</span><span class="o">=</span><span class="s1">&#39;other_zeotype&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.change_atom_properties"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.change_atom_properties">[docs]</a>    <span class="k">def</span> <span class="nf">change_atom_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">self_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">other_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the atom properties</span>
+
+<span class="sd">        :param self_index: index of self that needs to be changed</span>
+<span class="sd">        :param other_index: index of other that holds the properties to change self</span>
+<span class="sd">        :param other: other Atoms object that the other_indices corresponds to</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">tag</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">momentum</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">mass</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">magmom</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">magmom</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">self_index</span><span class="p">]</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="n">other_index</span><span class="p">]</span><span class="o">.</span><span class="n">charge</span></div>
+
+<div class="viewcode-block" id="Zeolite.build_H_atoms_cap_dict"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.build_H_atoms_cap_dict">[docs]</a>    <span class="k">def</span> <span class="nf">build_H_atoms_cap_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a dictionary of hydrogen caps</span>
+
+<span class="sd">        :param bonds_needed: Number of bonds needed for each atom</span>
+<span class="sd">        :return: A list of positions of H caps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bonds_needed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bonds_needed</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Sn&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+        <span class="n">cap_atoms_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_elements</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">o_index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_cap</span><span class="p">(</span><span class="n">o_index</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_pos</span><span class="p">(</span><span class="n">o_index</span><span class="p">)</span>
+                <span class="n">cap_atoms_dict</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cap_atoms_dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.build_O_atoms_cap_dict"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.build_O_atoms_cap_dict">[docs]</a>    <span class="k">def</span> <span class="nf">build_O_atoms_cap_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a dictionary of oxygen caps</span>
+
+<span class="sd">        :param bonds_needed: Number of bonds needed for each atom</span>
+<span class="sd">        :return: A list of oxygen cap positions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bonds_needed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bonds_needed</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Sn&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+
+        <span class="n">cap_atoms_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_elements</span><span class="p">()</span>
+        <span class="n">distict_positions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">si_index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_cap</span><span class="p">(</span><span class="n">si_index</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">si_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">])):</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_oxygen_cap_pos</span><span class="p">(</span><span class="n">si_index</span><span class="p">)</span>
+                    <span class="n">distict_positions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">distict_positions</span><span class="p">:</span>
+            <span class="n">cap_atoms_dict</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cap_atoms_dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.build_all_atoms_cap_dict"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.build_all_atoms_cap_dict">[docs]</a>    <span class="k">def</span> <span class="nf">build_all_atoms_cap_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a dictionary for all atoms (not currently being used, but could be resurrected).</span>
+
+<span class="sd">        :param bonds_needed: number of bonds needed for each atom type</span>
+<span class="sd">        :return: A list of capping atoms to add</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bonds_needed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bonds_needed</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Sn&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Al&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Ga&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+
+        <span class="n">cap_atoms_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">indices</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_elements</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">si_index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_cap</span><span class="p">(</span><span class="n">si_index</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">si_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">])):</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_oxygen_cap_pos</span><span class="p">(</span><span class="n">si_index</span><span class="p">)</span>
+                    <span class="n">cap_atoms_dict</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">o_index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">needs_cap</span><span class="p">(</span><span class="n">o_index</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">]):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_H_pos</span><span class="p">(</span><span class="n">o_index</span><span class="p">)</span>
+                <span class="n">cap_atoms_dict</span><span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cap_atoms_dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_H_pos"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_H_pos">[docs]</a>    <span class="k">def</span> <span class="nf">get_H_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_to_cap_self_i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param atom_to_cap_self_i: atom to cap index (self index)</span>
+<span class="sd">        :return: hydrogen position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atom_to_cap_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">atom_to_cap_self_i</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">atom_to_cap_pi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">site_pi</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;atom_to_cap_self_i </span><span class="si">{</span><span class="n">atom_to_cap_self_i</span><span class="si">}</span><span class="s1"> does not map to parent MAZE-sim&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">site_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_missing_atom</span><span class="p">(</span><span class="n">atom_to_cap_pi</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;H&#39;</span><span class="p">,</span> <span class="s1">&#39;Si&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">site_pi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;atom_to_cap_self_i </span><span class="si">{</span><span class="n">atom_to_cap_self_i</span><span class="si">}</span><span class="s1"> No matching atom in parent found using h_finder&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_hydrogen_cap_pos_simple</span><span class="p">(</span><span class="n">atom_to_cap_self_i</span><span class="p">)</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">get_distance</span><span class="p">(</span><span class="n">atom_to_cap_pi</span><span class="p">,</span> <span class="n">site_pi</span><span class="p">,</span> <span class="n">mic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">hydrogen_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">atom_to_cap_self_i</span><span class="p">]</span> <span class="o">+</span> <span class="n">direction</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hydrogen_pos</span></div>
+
+<div class="viewcode-block" id="Zeolite.find_missing_atom"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.find_missing_atom">[docs]</a>    <span class="k">def</span> <span class="nf">find_missing_atom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oxygen_atom_to_cap_pi</span><span class="p">,</span> <span class="n">atom_symbol_list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param atom_symbol_list: The symbols to look for in the parent MAZE-sim</span>
+<span class="sd">        :param oxygen_atom_to_cap_pi:</span>
+<span class="sd">        :return: parent atom Si index or H index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">oxygen_atom_to_cap_pi</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">atom_index</span> <span class="ow">in</span> <span class="n">nl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">atom_index</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="p">[</span><span class="n">atom_index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="ow">in</span> <span class="n">atom_symbol_list</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">atom_index</span></div>
+
+<div class="viewcode-block" id="Zeolite.delete_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.delete_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">delete_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices_to_delete</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Delete atoms from imperfect MAZE-sim by returning a copy with atoms deleted</span>
+
+<span class="sd">        :param indices_to_delete: Indices of atoms in current MAZE-sim to delete</span>
+<span class="sd">        :return: a copy of self with atoms deleted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">new_self_a</span><span class="p">[</span><span class="n">indices_to_delete</span><span class="p">]</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_self_a</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ztype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_attrs_source</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">old_to_new_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">old_to_new_map</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.set_attrs_source"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.set_attrs_source">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_attrs_source</span><span class="p">(</span><span class="n">new_z</span><span class="p">:</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the attributes of a new imperfect MAZE-sim to that of its source</span>
+
+<span class="sd">        :param new_z: Newly created zeolite without attributes set</span>
+<span class="sd">        :param source: the source from which new_z was created</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_z</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">parent_zeotype</span>
+        <span class="n">new_z</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">index_mapper</span>
+        <span class="n">new_z</span><span class="o">.</span><span class="n">additions</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">additions</span><span class="p">)</span>
+        <span class="n">new_z</span><span class="o">.</span><span class="n">cluster_maker</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">cluster_maker</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.change_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.change_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">change_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applies a custom function to the atoms and returns a new self</span>
+
+<span class="sd">        :param operation: applies a custom function to the atoms</span>
+<span class="sd">        :return: zeolite with applied modifications</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">operation</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">old_to_new_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">old_to_new_map</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_type"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the type of atom at a certain index</span>
+<span class="sd">        :param index: the atom index to get the type of</span>
+<span class="sd">        :type index: int</span>
+<span class="sd">        :return: the name of the type of index</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_atom_indices_to_site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_atom_indices_to_site</span><span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_site_types"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_site_types">[docs]</a>    <span class="k">def</span> <span class="nf">get_site_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a list of all of the types in the parent zeolite</span>
+<span class="sd">        :return: List of the names of all types</span>
+<span class="sd">        :rtype: List[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_atom_indices_to_site</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Zeolite.find_type"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.find_type">[docs]</a>    <span class="k">def</span> <span class="nf">find_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_type_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the type of the atom in the parent zeolite list</span>
+
+<span class="sd">        :param atom_type_name: the name of a certain site</span>
+<span class="sd">        :type atom_type_name: str</span>
+<span class="sd">        :return: List of indices that match site description</span>
+<span class="sd">        :rtype: List[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Parent Zeotype site mapping missing&#39;</span>
+        <span class="k">assert</span> <span class="n">atom_type_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span><span class="p">,</span> <span class="s1">&#39;atom type name not found&#39;</span>
+        <span class="n">parent_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span><span class="p">[</span><span class="n">atom_type_name</span><span class="p">]</span>
+        <span class="n">self_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p_index</span> <span class="ow">in</span> <span class="n">parent_list</span><span class="p">:</span>
+            <span class="n">self_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">p_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">self_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">self_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">self_index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">self_list</span></div>
+
+<div class="viewcode-block" id="Zeolite._check_unique_positions"><a class="viewcode-back" href="../source.html#zeolite.Zeolite._check_unique_positions">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_unique_positions</span><span class="p">(</span><span class="n">position_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A helper function to check that the positions of the atoms are unique. An error is thrown</span>
+<span class="sd">        if there are overlapping atoms. This slows down the code, because it is O(N^2).</span>
+
+<span class="sd">        :param position_list (np.array[np.array]):  an array of positions</span>
+<span class="sd">        :return: None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">position_list</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">position_list</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">position_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">position_list</span><span class="p">[</span><span class="n">j</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="n">x1</span> <span class="o">!=</span> <span class="n">y1</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># if break statement not called two vectors are equal (which means overlapping atoms)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;An Atoms object with Overlapping atoms was passed to the add_atoms method. &#39;</span>
+                                     <span class="s1">&#39;Overlapping atoms cause trouble and thus are not allowed. &#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zeolite.add_atoms"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.add_atoms">[docs]</a>    <span class="k">def</span> <span class="nf">add_atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atoms_to_add</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">,</span> <span class="n">atom_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">short_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds additional atoms to current imperfect MAZE-sim</span>
+
+<span class="sd">        :param atoms_to_add: The new atoms to add</span>
+<span class="sd">        :param atom_type: A str describing the type of atoms that are being added</span>
+<span class="sd">        :param short_description: A short description of the atoms that are being added (optional)</span>
+<span class="sd">        :return: A new imperfect MAZE-sim with the atoms added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># add atoms to indexer</span>
+        <span class="c1"># register atoms_to_add with index mapper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unique_positions</span><span class="p">(</span><span class="n">atoms_to_add</span><span class="o">.</span><span class="n">get_positions</span><span class="p">())</span>
+
+        <span class="n">atom_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">atoms_to_add</span><span class="p">]</span>
+        <span class="c1"># TODO: Find a way to map new atoms back to parent zeolite if that mapping exists</span>
+        <span class="k">if</span> <span class="n">short_description</span><span class="p">:</span>
+            <span class="n">new_atom_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_unique_name</span><span class="p">(</span><span class="n">atom_type</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">short_description</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_atom_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_unique_name</span><span class="p">(</span><span class="n">atom_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">new_atom_name</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">)</span>
+
+        <span class="c1"># create a new self</span>
+        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new_self_a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">atoms_to_add</span><span class="p">)</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_self_a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_attrs_source</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># map new self to new atoms object and self</span>
+        <span class="n">self_to_new_self_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_self</span><span class="p">)</span>
+        <span class="n">atoms_to_new_self_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_old_to_new_map</span><span class="p">(</span><span class="n">atoms_to_add</span><span class="p">,</span> <span class="n">new_self</span><span class="p">)</span>
+
+        <span class="c1"># combine maps into a single map to main indexer</span>
+        <span class="n">main_to_new_self_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># first map to self</span>
+        <span class="n">self_to_main_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_reverse_main_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">self_i</span><span class="p">,</span> <span class="n">new_self_i</span> <span class="ow">in</span> <span class="n">self_to_new_self_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">main_index</span> <span class="o">=</span> <span class="n">self_to_main_map</span><span class="p">[</span><span class="n">self_i</span><span class="p">]</span>
+            <span class="n">main_to_new_self_map</span><span class="p">[</span><span class="n">main_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_self_i</span>
+        <span class="c1"># then map to atoms</span>
+        <span class="n">atoms_to_main_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_reverse_main_index</span><span class="p">(</span><span class="n">new_atom_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atoms_i</span><span class="p">,</span> <span class="n">new_self_i</span> <span class="ow">in</span> <span class="n">atoms_to_new_self_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">main_index</span> <span class="o">=</span> <span class="n">atoms_to_main_map</span><span class="p">[</span><span class="n">atoms_i</span><span class="p">]</span>
+            <span class="n">main_to_new_self_map</span><span class="p">[</span><span class="n">main_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_self_i</span>
+        <span class="c1"># finally register object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register_with_main</span><span class="p">(</span><span class="n">new_self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">main_to_new_self_map</span><span class="p">)</span>
+        <span class="c1"># add new_atom_name to additions list</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">atom_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_atom_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.remove_addition"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.remove_addition">[docs]</a>    <span class="k">def</span> <span class="nf">remove_addition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">addition_name</span><span class="p">,</span> <span class="n">addition_type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes an addition to the MAZE-sim</span>
+
+<span class="sd">        :param addition_name: name of the addition</span>
+<span class="sd">        :param addition_type: the type of additon (h_cap, o_cap, ect.)</span>
+<span class="sd">        :return: A new MAZE-sim with the additional atoms remvoed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">addition_to_self_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_name1_to_name2_map</span><span class="p">(</span><span class="n">addition_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">to_delete</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">addition_to_self_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">to_delete</span><span class="p">)</span>
+        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">addition_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">addition_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_self</span></div>
+
+<div class="viewcode-block" id="Zeolite.create_silanol_defect"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.create_silanol_defect">[docs]</a>    <span class="k">def</span> <span class="nf">create_silanol_defect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">site_index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a silanol defect by deleting an atom and capping the resulting imperfect MAZE-sim</span>
+
+<span class="sd">        :param site_index:</span>
+<span class="sd">        :return: An imperfect MAZE-sim with a silanol defect</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">([</span><span class="n">site_index</span><span class="p">])</span><span class="o">.</span><span class="n">cap_atoms</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Zeolite.needs_cap"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.needs_cap">[docs]</a>    <span class="k">def</span> <span class="nf">needs_cap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">bonds_needed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds if an atom needs a cap</span>
+
+<span class="sd">        :param atom_index: index of atom to check for cap</span>
+<span class="sd">        :param bonds_needed: number of bonds an atom needs</span>
+<span class="sd">        :return: boolean stating if an atom needs a cap</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">atom_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">bonds_needed</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_oxygen_cap_pos"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_oxygen_cap_pos">[docs]</a>    <span class="k">def</span> <span class="nf">get_oxygen_cap_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atom_to_cap_self_i</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find a position of an oxygen cap</span>
+
+<span class="sd">        :param self_index: index of atom needing cap</span>
+<span class="sd">        :return: A position array of the oxygen cap position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">atom_to_cap_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">atom_to_cap_self_i</span><span class="p">)</span>
+        <span class="n">site_pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_missing_atom</span><span class="p">(</span><span class="n">atom_to_cap_pi</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">])</span>
+
+        <span class="c1"># parend_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, self_index)</span>
+        <span class="k">if</span> <span class="n">site_pi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;no matching parent oxygen found using old method&quot;</span><span class="p">)</span>
+            <span class="n">self_index</span> <span class="o">=</span> <span class="n">atom_to_cap_self_i</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_nl</span><span class="p">()</span>
+            <span class="n">nl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">self_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nl</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">neighbor</span> <span class="o">=</span> <span class="n">nl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># first index in the list of neighbor indicies</span>
+                <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">self_index</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span>
+                    <span class="n">neighbor</span><span class="p">]</span>  <span class="c1"># vector from neighbor to Si</span>
+                <span class="n">oxygen_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">self_index</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">direction</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">oxygen_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">self_index</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.6</span> <span class="o">*</span> <span class="n">direction</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">oxygen_pos</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">site_pi</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_hydrogen_cap_pos_simple"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_hydrogen_cap_pos_simple">[docs]</a>    <span class="k">def</span> <span class="nf">get_hydrogen_cap_pos_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the position of a hydrogen cap position</span>
+
+<span class="sd">        :param index: index of hydrogen cap</span>
+<span class="sd">        :return: the hydrogen position to add the cap too</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">neighbor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_list</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">index</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># first index in the list of neighbor indicies</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">neighbor</span><span class="p">]</span>  <span class="c1"># vector from neighbor to oxygen</span>
+        <span class="n">hydrogen_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_positions</span><span class="p">()[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="n">direction</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hydrogen_pos</span></div>
+
+<div class="viewcode-block" id="Zeolite.get_cluster"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.get_cluster">[docs]</a>    <span class="k">def</span> <span class="nf">get_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cluster_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">&quot;Zeolite&quot;</span><span class="p">,</span> <span class="s2">&quot;Zeolite&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a Cluster of atoms around the specified index. The number of atoms in the cluster</span>
+<span class="sd">        is given by the size parameter.</span>
+
+<span class="sd">        :param start_index: center index of cluster</span>
+<span class="sd">        :type start_index: int</span>
+<span class="sd">        :param cluster_indices: Indices of cluster to make</span>
+<span class="sd">        :param max_size: max size of cluster</span>
+<span class="sd">        :param index: index of the central atom in the cluster</span>
+<span class="sd">        :param max_neighbors: number of neighbors from the host atom in the final cluster</span>
+<span class="sd">        :return: index of the cluster in the MAZE-sim cluster array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">cluster_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">self_2</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="n">cluster_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span><span class="o">.</span><span class="n">get_cluster_indices</span><span class="p">(</span><span class="n">self_2</span><span class="p">,</span> <span class="n">start_index</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">cluster</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span><span class="o">.</span><span class="n">get_cluster</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_indices</span><span class="p">)</span>
+        <span class="n">open_defect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_maker</span><span class="o">.</span><span class="n">get_open_defect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">open_defect</span></div>
+
+<div class="viewcode-block" id="Zeolite.add_additions_map_to_self"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.add_additions_map_to_self">[docs]</a>    <span class="k">def</span> <span class="nf">add_additions_map_to_self</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">additions_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an additions map to the current Zeolite. This function has side effects and modifies the current Zeolite.</span>
+<span class="sd">        This is useful in building a Zeolite from a saved file and reloading the additions map into memory.</span>
+<span class="sd">        :param additions_map: an additions map (format is specified in the additions map function)</span>
+<span class="sd">        :type additions_map: Dict[Dict]</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">additions_map</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">additions_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="Zeolite.register_with_parent"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.register_with_parent">[docs]</a>    <span class="k">def</span> <span class="nf">register_with_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">additions_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a tagged zeolite with the parent zeolite/zeolite to register the zeolite with. For this to work</span>
+<span class="sd">        the tags of the current zeolite must be equal to the parent indices.</span>
+<span class="sd">        :param parent_zeolite: the parent zeolite to register the zeolite with.</span>
+<span class="sd">        :type parent_zeolite: PerfectZeolite</span>
+<span class="sd">        :param additions_map: Additions map containing addition names and their parent indices</span>
+<span class="sd">        :type additions_map: Optional[Dict]</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        :rtype: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># test that all tags are unique</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tags</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tags</span><span class="p">())):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Tags must be unique to register self with parent_zeolite&#39;</span><span class="p">)</span>
+
+        <span class="n">main_to_new_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">main_to_new_map</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="n">parent_zeolite</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register_with_main</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">main_to_new_map</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span> <span class="o">=</span> <span class="n">parent_zeolite</span><span class="o">.</span><span class="n">index_mapper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_zeotype</span> <span class="o">=</span> <span class="n">parent_zeolite</span>
+
+        <span class="k">if</span> <span class="n">additions_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># register additions</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_additions_map_to_self</span><span class="p">(</span><span class="n">additions_map</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">additions_map</span><span class="p">:</span>
+                <span class="n">addition_main_to_new_map</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">main_indices</span> <span class="ow">in</span> <span class="n">additions_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">addition_index</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">atom</span><span class="o">.</span><span class="n">tag</span> <span class="ow">in</span> <span class="n">main_indices</span><span class="p">:</span>
+                            <span class="n">addition_main_to_new_map</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">addition_index</span>
+                            <span class="n">addition_index</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">register_with_main</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">addition_main_to_new_map</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ClusterMaker"><a class="viewcode-back" href="../source.html#zeolite.ClusterMaker">[docs]</a><span class="k">class</span> <span class="nc">ClusterMaker</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is an abstract class that selects indices from a Zeolite to return a cluster.</span>
+<span class="sd">    Multiple implementations of a cluster maker are possible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ClusterMaker.get_cluster_indices"><a class="viewcode-back" href="../source.html#zeolite.ClusterMaker.get_cluster_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_cluster_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">start_site</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the cluster indices of a zeo</span>
+<span class="sd">        :param zeolite: zeolite to select the cluster from</span>
+<span class="sd">        :type zeolite: Zeolite</span>
+<span class="sd">        :param start_site: the start site (usually a T-site) from which to select the indices</span>
+<span class="sd">        :type start_site: int</span>
+<span class="sd">        :param kwargs: additional keyword arguments needed for other functions</span>
+<span class="sd">        :type kwargs: Dict</span>
+<span class="sd">        :return: list of indices</span>
+<span class="sd">        :rtype: List[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="ClusterMaker.get_cluster"><a class="viewcode-back" href="../source.html#zeolite.ClusterMaker.get_cluster">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_cluster</span><span class="p">(</span><span class="n">zeolite</span><span class="p">:</span> <span class="n">Zeolite</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Cluster&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Zeolite</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a cluster from a zeolite</span>
+<span class="sd">        :param zeolite: Zeolite from which to extract the cluster</span>
+<span class="sd">        :type zeolite: Zeolite</span>
+<span class="sd">        :param indices: the indices of the zeolite to construct the cluster</span>
+<span class="sd">        :type indices: Iterable[int]</span>
+<span class="sd">        :param name: the ztype of the created cluster</span>
+<span class="sd">        :type name: string</span>
+<span class="sd">        :return: The created cluster of type Zeolite</span>
+<span class="sd">        :rtype: Zeolite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="n">Zeolite</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">to_delete</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">get_indices_compliment</span><span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">to_delete</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cluster</span></div>
+
+<div class="viewcode-block" id="ClusterMaker.get_open_defect"><a class="viewcode-back" href="../source.html#zeolite.ClusterMaker.get_open_defect">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_open_defect</span><span class="p">(</span><span class="n">zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Open Defect&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Zeolite</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get an opendefect object from a zeolite</span>
+<span class="sd">        :param zeolite: zeolite from which to get the open defect</span>
+<span class="sd">        :type zeolite: Zeolite</span>
+<span class="sd">        :param indices: the indices of the cluster (these indices are going to be deleted)</span>
+<span class="sd">        :type indices: Iterable[int]</span>
+<span class="sd">        :param name: the ztype of the open defect that will be created</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :return: The created opendefect Zeolite</span>
+<span class="sd">        :rtype: Zeolite</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_od</span> <span class="o">=</span> <span class="n">Zeolite</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">new_od</span> <span class="o">=</span> <span class="n">new_od</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_od</span></div></div>
+
+
+<div class="viewcode-block" id="DefaultClusterMaker"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker">[docs]</a><span class="k">class</span> <span class="nc">DefaultClusterMaker</span><span class="p">(</span><span class="n">ClusterMaker</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is an implementation of a Cluster Maker that is used if no cluster maker object is specified</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DefaultClusterMaker.get_cluster_indices"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker.get_cluster_indices">[docs]</a>    <span class="k">def</span> <span class="nf">get_cluster_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">start_site</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_oh_cluster_indices</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">start_site</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DefaultClusterMaker.get_oh_cluster_multi_t_sites"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker.get_oh_cluster_multi_t_sites">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_oh_cluster_multi_t_sites</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">t_sites</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get an OH cluster with multiple T sites</span>
+<span class="sd">        :param zeolite: The MAZE-sim from which to extract the cluster</span>
+<span class="sd">        :param t_sites: the central t site</span>
+<span class="sd">        :return: A list of indices of the cluster</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">t_site</span> <span class="ow">in</span> <span class="n">t_sites</span><span class="p">:</span>
+            <span class="n">all_indices</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_oh_cluster_indices</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">t_site</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_indices</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DefaultClusterMaker.get_oh_cluster_indices"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker.get_oh_cluster_indices">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_oh_cluster_indices</span><span class="p">(</span><span class="n">zeolite</span><span class="p">:</span> <span class="n">PerfectZeolite</span><span class="p">,</span> <span class="n">t_site</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a cluster that only includes one central T site and then Oxygen</span>
+<span class="sd">        and Hydrogen atoms. This is different than the other cluster selection</span>
+<span class="sd">        methods that take in other</span>
+<span class="sd">        :param zeolite: The zeolite from which the cluster indices will be drawn</span>
+<span class="sd">        :param t_site: The index of the T site around which the cluster will be built</span>
+<span class="sd">        :return: The indices of the new cluster</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">zeolite</span><span class="o">.</span><span class="n">parent_zeotype</span><span class="o">.</span><span class="n">_site_to_atom_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;T&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">zeolite</span><span class="o">.</span><span class="n">get_site_type</span><span class="p">(</span><span class="n">t_site</span><span class="p">):</span>
+            <span class="c1"># short circuit to prevent get_site_type from throwing error</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Cluster indices generator requires a T site for the initial &#39;</span>
+                          <span class="sa">f</span><span class="s1">&#39;start site. Index </span><span class="si">{</span><span class="n">t_site</span><span class="si">}</span><span class="s1"> might not be a T site&#39;</span><span class="p">)</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">natural_cutoffs</span><span class="p">(</span><span class="n">zeolite</span><span class="p">),</span> <span class="n">self_interaction</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bothways</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">nl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">zeolite</span><span class="p">)</span>
+
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">t_site</span><span class="p">}</span>
+        <span class="n">oxygen_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">t_site</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">zeolite</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span>
+                <span class="n">oxygen_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">si_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">oxygen_index</span> <span class="ow">in</span> <span class="n">oxygen_indices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">oxygen_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">zeolite</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;Si&quot;</span><span class="p">:</span>
+                    <span class="n">si_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">si_index</span> <span class="ow">in</span> <span class="n">si_indices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">si_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">zeolite</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span>
+                    <span class="n">oxygen_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="n">all_indices</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">oxygen_indices</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">si_indices</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_indices</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DefaultClusterMaker.get_cluster_indices_all_atoms"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker.get_cluster_indices_all_atoms">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_cluster_indices_all_atoms</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_neighbors</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get the indices of a cluster from a zeolite when specifying the</span>
+<span class="sd">        center atom index and size of the cluster</span>
+
+<span class="sd">        :param zeolite: the zeolite from which to build the cluster</span>
+<span class="sd">        :param index: the centeral atom index</span>
+<span class="sd">        :param max_size: the max number of atoms in the final cluster</span>
+<span class="sd">        :param max_neighbors: the max number of neighbors from the starting cluster</span>
+<span class="sd">        :return: a list of indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">natural_cutoffs</span><span class="p">(</span><span class="n">zeolite</span><span class="p">),</span> <span class="n">self_interaction</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bothways</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># instead of using zeolite use only the T sites</span>
+        <span class="c1"># Sn Ti Hf, Si , Al, Zn T sites</span>
+        <span class="c1"># Look at the</span>
+        <span class="c1"># The remove functions should take all the T site elements or what T sites</span>
+        <span class="c1"># what to remove should be different from the function that actually removes the T sites</span>
+        <span class="c1"># User</span>
+
+        <span class="c1"># if I give it the indices of 5 T sites. I remove 5 Si atoms I should create 5 * 4 O-H bonds</span>
+        <span class="c1">#</span>
+        <span class="n">nl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">zeolite</span><span class="p">)</span>
+        <span class="n">cluster_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">new_cluster_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">index</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_neighbors</span><span class="p">):</span>
+            <span class="n">current_cluster_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">cluster_index</span> <span class="ow">in</span> <span class="n">new_cluster_indices</span><span class="p">:</span>
+                <span class="n">cluster_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cluster_index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_size</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">new_index</span> <span class="ow">in</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">cluster_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">current_cluster_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_index</span><span class="p">)</span>
+            <span class="n">new_cluster_indices</span> <span class="o">=</span> <span class="n">current_cluster_indices</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DefaultClusterMaker.get_cluster_indices_multi_T_site"><a class="viewcode-back" href="../source.html#zeolite.DefaultClusterMaker.get_cluster_indices_multi_T_site">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_cluster_indices_multi_T_site</span><span class="p">(</span><span class="n">zeolite</span><span class="p">,</span> <span class="n">T_indices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_neighbors</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span>
+        <span class="nb">int</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get the indices of a cluster from a zeolite when specifying the</span>
+<span class="sd">        center atom index and size of the cluster</span>
+
+<span class="sd">        :param T_indices: Indices of the T site</span>
+<span class="sd">        :type T_indices: Iterable[int]</span>
+<span class="sd">        :param zeolite: the zeolite from which to build the cluster</span>
+<span class="sd">        :param index: the centeral atom index</span>
+<span class="sd">        :param max_size: the max number of atoms in the final cluster</span>
+<span class="sd">        :param max_neighbors: the max number of neighbors from the starting cluster</span>
+<span class="sd">        :return: a list of indices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nl</span> <span class="o">=</span> <span class="n">NeighborList</span><span class="p">(</span><span class="n">natural_cutoffs</span><span class="p">(</span><span class="n">zeolite</span><span class="p">),</span> <span class="n">self_interaction</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bothways</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">nl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">zeolite</span><span class="p">)</span>
+        <span class="n">cluster_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">new_cluster_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">T_indices</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_neighbors</span><span class="p">):</span>
+            <span class="n">current_cluster_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">cluster_index</span> <span class="ow">in</span> <span class="n">new_cluster_indices</span><span class="p">:</span>
+                <span class="n">cluster_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cluster_index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_size</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">new_index</span> <span class="ow">in</span> <span class="n">nl</span><span class="o">.</span><span class="n">get_neighbors</span><span class="p">(</span><span class="n">cluster_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">new_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">T_indices</span><span class="p">:</span>  <span class="c1"># don&#39;t add T sites to current cluster indices</span>
+                        <span class="n">current_cluster_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_index</span><span class="p">)</span>
+            <span class="n">new_cluster_indices</span> <span class="o">=</span> <span class="n">current_cluster_indices</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_indices</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2020, Dexter Antonio, Sam Holton.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
