@@ -103,10 +103,10 @@ class ZeoliteDatabase:
 
     def make_parent_dict(self, zeotype: PerfectZeolite) -> Dict:
         """
-        Make a dictionary for the parent zeotype
-        :param zeotype: Parent zeotype to make dictionary from
+        Make a dictionary for the parent zeolite
+        :param zeotype: Parent zeolite to make dictionary from
         :type zeotype: PerfectZeolite
-        :return: Dict of zeotype's data
+        :return: Dict of zeolite's data
         :rtype: Dict
         """
 
@@ -125,10 +125,10 @@ class ZeoliteDatabase:
 
     def write_parent(self, zeotype: PerfectZeolite) -> int:
         """
-        Write parent zeotype to both databases
-        :param zeotype: parent zeotype to write to database
+        Write parent zeolite to both databases
+        :param zeotype: parent zeolite to write to database
         :type zeotype: PerfectZeolite
-        :return: id of added zeotype
+        :return: id of added zeolite
         :rtype: int
         """
 
@@ -139,10 +139,10 @@ class ZeoliteDatabase:
 
     def update_parent(self, zeotype: PerfectZeolite, key: int) -> None:
         """
-        Update the parent zeotype
-        :param zeotype: Parent zeotype with the data to update
+        Update the parent zeolite
+        :param zeotype: Parent zeolite with the data to update
         :type zeotype: PerfectZeolite
-        :param key: key of the parent zeotype
+        :param key: key of the parent zeolite
         :type key: int
         :return: None
         :rtype: None
@@ -155,10 +155,10 @@ class ZeoliteDatabase:
         Write a Zeotype to both databases
         :param zeotype: Zeotype to write to database
         :type zeotype: PerfectZeolite
-        :return: index of zeotype that was added to db
+        :return: index of zeolite that was added to db
         :rtype: int
         """
-        if zeotype.parent_zeotype is zeotype:  # writing parent zeotype
+        if zeotype.parent_zeotype is zeotype:  # writing parent zeolite
             if zeotype.unique_id in self.parent_zeotype_dict.keys():
                 db_index = self.parent_zeotype_dict[zeotype.unique_id]
                 self.update_parent(zeotype, db_index)
@@ -187,8 +187,8 @@ class ZeoliteDatabase:
 
     def build_parent_zeotype(self, data: Dict) -> PerfectZeolite:
         """
-        Build a parent zeotype from data dict
-        :param data: data dict containing atoms object and metadata for zeotype
+        Build a parent zeolite from data dict
+        :param data: data dict containing atoms object and metadata for zeolite
         :type data: Dict
         :return: parent Zeotype
         :rtype: PerfectZeolite
@@ -206,12 +206,12 @@ class ZeoliteDatabase:
 
     def get(self, key: int, default=None) -> Optional[PerfectZeolite]:
         """
-        Get a zeotype from the database
-        :param key: zeotype key
+        Get a zeolite from the database
+        :param key: zeolite key
         :type key: int
         :param default: what to return if key not in db
         :type default: Anytype
-        :return: zeotype from database or default
+        :return: zeolite from database or default
         :rtype: Optional[Zeotype]
         """
         data = self._get(key, default=None)
@@ -235,7 +235,7 @@ class ZeoliteDatabase:
         This is a connect method for the ZeotypeDatabase
         :param db_name: name of database
         :type db_name: str
-        :return: zeotype database with that name
+        :return: zeolite database with that name
         :rtype: ZeoliteDatabase
         """
         path = Path(db_name)

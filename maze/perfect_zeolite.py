@@ -64,8 +64,8 @@ class PerfectZeolite(Atoms):
                 self.name = 'parent'  # must be parent for code to work properly
                 self.index_mapper = IndexMapper(self.get_indices(self))
                 self.parent_zeotype = self
-            else:   # building a non-parent zeotype
-                # make a parent zeotype of self
+            else:   # building a non-parent zeolite
+                # make a parent zeolite of self
                 parent = PerfectZeolite(symbols)
                 self.parent_zeotype = parent
                 self.index_mapper = parent.index_mapper
@@ -463,7 +463,7 @@ class PerfectZeolite(Atoms):
         Builds an Zeolite from iza code
         :param iza_zeolite_code: zeolite iza code
         :type iza_zeolite_code: str
-        :return: An imperfect zeotype class or subclass
+        :return: An imperfect zeolite class or subclass
         :rtype: cls
         """
         iza_code.capitalize()

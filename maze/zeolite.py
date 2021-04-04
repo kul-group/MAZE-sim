@@ -318,7 +318,7 @@ class Zeolite(PerfectZeolite):
 
     def get_site_types(self) -> List[str]:
         """
-        Get a list of all of the types in the parent zeotype
+        Get a list of all of the types in the parent zeolite
         :return: List of the names of all types
         :rtype: List[str]
         """
@@ -328,7 +328,7 @@ class Zeolite(PerfectZeolite):
 
     def find_type(self, atom_type_name: str) -> List[int]:
         """
-        Find the type of the atom in the parent zeotype list
+        Find the type of the atom in the parent zeolite list
 
         :param atom_type_name: the name of a certain site
         :type atom_type_name: str
@@ -381,7 +381,7 @@ class Zeolite(PerfectZeolite):
         self._check_unique_positions(atoms_to_add.get_positions())
 
         atom_indices = [atom.index for atom in atoms_to_add]
-        # TODO: Find a way to map new atoms back to parent zeotype if that mapping exists
+        # TODO: Find a way to map new atoms back to parent zeolite if that mapping exists
         if short_description:
             new_atom_name = self.index_mapper.get_unique_name(atom_type) + '_' + short_description
         else:
@@ -513,11 +513,29 @@ class Zeolite(PerfectZeolite):
         open_defect = self.cluster_maker.get_open_defect(self, cluster_indices)
         return cluster, open_defect
 
-    def add_additions_map_to_self(self, additions_map):
+    def add_additions_map_to_self(self, additions_map: Dict) -> None:
+        """
+        Add an additions map to the current Zeolite. This function has side effects and modifies the current Zeolite.
+        This is useful in building a Zeolite from a saved file and reloading the additions map into memory.
+        :param additions_map: an additions map (format is specified in the additions map function)
+        :type additions_map: Dict[Dict]
+        :return: None
+        :rtype: None
+        """
         for key in additions_map:
             self.additions[key].extend(list(additions_map[key].keys()))
 
-    def register_with_parent(self, parent_zeolite: PerfectZeolite, additions_map: Optional[Dict] = None):
+    def register_with_parent(self, parent_zeolite: PerfectZeolite, additions_map: Optional[Dict] = None) -> None:
+        """
+        Register a tagged zeolite with the parent zeolite/zeolite to register the zeolite with. For this to work
+        the tags of the current zeolite must be equal to the parent indices.
+        :param parent_zeolite: the parent zeolite to register the zeolite with.
+        :type parent_zeolite: PerfectZeolite
+        :param additions_map: Additions map containing addition names and their parent indices
+        :type additions_map: Optional[Dict]
+        :return: None
+        :rtype: None
+        """
         # test that all tags are unique
         if len(self.get_tags()) != len(set(self.get_tags())):
             raise RuntimeError('Tags must be unique to register self with parent_zeolite')
@@ -529,7 +547,6 @@ class Zeolite(PerfectZeolite):
         parent_zeolite.index_mapper.register_with_main(self.name, main_to_new_map)
         self.index_mapper = parent_zeolite.index_mapper
         self.parent_zeotype = parent_zeolite
-
 
         if additions_map is not None: # register additions
             self.add_additions_map_to_self(additions_map)
@@ -545,29 +562,69 @@ class Zeolite(PerfectZeolite):
 
 
 class ClusterMaker(ABC):
-    def get_cluster_indices(self, zeotype: PerfectZeolite, start_site: int, **kwargs):
+    """
+    This is an abstract class that selects indices from a Zeolite to return a cluster.
+    Multiple implementations of a cluster maker are possible.
+    """
+    def get_cluster_indices(self, zeolite: PerfectZeolite, start_site: int, **kwargs) -> List[int]:
+        """
+        Get the cluster indices of a zeo
+        :param zeolite: zeolite to select the cluster from
+        :type zeolite: Zeolite
+        :param start_site: the start site (usually a T-site) from which to select the indices
+        :type start_site: int
+        :param kwargs: additional keyword arguments needed for other functions
+        :type kwargs: Dict
+        :return: list of indices
+        :rtype: List[int]
+        """
         raise NotImplementedError
 
     @staticmethod
-    def get_cluster(zeotype: PerfectZeolite, indices: Iterable[int], name="Cluster"):
-        cluster = Zeolite(zeotype, ztype=name)
+    def get_cluster(zeolite: Zeolite, indices: Iterable[int], name="Cluster") -> Zeolite:
+        """
+        Get a cluster from a zeolite
+        :param zeolite: Zeolite from which to extract the cluster
+        :type zeolite: Zeolite
+        :param indices: the indices of the zeolite to construct the cluster
+        :type indices: Iterable[int]
+        :param name: the ztype of the created cluster
+        :type name: string
+        :return: The created cluster of type Zeolite
+        :rtype: Zeolite
+        """
+        cluster = Zeolite(zeolite, ztype=name)
         to_delete = cluster.get_indices_compliment(cluster, indices)
         cluster = cluster.delete_atoms(to_delete)
         return cluster
 
     @staticmethod
-    def get_open_defect(zeotype: PerfectZeolite, indices: Iterable[int], name="Open Defect"):
-        new_od = Zeolite(zeotype, ztype=name)
+    def get_open_defect(zeolite: PerfectZeolite, indices: Iterable[int], name="Open Defect") -> Zeolite:
+        """
+        Get an opendefect object from a zeolite
+        :param zeolite: zeolite from which to get the open defect
+        :type zeolite: Zeolite
+        :param indices: the indices of the cluster (these indices are going to be deleted)
+        :type indices: Iterable[int]
+        :param name: the ztype of the open defect that will be created
+        :type name: str
+        :return: The created opendefect Zeolite
+        :rtype: Zeolite
+        """
+        new_od = Zeolite(zeolite, ztype=name)
         new_od = new_od.delete_atoms(indices)
         return new_od
 
 
 class DefaultClusterMaker(ClusterMaker):
+    """
+    This is an implementation of a Cluster Maker that is used if no cluster maker object is specified
+    """
     def __init__(self):
         pass
 
-    def get_cluster_indices(self, zeotype: PerfectZeolite, start_site: int, **kwargs):
-        return self.get_oh_cluster_indices(zeotype, start_site)
+    def get_cluster_indices(self, zeolite: PerfectZeolite, start_site: int, **kwargs):
+        return self.get_oh_cluster_indices(zeolite, start_site)
 
     @classmethod
     def get_oh_cluster_multi_t_sites(cls, zeolite: PerfectZeolite, t_sites: Iterable[int]) -> List[int]:

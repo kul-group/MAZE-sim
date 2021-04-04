@@ -4,9 +4,9 @@ from ase.constraints import FixAtoms
 from ase.constraints import FixBondLengths
 
 def constrain_host(host, index):
-    """constrains a zeotype so only adsorbate, central atom, and adjacent
-    oxygens can move. :param host: host zeotype object :param index: index of
-    central atom in host zeotype :return: constrained host zeotype object
+    """constrains a zeolite so only adsorbate, central atom, and adjacent
+    oxygens can move. :param host: host zeolite object :param index: index of
+    central atom in host zeolite :return: constrained host zeolite object
 
     Args:
         host:
@@ -20,7 +20,7 @@ def constrain_host(host, index):
 
 def constrain_ads_bonds(host):
     """Constrains the distance between atoms in adsorbate to adjacent adsorbate
-    atoms :param host: host zeotype with adsorbate :return: host zeotype with
+    atoms :param host: host zeolite with adsorbate :return: host zeolite with
     constrained adsorbate
 
     Args:

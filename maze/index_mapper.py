@@ -177,7 +177,7 @@ class IndexMapper:
 
     def extend(self, name: str, new_atom_indices: Iterable[int]) -> None:
         """
-        This adds additional atom indices to the zeotype
+        This adds additional atom indices to the zeolite
         :param name: name to add indices to
         :type name: str
         :param new_atom_indices: list of indices
