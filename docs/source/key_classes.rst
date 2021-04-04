@@ -8,7 +8,7 @@ Zeolite class
    :private-members:
    :special-members:
 
-PerfectZeolite class
+Perfect Zeolite class
 ----------------------------
 .. autoclass:: perfect_zeolite.PerfectZeolite
    :members:

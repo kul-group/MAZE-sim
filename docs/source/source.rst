@@ -10,21 +10,22 @@ cif\_download module
    :private-members:
    :special-members:
 
-zeotypes module
+Zeolite and Cluster Maker Module
 ---------------------
 .. automodule:: zeolite
    :members:
    :undoc-members:
    :show-inheritance:
 
-zeotypes module
+Perfect Zeolite Module
 ---------------------
 .. automodule:: perfect_zeolite
    :members:
    :undoc-members:
    :show-inheritance:
 
-index\_mapper module
+
+Index Mapper Module
 ---------------------------
 .. automodule:: index_mapper
    :members:
