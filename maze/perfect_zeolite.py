@@ -473,24 +473,12 @@ class PerfectZeolite(Atoms):
         parent = PerfectZeolite.build_from_cif_with_labels(cif_path)
         return cls(parent)
 
-    def get_self_to_main_index_map(self):
-        """
-        Get a self to main indiex m
-        :return:
-        :rtype:
-        """
-        self_to_main_dict = self.index_mapper.get_reverse_main_index(self.name)
-        addition_names = []
-        for ad_type in self.additions:
-            addition_names.extend(list(self.additions[ad_type]))
-
-        for name in addition_names:
-            tmp_dict = self.index_mapper.get_reverse_main_index(name)
-            self_to_main_dict.update(tmp_dict)
-
-        return self_to_main_dict
-
     def retag_self(self) -> None:
+        """
+        Add tags to the Zeolite that correspond to their main index in the index mapper
+        :return: None
+        :rtype: None
+        """
         assert self.index_mapper is not None, 'cannot retag when index mapper is None'
         self_to_main_index_map = self.index_mapper.get_reverse_main_index(self.name)
         #for additions in
@@ -498,6 +486,11 @@ class PerfectZeolite(Atoms):
             atom.tag = self_to_main_index_map[atom.index]
 
     def build_additions_map(self):
+        """
+        Build a serializable additions map that can be used to rebuild the Zeolite from file
+        :return: additions map
+        :rtype: Dict
+        """
         additions_map = defaultdict(dict)
         for category, names in self.additions.items():
             for name in names:
