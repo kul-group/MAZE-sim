@@ -11,8 +11,8 @@ A detailed and complete description of the features of the MAZE code can be foun
 
 Installation 
 =================
-~~The current stable, release of MAZE (v0.11)can now be installed via `pip` using the command 
-`pip install maze-sim` or conda~~
+The current stable, release of MAZE (0.1.0) can now be installed via `pip` using the command 
+`pip install maze-sim`.
  
 The most recent developer version of the MAZE code is available on Github. To install it follow the following instructions: 
  
