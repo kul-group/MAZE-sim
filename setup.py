@@ -11,6 +11,11 @@ setup(
     name='MAZE-sim',
     version='0.1.0',
     description='Multiscale Zeolite Atomic simulation Environment (MAZE)',
+    long_description="This project aims to extend the Atomic Simulation Environment (ASE) "
+                     "to more naturally represent the properties of zeolites and facilitate "
+                     "the calculations required to determine their properties. ",
+
+    long_description_content_type='text/x-rst',
     url='https://github.com/kul-group/MAZE',
     author='Dexter Antonio',
     author_email='dexter.d.antonio@gmail.com',
@@ -20,11 +25,17 @@ setup(
     install_requires=['ase', 'numpy', 'typing', 'packaging', 'scikit-learn'],
 
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
         'License :: MIT',
         'Operating System :: MacOS, Windows, Linux',
         'Programming Language :: Python :: 3.8',
     ],
-
+    keywords='ase zeolites simulations',
+    project_urls={
+        'Documentation': 'https://kul-group.github.io/MAZE-sim/build/html/index.html',
+        'Source': 'https://github.com/kul-group/MAZE-sim/',
+        'Tracker': 'https://github.com/kul-group/MAZE-sim/issues',
+    },
+    python_requires='>=3'
 )
