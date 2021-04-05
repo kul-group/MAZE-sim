@@ -27,8 +27,6 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        'License :: MIT',
-        'Operating System :: MacOS, Windows, Linux',
         'Programming Language :: Python :: 3.8',
     ],
     keywords='ase zeolites simulations',
