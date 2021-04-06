@@ -60,6 +60,8 @@ class IOZeolites(TestCase):
                 cha2[atom.index].tag = atom.index + 5
             tag_zeolite(cha1, cha2)
             self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+            for a1, a2 in zip(cha1, cha2):
+                self.assertEqual(a1.tag, a2.tag)
 
         with self.subTest('test offset atoms'):
             cha1 = Zeolite.make('CHA')
@@ -68,5 +70,6 @@ class IOZeolites(TestCase):
                 cha2[atom.index].position = cha2[atom.index].position + np.random.random(3)
                 cha2[atom.index].tag = atom.index + 5
             tag_zeolite(cha1, cha2)
-            view(cha1, cha2)
             self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+            for a1, a2 in zip(cha1, cha2):
+                self.assertEqual(a1.tag, a2.tag)
