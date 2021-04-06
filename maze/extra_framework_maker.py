@@ -19,6 +19,7 @@ class ExtraFrameworkMaker(object):
         if iza_code is not None:
             self.EFzeolite = Zeolite.make(iza_code)
         self.t_site_indices = {}
+        self.t_site_indices_count = {}
         self.traj_1Al = []
         self.traj_2Al = []
         self.count_all_Al_pairs = 0
@@ -27,39 +28,45 @@ class ExtraFrameworkMaker(object):
         self.T_site_pair = []
         self.T_index_pair = []
 
-    def make_extra_frameworks(self, print_statement=False):
+    def make_extra_frameworks(self, replace_1Al=False, replace_2Al=False, print_statement=False):
         """
+        :param replace_1Al:
+        :param replace_2Al:
         :param print_statement:
         """
-        self.replace_1Al()
-        if print_statement is True:
-            print('Single Al replacement is Done!')
-        self.replace_2Al_unique_pairs()
-        if print_statement is True:
-            print('The second Al replacement is Done!')
+        if replace_1Al is True:
+            self.replace_1Al()
+            if print_statement is True:
+                print('Single Al replacement is Done!')
+
+        if replace_2Al is True:
+            self.replace_2Al_unique_pairs()
+            if print_statement is True:
+                print('The second Al replacement is Done!')
         # add in Cu here
 
-    def get_t_sites(self) -> dict:
+    def get_t_sites(self):
         """ This function gets all unique T sites and corresponding atom indices for each T sites
         :return: dictionary mapping each unique T site tags with all atom indices with the same tag
         """
-        t_site_indices = {}
         for site_name, value in self.EFzeolite.site_to_atom_indices.items():
             if 'T' in site_name:
-                t_site_indices[site_name] = value
-        return t_site_indices
+                self.t_site_indices[site_name] = value
+                self.t_site_indices_count[site_name] = len(value)
 
     def replace_1Al(self):
         """ This function takes in a perfect zeolite and replace one Si atom with an Al for every T site
         :return: a dictionary of trajectories for each T site tags
         """
-        self.t_site_indices = self.get_t_sites()
+        self.get_t_sites()
         for site_name, t_site in self.t_site_indices.items():
             traj_t_sites = []
             for index in t_site:
                 pos = self.EFzeolite.get_positions()[index]
                 new_zeo = self.EFzeolite.delete_atoms([index])
                 new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
+                # new_zeo = self.EFzeolite
+                # new_zeo[index].symbol = 'Al'
                 new_ztype = new_zeo.ztype + site_name + '->Al'
                 new_zeo = Zeolite(new_zeo, ztype=new_ztype)
                 self.traj_1Al.append(new_zeo)
@@ -227,30 +234,35 @@ class ExtraFrameworkMaker(object):
         return dict_Z_TM
 
     def get_all_Bronsted_sites(self):
+        """
+        This function samples all Bronsted sites for each T sites names (4 Bronsted sites for each T site).
+        No double counting within each sites_name ('T1', 'T2', 'T3', etc), but do have overlaps among different
+        site_names.
+        """
         dict_ZH = {}
-        done_oxygen = []
         for site_name, all_traj in self.dict_t_sites_1Al_replaced.items():
-
             traj = []
+            done_oxygen = []
             for ref_atoms in all_traj:
                 atoms = copy.copy(ref_atoms)
-                nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
-                nl.update(atoms)
-                index_Al = [a.index for a in atoms if a.symbol == 'Al']
-                indices, offsets = nl.get_neighbors(index_Al[0])
+                nl = NeighborList(natural_cutoffs(ref_atoms), bothways=True, self_interaction=False)
+                nl.update(ref_atoms)
+                index_Al = [a.index for a in ref_atoms if a.symbol == 'Al']
+                index_Al = index_Al[0]
+                indices, offsets = nl.get_neighbors(index_Al)
                 assert len(indices) == 4
 
                 for count, index in enumerate(indices):
-                    if index not in done_oxygen:
-                        atoms = copy.copy(ref_atoms)
+                    if index not in done_oxygen:  # oxygen index
                         indices_neigh, offset_neigh = nl.get_neighbors(index)
-                        assert len(indices_neigh) == 2  # oxygen index
+                        assert len(indices_neigh) == 2
                         i_neigh_T = [val for val in indices_neigh if val != index_Al][0]
-                        assert atoms[i_neigh_T].symbol == 'Si'
-                        assert atoms[index].symbol == 'O'
-                        v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
-                        coord_O = atoms.get_positions()[index]
-                        traj.append(atoms.add_atoms(Atoms('H', positions=[coord_O + 0.97 * v]), 'H'))
+                        assert ref_atoms[i_neigh_T].symbol == 'Si'
+                        assert ref_atoms[index].symbol == 'O'
+                        v = self._get_direction_of_insertion(ref_atoms, index, i_neigh_T, index_Al)
+                        coord_O = ref_atoms.get_positions()[index]
+                        new_atoms = atoms + Atoms('H', positions=[coord_O + 0.97 * v])
+                        traj.append(new_atoms)
                         done_oxygen.append(index)
 
             dict_ZH[site_name] = traj
@@ -313,4 +325,3 @@ class ExtraFrameworkMaker(object):
         atoms.translate(-1 * translate_vector)
         atoms.wrap()
         return atoms
-
