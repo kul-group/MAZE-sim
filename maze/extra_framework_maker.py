@@ -24,6 +24,8 @@ class ExtraFrameworkMaker(object):
         self.count_all_Al_pairs = 0
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
         self.dict_t_sites_1Al_replaced = {}
+        self.T_site_pair = []
+        self.T_index_pair = []
 
     def make_extra_frameworks(self, print_statement=False):
         """
@@ -64,6 +66,9 @@ class ExtraFrameworkMaker(object):
                 traj_t_sites.append(new_zeo)
             self.dict_t_sites_1Al_replaced[site_name] = traj_t_sites
 
+    def get_T_site_from_atom_index(self, index):
+        return [k for k, v in self.t_site_indices.items() if index in v]
+
     def replace_2Al_unique_pairs(self, cutoff_radius=9):
         """ This function makes the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since
         even though the binding energies might be the same, the geometric properties, such as, Al-Al distance, are
@@ -102,6 +107,8 @@ class ExtraFrameworkMaker(object):
                         # first condition is the Lowenstein's rule
                         if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
                             T_site_name = ini_atoms.atom_indices_to_sites[index]
+                            self.T_site_pair.append([self.get_T_site_from_atom_index(index_Al[0])[0], T_site_name])
+                            self.T_index_pair.append([index_Al[0], index])
                             z_type_current = atoms.ztype
                             new_z_type = atoms.ztype + 'AND' + T_site_name + '->Al'
                             atoms = Zeolite(ini_atoms, ztype=new_z_type)
@@ -194,7 +201,7 @@ class ExtraFrameworkMaker(object):
         return v
 
     def get_all_Z_TM(self, d_Z_TM, TM_type):
-        """ # TODO: add description
+        """
         :param d_Z_TM: Z-TM distance with Z being the T sites on the zeolite framework and TM being extraframework atom
         to be inserted
         :return: a dictionary of structures for each T site name
@@ -220,29 +227,34 @@ class ExtraFrameworkMaker(object):
         return dict_Z_TM
 
     def get_all_Bronsted_sites(self):
-        traj_ZH = []
+        dict_ZH = {}
         done_oxygen = []
-        for ref_atoms in self.traj_1Al:
-            atoms = copy.copy(ref_atoms)
-            nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
-            nl.update(atoms)
-            index_Al = [a.index for a in atoms if a.symbol == 'Al']
-            indices, offsets = nl.get_neighbors(index_Al[0])
-            assert len(indices) == 4
+        for site_name, all_traj in self.dict_t_sites_1Al_replaced.items():
 
-            for count, index in enumerate(indices):
-                if index not in done_oxygen:
-                    atoms = copy.copy(ref_atoms)
-                    indices_neigh, offset_neigh = nl.get_neighbors(index)
-                    assert len(indices_neigh) == 2  # oxygen index
-                    i_neigh_T = [val for val in indices_neigh if val != index_Al][0]
-                    assert atoms[i_neigh_T].symbol == 'Si'
-                    assert atoms[index].symbol == 'O'
-                    v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
-                    coord_O = atoms.get_positions()[index]
-                    traj_ZH.append(atoms.add_atoms(Atoms('H', positions=[coord_O + 0.97 * v]), 'H'))
-                    done_oxygen.append(index)
-        return traj_ZH
+            traj = []
+            for ref_atoms in all_traj:
+                atoms = copy.copy(ref_atoms)
+                nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+                nl.update(atoms)
+                index_Al = [a.index for a in atoms if a.symbol == 'Al']
+                indices, offsets = nl.get_neighbors(index_Al[0])
+                assert len(indices) == 4
+
+                for count, index in enumerate(indices):
+                    if index not in done_oxygen:
+                        atoms = copy.copy(ref_atoms)
+                        indices_neigh, offset_neigh = nl.get_neighbors(index)
+                        assert len(indices_neigh) == 2  # oxygen index
+                        i_neigh_T = [val for val in indices_neigh if val != index_Al][0]
+                        assert atoms[i_neigh_T].symbol == 'Si'
+                        assert atoms[index].symbol == 'O'
+                        v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
+                        coord_O = atoms.get_positions()[index]
+                        traj.append(atoms.add_atoms(Atoms('H', positions=[coord_O + 0.97 * v]), 'H'))
+                        done_oxygen.append(index)
+
+            dict_ZH[site_name] = traj
+        return dict_ZH
 
     @staticmethod
     def get_cluster_radius(EF_atoms):
@@ -301,3 +313,4 @@ class ExtraFrameworkMaker(object):
         atoms.translate(-1 * translate_vector)
         atoms.wrap()
         return atoms
+
