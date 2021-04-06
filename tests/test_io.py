@@ -1,10 +1,12 @@
 from unittest import TestCase
 from maze.zeolite import Zeolite
-from maze.io_zeolite import save_zeolites, read_zeolites
+from maze.io_zeolite import save_zeolites, read_zeolites, tag_zeolite
 import glob
 import os
 from ase import Atoms
 import json
+import numpy as np
+from ase.visualize import view
 
 
 class IOZeolites(TestCase):
@@ -56,4 +58,15 @@ class IOZeolites(TestCase):
             cha2 = Zeolite.make('CHA')
             for atom in cha2:
                 cha2[atom.index].tag = atom.index + 5
-            print(cha2)
+            tag_zeolite(cha1, cha2)
+            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+
+        with self.subTest('test offset atoms'):
+            cha1 = Zeolite.make('CHA')
+            cha2 = Zeolite.make('CHA')
+            for atom in cha2:
+                cha2[atom.index].position = cha2[atom.index].position + np.random.random(3)
+                cha2[atom.index].tag = atom.index + 5
+            tag_zeolite(cha1, cha2)
+            view(cha1, cha2)
+            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
