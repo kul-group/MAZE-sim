@@ -50,3 +50,10 @@ class IOZeolites(TestCase):
         #import pandas as pd
         #print(pd.DataFrame(zeotypes[0].index_mapper.main_index).T.to_string())
 
+    def test_tag_zeolite(self):
+        with self.subTest('test overlapping atoms'):
+            cha1 = Zeolite.make('CHA')
+            cha2 = Zeolite.make('CHA')
+            for atom in cha2:
+                cha2[atom.index].tag = atom.index + 5
+            print(cha2)

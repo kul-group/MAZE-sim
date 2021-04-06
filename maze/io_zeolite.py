@@ -9,7 +9,8 @@ import json
 from maze.index_mapper import IndexMapper
 from typing import List, Iterable, Dict, Optional
 import shutil
-
+import math
+from ase import Atoms
 
 def make_folder_to_zeo(folder_path: str) -> None:
     """
@@ -162,8 +163,6 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-
-
 def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_filepath: str) -> PerfectZeolite:
     perfect_zeolite = PerfectZeolite(read(binary_filepath))
 
@@ -185,6 +184,7 @@ def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_f
     new_index_mapper.reregister_parent(main_to_parent_map)
     perfect_zeolite.index_mapper = new_index_mapper
     return perfect_zeolite
+
 
 def read_zeolite(binary_filepath: str, parent_zeolite: PerfectZeolite, json_filepath: Optional[str] = None) -> Zeolite:
     if json_filepath:
@@ -263,3 +263,53 @@ def read_zeolites(file_path: str, str_ext: str = '.traj', zipped: bool = True,
         delete_folder(folder_path)
 
     return zeotype_dict
+
+
+def compute_distance(p1, p2):
+    total = 0
+    for x1, x2 in zip(p1, p2):
+        total += (x1 - x2) ** 2
+    return math.sqrt(total)
+
+
+def find_NN(zeolite1: Atoms, zeolite2: Atoms, z1_index: int, a2_indices: List[int]) -> int:
+    """
+    Find the nearest neighbor of z1_index
+    :param zeolite1: the zeolite with the specified index
+    :type zeolite1: Atoms
+    :param zeolite2: the zeolite to find the neighbor
+    :type zeolite2: Atoms
+    :param z1_index: the index in the first zeolite to find the neighboring index
+    :type z1_index: int
+    :param a2_indices: indices to exclude from the search (already matched)
+    :type a2_indices: List[int]
+    :return: neighbor index
+    :rtype: int
+    """
+    min_distance = float('inf')
+    min_index2 = 0
+    a1 = zeolite1[z1_index]
+    for a2 in zeolite2:
+        if a1.symbol == a2.symbol and a2.index not in a2_indices:
+            tmp_distance = compute_distance(a1.position, a2.position)
+            if tmp_distance < min_distance:
+                min_distance = tmp_distance
+                min_index2 = a2.index
+    return min_index2
+
+
+def tag_zeolite(untagged_zeolite: Atoms, tagged_zeolite: Atoms) -> None:
+    """
+    Tag the untagged_zeolite by finding the nearest neighbors of the tagged_zeolite
+    :param untagged_zeolite: the untagged zeolite
+    :type untagged_zeolite: Atoms
+    :param tagged_zeolite: the tagged zeolite
+    :type tagged_zeolite: Atoms
+    :return: None
+    :rtype: None
+    """
+    indices = []
+    for atom in untagged_zeolite:
+        tz_index = find_NN(untagged_zeolite, tagged_zeolite, atom.index, indices)
+        untagged_zeolite[atom.index].tag = tagged_zeolite[tz_index].tag
+        indices.append(tz_index)
