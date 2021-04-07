@@ -25,6 +25,7 @@ class ExtraFrameworkMaker(object):
         self.count_all_Al_pairs = 0
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
         self.dict_t_sites_1Al_replaced = {}
+        self.dict_2Al_replaced = {}
         self.T_site_pair = []
         self.T_index_pair = []
 
@@ -41,6 +42,9 @@ class ExtraFrameworkMaker(object):
 
         if replace_2Al is True:
             self.replace_2Al_unique_pairs()
+            for count_num, item in enumerate(self.T_site_pair):
+                key_tag = '_'.join(item) + '_' + '_'.join(map(str, self.T_index_pair[count_num]))
+                self.dict_2Al_replaced[key_tag] = self.traj_2Al[count_num]
             if print_statement is True:
                 print('The second Al replacement is Done!')
         # add in Cu here
@@ -233,37 +237,62 @@ class ExtraFrameworkMaker(object):
 
         return dict_Z_TM
 
-    def get_all_Bronsted_sites(self):
+    def _insert_H(self, atoms, index):
+        nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+        nl.update(atoms)
+        index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        indices_neigh, offset_neigh = nl.get_neighbors(index)
+        assert len(indices_neigh) == 2
+        i_neigh_T = [val for val in indices_neigh if val not in index_Al][0]
+        assert atoms[i_neigh_T].symbol == 'Si'
+        assert atoms[index].symbol == 'O'
+        v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
+        coord_O = atoms.get_positions()[index]
+        new_atoms = atoms + Atoms('H', positions=[coord_O + 0.97 * v])
+        return new_atoms
+
+    def get_all_Bronsted_sites(self, case_1Al=False, case_2Al=False, my_dict=None):
         """
         This function samples all Bronsted sites for each T sites names (4 Bronsted sites for each T site).
         No double counting within each sites_name ('T1', 'T2', 'T3', etc), but do have overlaps among different
         site_names.
         """
-        dict_ZH = {}
-        for site_name, all_traj in self.dict_t_sites_1Al_replaced.items():
-            traj = []
-            done_oxygen = []
-            for ref_atoms in all_traj:
-                atoms = copy.copy(ref_atoms)
-                nl = NeighborList(natural_cutoffs(ref_atoms), bothways=True, self_interaction=False)
-                nl.update(ref_atoms)
-                index_Al = [a.index for a in ref_atoms if a.symbol == 'Al']
-                index_Al = index_Al[0]
-                indices, offsets = nl.get_neighbors(index_Al)
-                assert len(indices) == 4
 
-                for count, index in enumerate(indices):
-                    if index not in done_oxygen:  # oxygen index
-                        indices_neigh, offset_neigh = nl.get_neighbors(index)
-                        assert len(indices_neigh) == 2
-                        i_neigh_T = [val for val in indices_neigh if val != index_Al][0]
-                        assert ref_atoms[i_neigh_T].symbol == 'Si'
-                        assert ref_atoms[index].symbol == 'O'
-                        v = self._get_direction_of_insertion(ref_atoms, index, i_neigh_T, index_Al)
-                        coord_O = ref_atoms.get_positions()[index]
-                        new_atoms = atoms + Atoms('H', positions=[coord_O + 0.97 * v])
-                        traj.append(new_atoms)
-                        done_oxygen.append(index)
+        if case_1Al is True:
+            my_dict = copy.copy(self.dict_t_sites_1Al_replaced)
+        if case_2Al is True:
+            my_dict = copy.copy(self.dict_2Al_replaced)
+
+        dict_ZH = {}
+        for site_name, all_zeo_with_same_T in my_dict.items():
+            if case_2Al is True:
+                atoms = copy.copy(all_zeo_with_same_T)
+            else:
+                atoms = copy.copy(all_zeo_with_same_T[0])
+
+            nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+            nl.update(atoms)
+            index_Al = [a.index for a in atoms if a.symbol == 'Al']
+            indices = []
+            for each_Al in index_Al:
+                indices.append(list(nl.get_neighbors(each_Al)[0]))
+
+            traj = []
+            if case_2Al is True:
+                assert len(indices) == 2
+                all_pairs = []
+                for count, value1 in enumerate(indices[0]):
+                    all_pairs.extend([value1, value2] for value2 in indices[1])
+                assert len(all_pairs) == 16
+                for index_pair in all_pairs:
+                    new_atoms = copy.copy(atoms)
+                    for index in index_pair:
+                        new_atoms = self._insert_H(new_atoms, index)
+                    traj.append(new_atoms)
+            else:
+                for count, index in enumerate(indices[0]):
+                    new_atoms = self._insert_H(atoms, index)
+                    traj.append(new_atoms)
 
             dict_ZH[site_name] = traj
         return dict_ZH
