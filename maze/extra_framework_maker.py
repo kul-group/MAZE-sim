@@ -354,3 +354,39 @@ class ExtraFrameworkMaker(object):
         atoms.translate(-1 * translate_vector)
         atoms.wrap()
         return atoms
+
+    def get_extraframework_atoms(self):
+        # track extraframework atoms based on neighboring connection
+        # save atom symbols and index in dict
+        ...
+
+def main():
+    '''
+    zeolite_traj = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', ':')
+    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+    EF_atoms = Atoms('Co', positions=[[0, 0, 0]])
+
+    count = 0
+    inserted_traj = []
+    for zeolite in zeolite_traj:
+        try:
+            EFzeolite = ExtraFrameworkMaker()
+            inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
+            inserted_traj.append(inserted_atoms)
+            count += 1
+            print(count)
+        except AttributeError:
+            print('Error!')
+    # view(inserted_traj)
+    '''
+    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '0')
+    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+    EFzeolite = ExtraFrameworkMaker()
+    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
+    view(inserted_atoms)
+
+    # write('MFI_Co.traj', inserted_atoms)
+
+
+if __name__ == '__main__':
+    main()
