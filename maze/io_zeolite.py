@@ -385,12 +385,12 @@ def read_vasp(optimized_zeolite_path: str, unoptimized_zeolite: Zeolite, atoms_s
     opt_zeolite = Zeolite(unoptimized_zeolite)
 
     for atom in opt_zeolite:
-        atom[atom.index].symbol = opt_atoms[old_to_new_map[atom.index]].symbol
-        atom[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
-        atom[atom.index].tag = opt_atoms[old_to_new_map[atom.index]].tag
-        atom[atom.index].momentum = opt_atoms[old_to_new_map[atom.index]].momentum
-        atom[atom.index].mass = opt_atoms[old_to_new_map[atom.index]].mass
-        atom[atom.index].magmom = opt_atoms[old_to_new_map[atom.index]].magmom
-        atom[atom.index].charge = opt_atoms[old_to_new_map[atom.index]].charge
+        opt_zeolite[atom.index].symbol = opt_atoms[old_to_new_map[atom.index]].symbol
+        opt_zeolite[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
+        opt_zeolite[atom.index].tag = opt_atoms[old_to_new_map[atom.index]].tag
+        opt_zeolite[atom.index].momentum = opt_atoms[old_to_new_map[atom.index]].momentum
+        opt_zeolite[atom.index].mass = opt_atoms[old_to_new_map[atom.index]].mass
+        opt_zeolite[atom.index].magmom = opt_atoms[old_to_new_map[atom.index]].magmom
+        opt_zeolite[atom.index].charge = opt_atoms[old_to_new_map[atom.index]].charge
 
     return opt_zeolite
