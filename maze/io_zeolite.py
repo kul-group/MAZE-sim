@@ -7,10 +7,12 @@ import os
 from pathlib import Path
 import json
 from maze.index_mapper import IndexMapper
-from typing import List, Iterable, Dict, Optional
+from typing import List, Iterable, Dict, Optional, Sequence, Tuple
 import shutil
 import math
 from ase import Atoms
+import ase
+
 
 def make_folder_to_zeo(folder_path: str) -> None:
     """
@@ -298,7 +300,7 @@ def find_NN(zeolite1: Atoms, zeolite2: Atoms, z1_index: int, a2_indices: List[in
     return min_index2
 
 
-def tag_zeolite(untagged_zeolite: Atoms, tagged_zeolite: Atoms) -> None:
+def tag_zeolite_NN(untagged_zeolite: Atoms, tagged_zeolite: Atoms) -> None:
     """
     Tag the untagged_zeolite by finding the nearest neighbors of the tagged_zeolite
     :param untagged_zeolite: the untagged zeolite
@@ -313,3 +315,77 @@ def tag_zeolite(untagged_zeolite: Atoms, tagged_zeolite: Atoms) -> None:
         tz_index = find_NN(untagged_zeolite, tagged_zeolite, atom.index, indices)
         untagged_zeolite[atom.index].tag = tagged_zeolite[tz_index].tag
         indices.append(tz_index)
+
+
+# The following two functions are from ASE vasp module
+# the following copyright applies to them
+# Copyright (C) 2008 CSC - Scientific Computing Ltd.
+
+def count_symbols(atoms, exclude=()):
+    """Count symbols in atoms object, excluding a set of indices
+
+    Parameters:
+        atoms: Atoms object to be grouped
+        exclude: List of indices to be excluded from the counting
+
+    Returns:
+        Tuple of (symbols, symbolcount)
+        symbols: The unique symbols in the included list
+        symbolscount: Count of symbols in the included list
+
+    Example:
+
+    >>> from ase.build import bulk
+    >>> atoms = bulk('NaCl', crystalstructure='rocksalt', a=4.1, cubic=True)
+    >>> count_symbols(atoms)
+    (['Na', 'Cl'], {'Na': 4, 'Cl': 4})
+    >>> count_symbols(atoms, exclude=(1, 2, 3))
+    (['Na', 'Cl'], {'Na': 3, 'Cl': 2})
+    """
+    symbols = []
+    symbolcount = {}
+    for m, symbol in enumerate(atoms.symbols):
+        if m in exclude:
+            continue
+        if symbol not in symbols:
+            symbols.append(symbol)
+            symbolcount[symbol] = 1
+        else:
+            symbolcount[symbol] += 1
+    return symbols, symbolcount
+
+
+def _make_sort(atoms: ase.Atoms, special_setups: Sequence[int] = ()) -> Tuple[List[int], List[int]]:
+    symbols, _ = count_symbols(atoms, exclude=special_setups)
+
+    # Create sorting list
+    srt = []  # type: List[int]
+    srt.extend(special_setups)
+
+    for symbol in symbols:
+        for m, atom in enumerate(atoms):
+            if m in special_setups:
+                continue
+            if atom.symbol == symbol:
+                srt.append(m)
+    # Create the resorting list
+    resrt = list(range(len(srt)))
+    for n in range(len(resrt)):
+        resrt[srt[n]] = n
+    return srt, resrt
+
+
+def read_vasp(optimized_zeolite_xml_path: str, unoptimized_zeolite: Zeolite, atoms_sorted: bool = False):
+    opt_atoms = read(optimized_zeolite_xml_path)
+    new, old = _make_sort(unoptimized_zeolite)
+    if sorted:
+        old_to_new_map = dict(zip(old, new))
+    else:
+        old_to_new_map = dict(zip(old, old))
+
+    opt_zeolite = Zeolite(unoptimized_zeolite)
+
+    for atom in opt_zeolite:
+        opt_zeolite[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
+
+    return opt_zeolite
