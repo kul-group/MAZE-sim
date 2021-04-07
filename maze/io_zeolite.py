@@ -78,7 +78,6 @@ def save_zeolites(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_
         for names in z.additions.values():
             name_list.extend(names)
 
-    print(name_list)
     assert "parent" in name_list, 'parent must be in zeolite list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
 
@@ -375,8 +374,8 @@ def _make_sort(atoms: ase.Atoms, special_setups: Sequence[int] = ()) -> Tuple[Li
     return srt, resrt
 
 
-def read_vasp(optimized_zeolite_xml_path: str, unoptimized_zeolite: Zeolite, atoms_sorted: bool = False):
-    opt_atoms = read(optimized_zeolite_xml_path)
+def read_vasp(optimized_zeolite_path: str, unoptimized_zeolite: Zeolite, atoms_sorted: bool = False):
+    opt_atoms = read(optimized_zeolite_path)
     new, old = _make_sort(unoptimized_zeolite)
     if sorted:
         old_to_new_map = dict(zip(old, new))
@@ -386,6 +385,12 @@ def read_vasp(optimized_zeolite_xml_path: str, unoptimized_zeolite: Zeolite, ato
     opt_zeolite = Zeolite(unoptimized_zeolite)
 
     for atom in opt_zeolite:
-        opt_zeolite[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
+        atom[atom.index].symbol = opt_atoms[old_to_new_map[atom.index]].symbol
+        atom[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
+        atom[atom.index].tag = opt_atoms[old_to_new_map[atom.index]].tag
+        atom[atom.index].momentum = opt_atoms[old_to_new_map[atom.index]].momentum
+        atom[atom.index].mass = opt_atoms[old_to_new_map[atom.index]].mass
+        atom[atom.index].magmom = opt_atoms[old_to_new_map[atom.index]].magmom
+        atom[atom.index].charge = opt_atoms[old_to_new_map[atom.index]].charge
 
     return opt_zeolite
