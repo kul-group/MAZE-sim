@@ -1,5 +1,5 @@
 from maze.zeolite import PerfectZeolite, Zeolite
-from ase import Atoms
+from ase import Atoms, db
 from typing import Union, Tuple
 from collections import defaultdict
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -12,6 +12,7 @@ import itertools
 
 
 class ExtraFrameworkMaker(object):
+
     def __init__(self, iza_code=None):
         """ This is an extra-framework class
         :param iza_code: 3 letter code for the zeolite structures (IZA database)
@@ -355,10 +356,56 @@ class ExtraFrameworkMaker(object):
         atoms.wrap()
         return atoms
 
+
+class ExtraFrameworkAnalyzer(object):
+
+    def __init__(self, atoms):
+        self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
+        self.dict_EF_atoms = {}
+        self.centering_atom_index = 0
+        self.atoms = PerfectZeolite(atoms)
+
     def get_extraframework_atoms(self):
-        # track extraframework atoms based on neighboring connection
-        # save atom symbols and index in dict
-        ...
+        #TODO: MORE GENERAL EXTRA FRAMEWORK DETECTION (CUFRRENTLY LIMITED TO TM-O-TM)
+
+        index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
+        assert len(index_EF_TM) == 2
+        centering_o = np.intersect1d(self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
+                                     self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0])
+        self.centering_atom_index = centering_o[0]
+        assert len(centering_o) == 1
+        assert atoms[centering_o].symbols == 'O'
+
+        EF_indices = [index_EF_TM]
+        EF_indices.extend(centering_o)
+        EF_symbols = [atoms[index_EF_TM[0]].symbol]
+        EF_symbols.extend('O')
+
+        for count, index in enumerate(EF_indices):
+            self.dict_EF_atoms[EF_symbols[count]] = index
+
+    def get_all_bonds(self):
+        #TODO: NEED TO INCLUDE THE BONDS THAT CONNECTS EF ATOMS TO ZEOLITE BACKBONE, MAY NEED TO EXTEND UPDATE_NL MUL VAL
+        d_vec = []
+        d_mag = []
+        for symbol, index_list in self.dict_EF_atoms.items():
+            if symbol != self.atoms[self.centering_atom_index].symbol:
+                for index in index_list:
+                    d_vec.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=True))
+                    d_mag.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=False))
+        return d_vec, d_mag
+
+    def get_angle_at_centering_atom(self):
+        for symbol, index_list in self.dict_EF_atoms.items():
+            if symbol != self.atoms[self.centering_atom_index].symbol:
+                angle = self.atoms.get_angle(index_list[0], self.centering_atom_index, index_list[1], mic=True)
+                return angle
+
+    def get_forces_on_centering_atom(self):
+        f_vec = self.atoms.get_forces()[self.centering_atom_index]
+        f_mag = np.linalg.norm(f_vec)
+        return f_vec, f_mag
+
 
 def main():
     '''
@@ -379,6 +426,7 @@ def main():
             print('Error!')
     # view(inserted_traj)
     '''
+    # TESTING
     zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '0')
     EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
     EFzeolite = ExtraFrameworkMaker()
@@ -388,5 +436,21 @@ def main():
     # write('MFI_Co.traj', inserted_atoms)
 
 
+def test_detect_EF():
+
+    global atoms
+    database = db.connect('/Users/jiaweiguo/Box/CuOCu_systematic/systematic_cuocu.db')
+    for row in database.select(min_energy_structure=True):
+        atoms = database.get_atoms(id=row.id)
+        break
+
+    EF_analyzer = ExtraFrameworkAnalyzer(atoms)
+    EF_analyzer.get_extraframework_atoms()
+    print(EF_analyzer.dict_EF_atoms)
+    print(EF_analyzer.get_all_bonds())
+    print(EF_analyzer.get_angle_at_centering_atom())
+    print(EF_analyzer.get_forces_on_centering_atom())
+
+
 if __name__ == '__main__':
-    main()
+    test_detect_EF()
