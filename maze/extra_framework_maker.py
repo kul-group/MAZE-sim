@@ -9,6 +9,7 @@ from ase.visualize import view
 import copy as copy
 from ase.io import write, read
 import itertools
+from scipy.optimize import least_squares
 
 
 class ExtraFrameworkMaker(object):
@@ -362,27 +363,62 @@ class ExtraFrameworkAnalyzer(object):
     def __init__(self, atoms):
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
         self.dict_EF_atoms = {}
+        self.EF_indices = []
         self.centering_atom_index = 0
         self.atoms = PerfectZeolite(atoms)
+
+    @property
+    def EF_bond_vectors(self):
+        d_vec, d_mag = self.get_all_bonds()
+        return d_vec
+
+    @property
+    def EF_angles(self):
+        return self.get_angle_at_centering_atom()
 
     def get_extraframework_atoms(self):
         #TODO: MORE GENERAL EXTRA FRAMEWORK DETECTION (CUFRRENTLY LIMITED TO TM-O-TM)
 
         index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
+        index_Al = [a.index for a in self.atoms if a.symbol == 'Al']
         assert len(index_EF_TM) == 2
-        centering_o = np.intersect1d(self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
-                                     self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0])
+        assert len(index_Al) == 2
+
+        self.atoms.update_nl(1.2)
+
+        TM_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
+                                        self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0]))
+
+        Al_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_Al[0])[0],
+                                        self.atoms.neighbor_list.get_neighbors(index_Al[1])[0]))
+
+        # print(TM_neigh_list, Al_neigh_list)
+        centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1][0]]
+        # print(centering_o)
+
+        o_between_T_Cu = [val for val in TM_neigh_list if val in Al_neigh_list and self.atoms[val].symbol == 'O']
+        print(o_between_T_Cu)
+
         self.centering_atom_index = centering_o[0]
         assert len(centering_o) == 1
-        assert atoms[centering_o].symbols == 'O'
+        assert self.atoms[centering_o].symbols == 'O'
 
         EF_indices = [index_EF_TM]
         EF_indices.extend(centering_o)
-        EF_symbols = [atoms[index_EF_TM[0]].symbol]
+        EF_symbols = [self.atoms[index_EF_TM[0]].symbol]
         EF_symbols.extend('O')
+
+        self.EF_indices = list(centering_o)
+        self.EF_indices.extend([value for value in index_EF_TM])
 
         for count, index in enumerate(EF_indices):
             self.dict_EF_atoms[EF_symbols[count]] = index
+
+    def get_closest_O_near_EF_atoms(self, num_sites=4):
+        # oxygen connecting Cu and T sites (Al)
+        index_So= [a.index for a in self.atoms if a.symbol in self.TM_list]
+
+
 
     def get_all_bonds(self):
         #TODO: NEED TO INCLUDE THE BONDS THAT CONNECTS EF ATOMS TO ZEOLITE BACKBONE, MAY NEED TO EXTEND UPDATE_NL MUL VAL
@@ -405,6 +441,22 @@ class ExtraFrameworkAnalyzer(object):
         f_vec = self.atoms.get_forces()[self.centering_atom_index]
         f_mag = np.linalg.norm(f_vec)
         return f_vec, f_mag
+
+    @staticmethod
+    def morse_force(r, a, e, rm):
+        return 2 * a * e * np.exp(-a * (r - rm)) * (1 - np.exp(-a * (r - rm)))
+
+    @staticmethod
+    def harmonic(theta, k, theta_o):
+        return 2 * k * (theta - theta_o)
+
+    def get_predicted_forces(self, param):
+        # param = [a, e, rm, k, theta_o]
+        f = [0, 0, 0]
+        d_vec, d_mag = self.get_all_bonds()
+        for count, vec in enumerate(d_vec):
+            f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count]
+        return np.linalg.norm(f) + self.harmonic(self.get_angle_at_centering_atom(), *param[3:5])
 
 
 def main():
@@ -437,19 +489,23 @@ def main():
 
 
 def test_detect_EF():
-
-    global atoms
+    traj = []
     database = db.connect('/Users/jiaweiguo/Box/CuOCu_systematic/systematic_cuocu.db')
     for row in database.select(min_energy_structure=True):
-        atoms = database.get_atoms(id=row.id)
-        break
+        traj.append(database.get_atoms(id=row.id))
+    print(len(traj))
 
-    EF_analyzer = ExtraFrameworkAnalyzer(atoms)
-    EF_analyzer.get_extraframework_atoms()
-    print(EF_analyzer.dict_EF_atoms)
-    print(EF_analyzer.get_all_bonds())
-    print(EF_analyzer.get_angle_at_centering_atom())
-    print(EF_analyzer.get_forces_on_centering_atom())
+    for atoms in traj:
+        try:
+            EF_analyzer = ExtraFrameworkAnalyzer(atoms)
+            EF_analyzer.get_extraframework_atoms()
+            print(EF_analyzer.dict_EF_atoms)
+            print(EF_analyzer.get_all_bonds())
+            print(EF_analyzer.get_angle_at_centering_atom())
+            print(EF_analyzer.get_forces_on_centering_atom())
+            print(EF_analyzer.get_predicted_forces([1, 1, 2, 1, 1]))
+        except:
+            print('Error')
 
 
 if __name__ == '__main__':
