@@ -267,7 +267,7 @@ class PerfectZeolite(Atoms):
 
         return atoms, dict(site_to_atom_indices), atom_indices_to_site
 
-    def update_nl(self, mult: int = 1) -> None:
+    def update_nl(self, mult: float = 1) -> None:
         """
         Builds and updates neighborlist
         :param mult: The mult (multiply) parameter for natural cutoffs (Default 1)
