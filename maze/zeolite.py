@@ -267,7 +267,7 @@ class Zeolite(PerfectZeolite):
         :param indices_to_delete: Indices of atoms in current MAZE-sim to delete
         :return: a copy of self with atoms deleted
         """
-        new_self_a = ase.Atoms(self)
+        new_self_a = copy.deepcopy(ase.Atoms(self))
         del new_self_a[indices_to_delete]
         new_self = self.__class__(new_self_a, ztype=self.ztype)
         self.set_attrs_source(new_self, self)
@@ -387,7 +387,7 @@ class Zeolite(PerfectZeolite):
         self.index_mapper.add_atoms(new_atom_name, atom_indices)
 
         # create a new self
-        new_self_a = ase.Atoms(self)
+        new_self_a = copy.deepcopy(ase.Atoms(self))
         new_self_a.extend(atoms_to_add)
         new_self = self.__class__(new_self_a)
         self.set_attrs_source(new_self, self)
