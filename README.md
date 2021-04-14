@@ -1,5 +1,7 @@
 **M**ultiscale **A**tomic **Z**eolite Simulation **E**nvironment (**MAZE**)
 ========================================================
+!['MAZE Features'](docs/source/maze_gif.gif)
+
 Introduction
 ===============
 This project aims to extend the Atomic Simulation Environment (ASE) to more naturally represent zeolites and facilitate the calculations required to determine their properties. 
