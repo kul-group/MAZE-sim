@@ -1,7 +1,7 @@
 import copy
 import os
 from collections import defaultdict
-from typing import List, Dict, Tuple, Iterable, Optional, Union
+from typing import List, Dict, Tuple, Iterable, Optional
 import uuid
 
 import ase
@@ -472,18 +472,6 @@ class PerfectZeolite(Atoms):
             download_cif(iza_code, data_dir)
         parent = PerfectZeolite.build_from_cif_with_labels(cif_path)
         return cls(parent)
-
-    def retag_self(self) -> None:
-        """
-        Add tags to the Zeolite that correspond to their main index in the index mapper
-        :return: None
-        :rtype: None
-        """
-        assert self.index_mapper is not None, 'cannot retag when index mapper is None'
-        self_to_main_index_map = self.index_mapper.get_reverse_main_index(self.name)
-        #for additions in
-        for atom in self:
-            atom.tag = self_to_main_index_map[atom.index]
 
     def build_additions_map(self):
         """

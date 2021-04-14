@@ -232,12 +232,4 @@ class TestPerfectZeolite(TestCase):
     def test__del__(self):
         pass
 
-    def test_retag_self(self):
-        with self.subTest(msg="retag doesn't throw errrors"):
-            cha = PerfectZeolite.make('CHA')
-            cha.retag_self()
-        with self.subTest(msg='test main index matches tags'):
-            reverse_index_map = cha.index_mapper.get_reverse_main_index(cha.name)
-            for atom in cha:
-                self.assertEqual(atom.tag, reverse_index_map[atom.index])
 

@@ -288,7 +288,7 @@ class Zeolite(PerfectZeolite):
         :param indices_to_delete: Indices of atoms in current MAZE-sim to delete
         :return: a copy of self with atoms deleted
         """
-        #lambda a: del a[indices_to_delete]
+        # lambda a: del a[indices_to_delete]
 
         new_self_a = copy.deepcopy(ase.Atoms(self))
         del new_self_a[indices_to_delete]
@@ -332,18 +332,38 @@ class Zeolite(PerfectZeolite):
         new_self._calc = self._calc
         return new_self
 
+    @staticmethod
+    def _count_equal(list1: Iterable, list2: Iterable) -> bool:
+        count_dict_1 = defaultdict(lambda: 0)
+        count_dict_2 = defaultdict(lambda: 0)
+        for el1, el2 in zip(list1, list2):
+            count_dict_1[el1] += 1
+            count_dict_2[el2] += 1
+
+        if len(count_dict_1) != len(count_dict_2):
+            return False
+
+        for key in count_dict_1:
+            if count_dict_1[key] != count_dict_2[key]:
+                return False
+
+        return True
+
     def apply(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
         """
-        Applies a custom function to the atoms and returns a new self
+        Applies a custom function to the atoms and returns a new self.
+        Custom operation cannot change tags or else errors will occur!
 
         :param operation: applies a custom function to the atoms
         :return: zeolite with applied modifications
         """
-        new_self_a = copy.deepcopy(ase.Atoms(self))
+        new_self_a = copy.deepcopy(ase.Atoms(self.retag_self()))
+        pre_operation_tags = new_self_a.get_tags()
         operation(new_self_a, *args, **kwargs)
+        post_operation_tags = new_self_a.get_tags()
+        assert self._count_equal(pre_operation_tags, post_operation_tags), 'tags cannot be changed by operation'
         new_self = self.__class__(new_self_a)
-        old_to_new_map = self._get_old_to_new_map(self, new_self)
-        self.index_mapper.register(new_self.name, self.name, old_to_new_map)
+        new_self.register_with_parent(self.parent_zeotype, self.build_additions_map())
         return new_self
 
     def get_type(self, index: int) -> 'str':
@@ -601,6 +621,20 @@ class Zeolite(PerfectZeolite):
                             addition_main_to_new_map[atom.tag] = addition_index
                             addition_index += 1
                     self.index_mapper.register_with_main(name, addition_main_to_new_map)
+
+    def retag_self(self) -> None:
+        """
+        Add tags to the Zeolite that correspond to their main index in the index mapper
+        :return: None
+        :rtype: None
+        """
+        assert self.index_mapper is not None, 'cannot retag when index mapper is None'
+        self_to_main_index_map = self.index_mapper.get_reverse_main_index(self.name)
+        new_self = self.__class__(self)
+        for atom in new_self:
+            atom.tag = self_to_main_index_map[atom.index]
+
+        return new_self
 
 
 class ClusterMaker(ABC):

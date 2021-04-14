@@ -226,7 +226,7 @@ class TestImperfectZeotype(TestCase):
     def test_retag_self(self):
         with self.subTest(msg="retag doesn't throw errrors"):
             cha = Zeolite.make('CHA')
-            cha.retag_self()
+            cha = cha.retag_self()
         with self.subTest(msg='test main index matches tags'):
             reverse_index_map = cha.index_mapper.get_reverse_main_index(cha.name)
             for atom in cha:
@@ -245,7 +245,7 @@ class TestImperfectZeotype(TestCase):
         with self.subTest(msg='test simple case, no additions'):
             parent = PerfectZeolite.make('BEA')
             child = Zeolite.make('BEA')
-            child.retag_self()
+            child = child.retag_self()
             child.register_with_parent(parent)
             self.assertEqual(parent.index_mapper, child.index_mapper)
             self.assertEqual(parent, child.parent_zeotype)
@@ -258,7 +258,7 @@ class TestImperfectZeotype(TestCase):
             child = child.add_atoms(Atoms("H2", positions=[[0,0,0], [1,1,1]]), 'H2').delete_atoms([1, 2, 3, 4])
             ads_map = child.build_additions_map()
             child.additions = additions_dict
-            child.retag_self()
+            child = child.retag_self()
             child.register_with_parent(parent, ads_map)
             self.assertEqual(parent.index_mapper, child.index_mapper)
             self.assertEqual(parent, child.parent_zeotype)
