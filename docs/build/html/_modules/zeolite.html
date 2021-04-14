@@ -424,7 +424,7 @@
 <span class="sd">        :param indices_to_delete: Indices of atoms in current MAZE-sim to delete</span>
 <span class="sd">        :return: a copy of self with atoms deleted</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">del</span> <span class="n">new_self_a</span><span class="p">[</span><span class="n">indices_to_delete</span><span class="p">]</span>
         <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_self_a</span><span class="p">,</span> <span class="n">ztype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ztype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_attrs_source</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -544,7 +544,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">add_atoms</span><span class="p">(</span><span class="n">new_atom_name</span><span class="p">,</span> <span class="n">atom_indices</span><span class="p">)</span>
 
         <span class="c1"># create a new self</span>
-        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new_self_a</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ase</span><span class="o">.</span><span class="n">Atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="n">new_self_a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">atoms_to_add</span><span class="p">)</span>
         <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_self_a</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_attrs_source</span><span class="p">(</span><span class="n">new_self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
