@@ -313,10 +313,33 @@ class Zeolite(PerfectZeolite):
         # copy over forces
         # copy over other key atoms attributes
 
-    # TODO: make translate and wrap functions that return a new Zeolite with the coppied attrs
-    #
+    def translate_self(self, displacement) -> "Zeolite":
+       """
+       Returns a copy of self with applied translation
+       :param displacement: atomic positions
+       :type displacement: Iterable
+       :return: new self translated
+       :rtype: Zeolite
+       """
 
+       new_self_a = copy.deepcopy(ase.Atoms(self))
+       new_self_a.translate(displacement)
+       new_self = self.__class__(new_self_a, ztype=self.ztype)
+       self.set_attrs_source(new_self, self)
+       new_self._calc = self._calc  # fixes forces issue
+       old_to_new_map = self._get_old_to_new_map(self, new_self)
+       self.index_mapper.register(self.name, new_self.name, old_to_new_map)
+       return new_self
 
+    def wrap_self(self, **wrap_kw):
+        new_self_a = copy.deepcopy(ase.Atoms(self))
+        new_self_a.wrap(**wrap_kw)
+        new_self = self.__class__(new_self_a, ztype=self.ztype)
+        self.set_attrs_source(new_self, self)
+        new_self._calc = self._calc  # fixes forces issue
+        old_to_new_map = self._get_old_to_new_map(self, new_self)
+        self.index_mapper.register(self.name, new_self.name, old_to_new_map)
+        return new_self
 
     def change_atoms(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
         """
