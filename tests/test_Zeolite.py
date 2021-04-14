@@ -299,3 +299,45 @@ class TestImperfectZeotype(TestCase):
                 self.fail('error not thrown')
             except ValueError:
                 self.assertTrue(True)
+
+    def test_remove_caps(self):
+        bea = Zeolite.make('BEA')
+        cluster, od = bea.get_cluster(154)
+        with self.subTest('testing removing caps without arguments'):
+            capped_cluster = cluster.cap_atoms()
+            uncapped_cluster = capped_cluster.remove_caps()
+            for cap_type in uncapped_cluster.additions.keys():
+                if 'cap' not in cap_type:
+                    continue
+                self.assertFalse(uncapped_cluster.additions[cap_type])  # assert empty
+            self.assertEqual(len(uncapped_cluster), len(cluster), msg='num atoms in uncapped = num atoms in original')
+            for atom in uncapped_cluster:
+                self.assertFalse(atom.symbol=='H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
+
+        with self.subTest('testing oxygen and hydrogen caps'):
+            cluster_wo_o = cluster.delete_atoms([1])
+            capped_cluster = cluster_wo_o.cap_atoms()
+            uncapped_cluster = capped_cluster.remove_caps()
+            for cap_type in uncapped_cluster.additions.keys():
+                if 'cap' not in cap_type:
+                    continue
+                self.assertFalse(uncapped_cluster.additions[cap_type])  # assert empty
+            self.assertEqual(len(uncapped_cluster), len(cluster_wo_o), 'num atoms in uncapped = num atoms in original')
+            for atom in uncapped_cluster:
+                self.assertFalse(atom.symbol=='H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
+
+        with self.subTest('remove only H caps'):
+            cluster_wo_o = cluster.delete_atoms([1])
+            capped_cluster = cluster_wo_o.cap_atoms()
+            uncapped_cluster = capped_cluster.remove_caps(cap_type='h_cap')
+            for cap_type in uncapped_cluster.additions.keys():
+                if 'h_cap' not in cap_type:
+                    continue
+                self.assertFalse(uncapped_cluster.additions[cap_type])  # assert empty
+            self.assertEqual(len(uncapped_cluster), len(cluster),
+                             msg='num atoms in uncapped = num atoms in original')
+            for atom in uncapped_cluster:
+                self.assertFalse(atom.symbol == 'H',
+                                 msg='no hydrogen in uncapped cluster')  # check for no hydrogens
+
+        view(uncapped_cluster)
