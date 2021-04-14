@@ -22,8 +22,8 @@ Import Required Packages
 
 --------------
 
-Extracting, Adding and Capping Clusters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Overview
+~~~~~~~~
 
 One of the most useful features of the MAZE package is the ability to
 add and remove atoms from a ``Zeolite`` object. To demonstrate this, we
@@ -365,18 +365,12 @@ is not wrapped in a nice function.
       border: 1px solid #ddd;
     }
 
-    th, td {
-      text-align: left;
-      padding: 8px;
-    }
-
-    tr:nth-child(even){background-color: #f2f2f2}
     </style>
     </head>
     <body>
 
     <div style="overflow-x:auto;">
-    <table border="1" class="dataframe">
+    <table border="1" class="dataframe" background-color="#f2f2f2" padding="8px" border-collapse="collapse" border-spacing="0" width="100%" border="1px solid #ddd">
       <thead>
         <tr style="text-align: right;">
           <th></th>
@@ -2422,6 +2416,9 @@ Now that we know the indices to fix, we can go ahead and fix them.
 You should now notice that the hydrogen atoms have ``X``\ ’s on them
 indicating that they have been fixed/frozen.
 
+Saving Zeolites
+~~~~~~~~~~~~~~~~~
+
 Now let us optimize the cluster! There are two ways to perform this
 optimization. The first is with an inbuilt calculator. The second is by
 optimizing the traj file offline, on a remote server. We will show the
@@ -2526,6 +2523,9 @@ The optimization is complete and a new ``opt_from_vasp.traj`` file has
 been created. VASP (sometimes) sorts the atom indices during
 optimization. The information is also contained in the vasprun.xml file.
 
+Loading Zeolites
+~~~~~~~~~~~~~~~~~
+
 Reading an optimized function back into memory can be achieved by using
 the ``read_vasp`` function. This function takes an optimized structure
 and matches it to the unoptimized structure.
@@ -2562,6 +2562,8 @@ The easiest way to load in a zeolite after optimization is with the read
 
 .. image:: output_81_1.png
 
+Removing Caps
+~~~~~~~~~~~~~~~~~
 
 The optimized zeolite has been loaded! It’s caps can now be removed and
 it can be reintegrated back into the original zeolite.
@@ -2609,6 +2611,8 @@ Next we call the remove_addition method
 
 .. image:: output_89_1.png
 
+Integrating Cluster
+~~~~~~~~~~~~~~~~~~~~~
 
 The caps have been removed. We can now integrate the cluster back into
 the original zeolite.
