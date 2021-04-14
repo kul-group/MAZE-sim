@@ -13,7 +13,7 @@ Import Required Packages
 
     from maze import Zeolite
 
-.. code:: ipython3
+.. code:: python
 
     import matplotlib.pyplot as plt
     from ase.visualize.plot import plot_atoms
@@ -33,25 +33,10 @@ and then integrate it back into the main ``Zeolite``.
 First, we make a bea_zeolite object with the ``Zeolite`` class’ static
 ``make`` method.
 
-.. code:: ipython3
+.. code:: python
 
     bea_zeolite = Zeolite.make('BEA')
     plot_atoms(bea_zeolite)
-
-
-.. parsed-literal::
-
-    /usr/local/anaconda3/envs/zeotype_demos/lib/python3.8/site-packages/ase/io/cif.py:402: UserWarning: crystal system 'tetragonal' is not interpreted for space group Spacegroup(91, setting=1). This may result in wrong setting!
-      warnings.warn(
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_8_2.png
@@ -79,14 +64,12 @@ cluster maker.
 Let’s call our ``bea_zeolite``\ ’s ``ClusterMaker`` object’s
 ``get_cluster_indices`` method, to see what indices it will select.
 
-.. code:: ipython3
+.. code:: python3
 
     site = 154 
     cluster_indices = bea_zeolite.cluster_maker.get_cluster_indices(bea_zeolite, site)
     print(cluster_indices)
 
-
-.. parsed-literal::
 
     [2, 66, 74, 138, 77, 82, 146, 22, 154, 30, 38, 102, 186, 42, 174, 50, 114, 117, 118, 58, 126]
 
@@ -98,24 +81,15 @@ defect zeolite.
 We can now make the cluster and open defect zeolites by using the
 ``get_cluster`` method.
 
-.. code:: ipython3
+.. code:: python3
 
     cluster, od = bea_zeolite.get_cluster(154)
 
 The cluster looks like this
 
-.. code:: ipython3
+.. code:: python3
 
     plot_atoms(cluster)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_14_1.png
@@ -123,18 +97,9 @@ The cluster looks like this
 
 the open defect looks like this
 
-.. code:: ipython3
+.. code:: python3
 
     plot_atoms(od)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_16_1.png
@@ -143,7 +108,7 @@ the open defect looks like this
 Both the open defect and the cluster are ``Zeolite`` objects, yet they
 have a different ztype attribute
 
-.. code:: ipython3
+.. code:: python3
 
     display(type(bea_zeolite))
     display(type(od))
@@ -154,21 +119,11 @@ have a different ztype attribute
 .. parsed-literal::
 
     maze.zeolite.Zeolite
-
-
-
-.. parsed-literal::
-
+    maze.zeolite.Zeolite
     maze.zeolite.Zeolite
 
 
-
-.. parsed-literal::
-
-    maze.zeolite.Zeolite
-
-
-.. code:: ipython3
+.. code:: python3
 
     display(bea_zeolite.ztype)
     display(od.ztype)
@@ -179,42 +134,18 @@ have a different ztype attribute
 .. parsed-literal::
 
     'Zeolite'
-
-
-
-.. parsed-literal::
-
     'Open Defect'
-
-
-
-.. parsed-literal::
-
     'Cluster'
-
 
 Next, we want to cap the cluster and apply changes to some of the
 internal atoms. Capping involves adding hydrogens and oxygens to the
 cluster. The built-in ``cap_atoms()`` method returns a new cluster
 object that has hydrogen caps added to it.
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster = cluster.cap_atoms()
-
-.. code:: ipython3
-
     plot_atoms(capped_cluster)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
-
 
 .. image:: output_22_1.png
 
@@ -243,12 +174,9 @@ For example, to get the capped_cluster central T site index, knowing
 that the that T site in the parent zeolite had index is 154 we use the
 following command.
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster.index_mapper.get_index(capped_cluster.parent_zeotype.name, capped_cluster.name, 154)
-
-
-
 
 .. parsed-literal::
 
@@ -260,7 +188,7 @@ This is a little wordy, but it works. We can also use the
 ``site_to_atom_indices`` dictionary to see the idenity of all of the
 sites in the capped cluster.
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster.atom_indices_to_sites[18]
 
@@ -279,23 +207,11 @@ we found in both the parent zeolite and the current zeolite.
 Substitutions do not change the index mapper and are not tracked since
 the indices are not shifted by substitutions.
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster.parent_zeotype[154].symbol = 'Sn' # replace original zeolite 154 site Si -> Sn
     capped_cluster[18].symbol = 'Sn' # replace site in the capped_cluster
-
-.. code:: ipython3
-
     plot_atoms(capped_cluster.parent_zeotype)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_31_1.png
@@ -304,15 +220,6 @@ the indices are not shifted by substitutions.
 .. code:: ipython3
 
     plot_atoms(capped_cluster)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_32_1.png
@@ -329,26 +236,13 @@ adsorbate code works best when the original framework is used as the
 host zeotype, since it takes into consideration the containment provided
 by the entire framework.
 
-.. code:: ipython3
+.. code:: python
 
     from maze.adsorbate import Adsorbate
     from ase.build import molecule
-
-.. code:: ipython3
-
     ch3cn = molecule('CH3CN')
     ch3cn = Adsorbate(ch3cn, host_zeotype=capped_cluster.parent_zeotype, name='acetonitrile')
     plot_atoms(ch3cn)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
-
 
 .. image:: output_35_1.png
 
@@ -359,7 +253,7 @@ used with ASE’s visualization tools
 To position the adsorbate, we need to find the index of the nucleophile
 (i.e. the nitrogen)
 
-.. code:: ipython3
+.. code:: python
 
     for atom in ch3cn:
         print(atom.index, atom.symbol)
@@ -378,7 +272,7 @@ To position the adsorbate, we need to find the index of the nucleophile
 The donor atom is the N; thus, we note the index = 2. We could also find
 this in one step with list comprehension.
 
-.. code:: ipython3
+.. code:: python
 
     nitrogen_index = [atom.index for atom in ch3cn if atom.symbol == 'N'][0]
     nitrogen_index
@@ -392,7 +286,7 @@ this in one step with list comprehension.
 
 
 
-.. code:: ipython3
+.. code:: python
 
     #lets position the adsorbate (run this a few times until it works) 
     for _ in range(10):
@@ -401,19 +295,7 @@ this in one step with list comprehension.
             break
         except AssertionError:
             pass
-
-.. code:: ipython3
-
     plot_atoms(ch3cn)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_42_1.png
@@ -425,7 +307,7 @@ doesn’t have to be the capped cluster for the integration to take place.
 This integrate-adsorbate method also returns a new cluster object and a
 new adsorbate object.
 
-.. code:: ipython3
+.. code:: python
 
     cluster_with_ads, ch3cn_in = capped_cluster.integrate_adsorbate(ch3cn)
 
@@ -433,18 +315,9 @@ We can now view the ``cluster_with_ads object``. The positioning will
 not be perfect, since it relies on some very simple heuristics, but it
 is a good initial guess for the calculations.
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(cluster_with_ads)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_46_1.png
@@ -469,12 +342,12 @@ it can easily be visualized by turning it into a Pandas Data Frame.
 Pandas is not a required package for MAZE so the following line of code
 is not wrapped in a nice function.
 
-.. code:: ipython3
+.. code:: python
 
     import pandas as pd
     from IPython.core.display import HTML
 
-.. code:: ipython3
+.. code:: python
 
     HTML(pd.DataFrame(cluster_with_ads.index_mapper.main_index).to_html())
 
@@ -482,7 +355,27 @@ is not wrapped in a nice function.
 
 
 .. raw:: html
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    table {
+      border-collapse: collapse;
+      border-spacing: 0;
+      width: 100%;
+      border: 1px solid #ddd;
+    }
 
+    th, td {
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even){background-color: #f2f2f2}
+    </style>
+    </head>
+    <body>
+
+    <div style="overflow-x:auto;">
     <table border="1" class="dataframe">
       <thead>
         <tr style="text-align: right;">
@@ -2406,6 +2299,8 @@ is not wrapped in a nice function.
         </tr>
       </tbody>
     </table>
+    </div>
+    </body>
 
 
 
@@ -2419,7 +2314,7 @@ across different index mappers.
 The ``h_caps_7`` is one such groups of atoms. These are the atoms that
 we want to freeze in the cluster. Let us visualize the cluster.
 
-.. code:: ipython3
+.. code:: python
 
     h_cap_name = capped_cluster.additions['h_caps'][0]
     h_cap_name
@@ -2433,24 +2328,15 @@ we want to freeze in the cluster. Let us visualize the cluster.
 
 
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(capped_cluster)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_54_1.png
 
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster.name 
 
@@ -2473,7 +2359,7 @@ possess any corresponding atoms, then ``None`` is returned. We can use
 this get_index function to find the hydrogen caps in the
 ``capped_cluster``.
 
-.. code:: ipython3
+.. code:: python
 
     help(capped_cluster.index_mapper.get_index)
 
@@ -2491,7 +2377,7 @@ this get_index function to find the hydrogen caps in the
     
 
 
-.. code:: ipython3
+.. code:: python
 
     cap_indices = []
     for atom in capped_cluster:
@@ -2513,25 +2399,20 @@ this get_index function to find the hydrogen caps in the
 
 Now that we know the indices to fix, we can go ahead and fix them.
 
-.. code:: ipython3
+.. code:: python
 
     from ase.constraints import FixAtoms
 
-.. code:: ipython3
+.. code:: python
 
     c = FixAtoms(indices=cap_indices)
     capped_cluster.set_constraint(c)
 
-.. code:: ipython3
+.. code:: python
 
     from IPython.display import Image
-
-.. code:: ipython3
-
     #view(capped_cluster)
     Image(filename='output/fixed.png')
-
-
 
 
 .. image:: output_63_0.png
@@ -2553,11 +2434,11 @@ The following zeolite folder structure is created. Each zeolite gets its
 own folder. This is useful as it allows the organization of the pre- and
 post-optimized zeolites.
 
-.. code:: ipython3
+.. code:: python
 
     from maze.io_zeolite import save_zeolites
 
-.. code:: ipython3
+.. code:: python
 
     output_dir = "output/zeolites/capped_cluster"
     output_zeolite_list = [capped_cluster, capped_cluster.parent_zeotype]
@@ -2567,7 +2448,7 @@ The following zeolite folder structure is created. Each zeolite get’s
 its own folder. This is extremely useful as it allows the organization
 of the pre and post optimization zeolites.
 
-.. code:: ipython3
+.. code:: python
 
     !tree 'output/zeolites'
 
@@ -2595,7 +2476,7 @@ of the pre and post optimization zeolites.
 
 Now we optimize the Zeolite using VASP.
 
-.. code:: ipython3
+.. code:: python
 
     !tree ~/Code/zeotype_demos/optimization_workflow/opt_output
 
@@ -2649,18 +2530,18 @@ Reading an optimized function back into memory can be achieved by using
 the ``read_vasp`` function. This function takes an optimized structure
 and matches it to the unoptimized structure.
 
-.. code:: ipython3
+.. code:: python
 
     from maze.io_zeolite import read_vasp
 
-.. code:: ipython3
+.. code:: python
 
     opt_traj_path = "/Users/dda/Code/zeotype_demos/optimization_workflow/opt_output/capped_cluster/Zeolite_11301/00_opt/opt_from_vasp.traj"
 
 The easiest way to load in a zeolite after optimization is with the read
 ``read_vasp`` function.
 
-.. code:: ipython3
+.. code:: python
 
     help(read_vasp)
 
@@ -2673,27 +2554,11 @@ The easiest way to load in a zeolite after optimization is with the read
     
 
 
-.. code:: ipython3
+.. code:: python
 
     from ase.io import read
-
-.. code:: ipython3
-
     capped_cluster_opt = read_vasp(opt_traj_path, capped_cluster, atoms_sorted=True)
-
-.. code:: ipython3
-
     plot_atoms(capped_cluster_opt)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
-
 
 .. image:: output_81_1.png
 
@@ -2707,7 +2572,7 @@ back into the original zeolite.
 To remove caps, we have to find the name of the caps in ``additions``
 dictionary.
 
-.. code:: ipython3
+.. code:: python
 
     dict(capped_cluster_opt.additions)
 
@@ -2722,7 +2587,7 @@ dictionary.
 
 or we can just select the last h_caps added using pythons list methods
 
-.. code:: ipython3
+.. code:: python
 
     additon_category = 'h_caps'
     addition_name = capped_cluster_opt.additions[additon_category][-1]
@@ -2737,23 +2602,10 @@ or we can just select the last h_caps added using pythons list methods
 
 Next we call the remove_addition method
 
-.. code:: ipython3
+.. code:: python
 
     uncapped_cluster = capped_cluster_opt.remove_addition(addition_name, additon_category)
-
-.. code:: ipython3
-
     plot_atoms(uncapped_cluster)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
-
 
 .. image:: output_89_1.png
 
@@ -2761,22 +2613,10 @@ Next we call the remove_addition method
 The caps have been removed. We can now integrate the cluster back into
 the original zeolite.
 
-.. code:: ipython3
+.. code:: python
 
     bea_zeolite_with_al = bea_zeolite.integrate(uncapped_cluster)
-
-.. code:: ipython3
-
     plot_atoms(bea_zeolite_with_al)
-
-
-
-
-.. parsed-literal::
-
-    <AxesSubplot:>
-
-
 
 
 .. image:: output_92_1.png
