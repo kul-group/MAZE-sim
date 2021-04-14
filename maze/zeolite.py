@@ -309,6 +309,14 @@ class Zeolite(PerfectZeolite):
         new_z.index_mapper = source.index_mapper
         new_z.additions = copy.deepcopy(source.additions)
         new_z.cluster_maker = copy.deepcopy(source.cluster_maker)
+        # copy over potential energies
+        # copy over forces
+        # copy over other key atoms attributes
+
+    # TODO: make translate and wrap functions that return a new Zeolite with the coppied attrs
+    #
+
+
 
     def change_atoms(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
         """
