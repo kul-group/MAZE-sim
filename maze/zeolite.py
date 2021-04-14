@@ -76,18 +76,39 @@ class Zeolite(PerfectZeolite):
 
         return new_self
 
-    def remove_caps(self, cap_type: str = 'h_cap', cap_name: str = "cap") -> 'Zeolite':
+    def remove_caps(self, cap_type: str = 'cap', cap_name: Optional[str] = None) -> 'Zeolite':
         """
-        Remove caps from an imperfect MAZE-sim
+        Remove caps from an imperfect MAZE-sim, if no arguments are provided all
+        caps are removed from the Zeolite
 
-        :param cap_type: The type of cap (h_cap, o_cap)
+        :param cap_type: The type of cap (h_cap, o_cap or cap for both) partial matching will work
         :param cap_name: The name of the cap
         :return: A copy of self with the caps removed
         """
-        assert cap_name in self.additions[cap_type], 'cap not in additions'
-        indices_to_delete = self.index_mapper.get_overlap(self.name, cap_name)
+        cap_names_to_delete = []
+        cap_names_to_delete_dict = defaultdict(list)
+        for addition_type in self.additions.keys():
+            if cap_type not in addition_type:
+                continue
+            if cap_name is None:  # select all names
+                cap_names_to_delete.extend(self.additions[addition_type])
+                cap_names_to_delete_dict[addition_type].extend(self.additions[addition_type])
+            else:
+                matching_names = [name for name in self.additions[addition_type] if cap_name in name]
+                cap_names_to_delete.extend(matching_names)
+                cap_names_to_delete_dict[addition_type].extend(matching_names)
+
+        assert cap_names_to_delete, 'no matching caps found'
+
+        indices_to_delete = []
+        for cap_name in cap_names_to_delete:
+            indices_to_delete.extend(self.index_mapper.get_overlap(self.name, cap_name))
+
         new_self = self.delete_atoms(indices_to_delete)
-        new_self.additions[cap_type].remove(cap_name)
+        for cap_type in cap_names_to_delete_dict.keys():
+            for cap_name in cap_names_to_delete_dict[cap_type]:
+                new_self.additions[cap_type].remove(cap_name)
+
         return new_self
 
     def integrate_adsorbate(self, adsorbate: Atoms) -> Tuple['Zeolite', Adsorbate]:
