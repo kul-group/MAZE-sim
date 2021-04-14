@@ -7,8 +7,11 @@ import os
 from pathlib import Path
 import json
 from maze.index_mapper import IndexMapper
-from typing import List, Iterable, Dict, Optional
+from typing import List, Iterable, Dict, Optional, Sequence, Tuple
 import shutil
+import math
+from ase import Atoms
+import ase
 
 
 def make_folder_to_zeo(folder_path: str) -> None:
@@ -75,7 +78,6 @@ def save_zeolites(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_
         for names in z.additions.values():
             name_list.extend(names)
 
-    print(name_list)
     assert "parent" in name_list, 'parent must be in zeolite list'
     new_index_mapper = copy.deepcopy(zeotype_list[0].index_mapper)
 
@@ -162,8 +164,6 @@ def load_index_mapper(filepath) -> IndexMapper:
     return new_im
 
 
-
-
 def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_filepath: str) -> PerfectZeolite:
     perfect_zeolite = PerfectZeolite(read(binary_filepath))
 
@@ -185,6 +185,7 @@ def read_parent_zeolite(binary_filepath: str, json_filepath: str, index_mapper_f
     new_index_mapper.reregister_parent(main_to_parent_map)
     perfect_zeolite.index_mapper = new_index_mapper
     return perfect_zeolite
+
 
 def read_zeolite(binary_filepath: str, parent_zeolite: PerfectZeolite, json_filepath: Optional[str] = None) -> Zeolite:
     if json_filepath:
@@ -263,3 +264,133 @@ def read_zeolites(file_path: str, str_ext: str = '.traj', zipped: bool = True,
         delete_folder(folder_path)
 
     return zeotype_dict
+
+
+def compute_distance(p1, p2):
+    total = 0
+    for x1, x2 in zip(p1, p2):
+        total += (x1 - x2) ** 2
+    return math.sqrt(total)
+
+
+def find_NN(zeolite1: Atoms, zeolite2: Atoms, z1_index: int, a2_indices: List[int]) -> int:
+    """
+    Find the nearest neighbor of z1_index
+    :param zeolite1: the zeolite with the specified index
+    :type zeolite1: Atoms
+    :param zeolite2: the zeolite to find the neighbor
+    :type zeolite2: Atoms
+    :param z1_index: the index in the first zeolite to find the neighboring index
+    :type z1_index: int
+    :param a2_indices: indices to exclude from the search (already matched)
+    :type a2_indices: List[int]
+    :return: neighbor index
+    :rtype: int
+    """
+    min_distance = float('inf')
+    min_index2 = 0
+    a1 = zeolite1[z1_index]
+    for a2 in zeolite2:
+        if a1.symbol == a2.symbol and a2.index not in a2_indices:
+            tmp_distance = compute_distance(a1.position, a2.position)
+            if tmp_distance < min_distance:
+                min_distance = tmp_distance
+                min_index2 = a2.index
+    return min_index2
+
+
+def tag_zeolite_NN(untagged_zeolite: Atoms, tagged_zeolite: Atoms) -> None:
+    """
+    Tag the untagged_zeolite by finding the nearest neighbors of the tagged_zeolite
+    :param untagged_zeolite: the untagged zeolite
+    :type untagged_zeolite: Atoms
+    :param tagged_zeolite: the tagged zeolite
+    :type tagged_zeolite: Atoms
+    :return: None
+    :rtype: None
+    """
+    indices = []
+    for atom in untagged_zeolite:
+        tz_index = find_NN(untagged_zeolite, tagged_zeolite, atom.index, indices)
+        untagged_zeolite[atom.index].tag = tagged_zeolite[tz_index].tag
+        indices.append(tz_index)
+
+
+# The following two functions are from ASE vasp module
+# the following copyright applies to them
+# Copyright (C) 2008 CSC - Scientific Computing Ltd.
+
+def count_symbols(atoms, exclude=()):
+    """Count symbols in atoms object, excluding a set of indices
+
+    Parameters:
+        atoms: Atoms object to be grouped
+        exclude: List of indices to be excluded from the counting
+
+    Returns:
+        Tuple of (symbols, symbolcount)
+        symbols: The unique symbols in the included list
+        symbolscount: Count of symbols in the included list
+
+    Example:
+
+    >>> from ase.build import bulk
+    >>> atoms = bulk('NaCl', crystalstructure='rocksalt', a=4.1, cubic=True)
+    >>> count_symbols(atoms)
+    (['Na', 'Cl'], {'Na': 4, 'Cl': 4})
+    >>> count_symbols(atoms, exclude=(1, 2, 3))
+    (['Na', 'Cl'], {'Na': 3, 'Cl': 2})
+    """
+    symbols = []
+    symbolcount = {}
+    for m, symbol in enumerate(atoms.symbols):
+        if m in exclude:
+            continue
+        if symbol not in symbols:
+            symbols.append(symbol)
+            symbolcount[symbol] = 1
+        else:
+            symbolcount[symbol] += 1
+    return symbols, symbolcount
+
+
+def _make_sort(atoms: ase.Atoms, special_setups: Sequence[int] = ()) -> Tuple[List[int], List[int]]:
+    symbols, _ = count_symbols(atoms, exclude=special_setups)
+
+    # Create sorting list
+    srt = []  # type: List[int]
+    srt.extend(special_setups)
+
+    for symbol in symbols:
+        for m, atom in enumerate(atoms):
+            if m in special_setups:
+                continue
+            if atom.symbol == symbol:
+                srt.append(m)
+    # Create the resorting list
+    resrt = list(range(len(srt)))
+    for n in range(len(resrt)):
+        resrt[srt[n]] = n
+    return srt, resrt
+
+
+def read_vasp(optimized_zeolite_path: str, unoptimized_zeolite: Zeolite, atoms_sorted: bool = False):
+    opt_atoms = read(optimized_zeolite_path)
+    new, old = _make_sort(unoptimized_zeolite)
+    if sorted:
+        old_to_new_map = dict(zip(old, new))
+    else:
+        old_to_new_map = dict(zip(old, old))
+
+    opt_zeolite = Zeolite(unoptimized_zeolite)
+
+    for atom in opt_zeolite:
+        opt_zeolite[atom.index].symbol = opt_atoms[old_to_new_map[atom.index]].symbol
+        opt_zeolite[atom.index].position = opt_atoms[old_to_new_map[atom.index]].position
+        opt_zeolite[atom.index].tag = opt_atoms[old_to_new_map[atom.index]].tag
+        opt_zeolite[atom.index].momentum = opt_atoms[old_to_new_map[atom.index]].momentum
+        opt_zeolite[atom.index].mass = opt_atoms[old_to_new_map[atom.index]].mass
+        opt_zeolite[atom.index].magmom = opt_atoms[old_to_new_map[atom.index]].magmom
+        opt_zeolite[atom.index].charge = opt_atoms[old_to_new_map[atom.index]].charge
+
+    return opt_zeolite

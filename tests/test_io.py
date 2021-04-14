@@ -1,10 +1,12 @@
 from unittest import TestCase
 from maze.zeolite import Zeolite
-from maze.io_zeolite import save_zeolites, read_zeolites
+from maze.io_zeolite import save_zeolites, read_zeolites, tag_zeolite
 import glob
 import os
 from ase import Atoms
 import json
+import numpy as np
+from ase.visualize import view
 
 
 class IOZeolites(TestCase):
@@ -50,3 +52,24 @@ class IOZeolites(TestCase):
         #import pandas as pd
         #print(pd.DataFrame(zeotypes[0].index_mapper.main_index).T.to_string())
 
+    def test_tag_zeolite(self):
+        with self.subTest('test overlapping atoms'):
+            cha1 = Zeolite.make('CHA')
+            cha2 = Zeolite.make('CHA')
+            for atom in cha2:
+                cha2[atom.index].tag = atom.index + 5
+            tag_zeolite(cha1, cha2)
+            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+            for a1, a2 in zip(cha1, cha2):
+                self.assertEqual(a1.tag, a2.tag)
+
+        with self.subTest('test offset atoms'):
+            cha1 = Zeolite.make('CHA')
+            cha2 = Zeolite.make('CHA')
+            for atom in cha2:
+                cha2[atom.index].position = cha2[atom.index].position + np.random.random(3)
+                cha2[atom.index].tag = atom.index + 5
+            tag_zeolite(cha1, cha2)
+            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+            for a1, a2 in zip(cha1, cha2):
+                self.assertEqual(a1.tag, a2.tag)
