@@ -36,9 +36,9 @@ class Zeolite(PerfectZeolite):
         # handle cluster maker
         if isinstance(symbols, self.__class__) and cluster_maker is None:  # build from IZ
             self.cluster_maker = copy.deepcopy(symbols.cluster_maker)
-        elif cluster_maker is None: # cluster maker argument passed and not built from IZ
+        elif cluster_maker is None:  # cluster maker argument passed and not built from IZ
             self.cluster_maker = DefaultClusterMaker()
-        else: # cluster maker argument passed
+        else:  # cluster maker argument passed
             self.cluster_maker = cluster_maker
 
     @staticmethod
@@ -288,6 +288,8 @@ class Zeolite(PerfectZeolite):
         :param indices_to_delete: Indices of atoms in current MAZE-sim to delete
         :return: a copy of self with atoms deleted
         """
+        #lambda a: del a[indices_to_delete]
+
         new_self_a = copy.deepcopy(ase.Atoms(self))
         del new_self_a[indices_to_delete]
         new_self = self.__class__(new_self_a, ztype=self.ztype)
@@ -297,7 +299,7 @@ class Zeolite(PerfectZeolite):
         return new_self
 
     @staticmethod
-    def set_attrs_source(new_z: 'Zeolite', source: PerfectZeolite) -> None:
+    def set_attrs_source(new_z: 'Zeolite', source: "Zeolite") -> None:
         """
         Set the attributes of a new imperfect MAZE-sim to that of its source
 
@@ -314,42 +316,32 @@ class Zeolite(PerfectZeolite):
         # copy over other key atoms attributes
 
     def translate_self(self, displacement) -> "Zeolite":
-       """
-       Returns a copy of self with applied translation
-       :param displacement: atomic positions
-       :type displacement: Iterable
-       :return: new self translated
-       :rtype: Zeolite
-       """
-
-       new_self_a = copy.deepcopy(ase.Atoms(self))
-       new_self_a.translate(displacement)
-       new_self = self.__class__(new_self_a, ztype=self.ztype)
-       self.set_attrs_source(new_self, self)
-       new_self._calc = self._calc  # fixes forces issue
-       old_to_new_map = self._get_old_to_new_map(self, new_self)
-       self.index_mapper.register(self.name, new_self.name, old_to_new_map)
-       return new_self
-
-    def wrap_self(self, **wrap_kw):
-        new_self_a = copy.deepcopy(ase.Atoms(self))
-        new_self_a.wrap(**wrap_kw)
-        new_self = self.__class__(new_self_a, ztype=self.ztype)
-        self.set_attrs_source(new_self, self)
-        new_self._calc = self._calc  # fixes forces issue
-        old_to_new_map = self._get_old_to_new_map(self, new_self)
-        self.index_mapper.register(self.name, new_self.name, old_to_new_map)
+        """
+        Returns a copy of self with applied translation
+        :param displacement: atomic positions
+        :type displacement: Iterable
+        :return: new self translated
+        :rtype: Zeolite
+        """
+        new_self = self.apply(lambda a: a.translate_self(displacement))
+        new_self._calc = self._calc
         return new_self
 
-    def change_atoms(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
+    def wrap_self(self, **wrap_kw) -> "Zeolite":
+        new_self = self.apply(lambda a: a.wrap(**wrap_kw))
+        new_self._calc = self._calc
+        return new_self
+
+    def apply(self, operation: Callable, *args, **kwargs) -> 'Zeolite':
         """
         Applies a custom function to the atoms and returns a new self
 
         :param operation: applies a custom function to the atoms
         :return: zeolite with applied modifications
         """
-        new_self = self.__class__(self)
-        operation(new_self, *args, **kwargs)
+        new_self_a = copy.deepcopy(ase.Atoms(self))
+        operation(new_self_a, *args, **kwargs)
+        new_self = self.__class__(new_self_a)
         old_to_new_map = self._get_old_to_new_map(self, new_self)
         self.index_mapper.register(new_self.name, self.name, old_to_new_map)
         return new_self
@@ -598,7 +590,7 @@ class Zeolite(PerfectZeolite):
         self.index_mapper = parent_zeolite.index_mapper
         self.parent_zeotype = parent_zeolite
 
-        if additions_map is not None: # register additions
+        if additions_map is not None:  # register additions
             self.add_additions_map_to_self(additions_map)
             for key in additions_map:
                 addition_main_to_new_map = {}
@@ -616,6 +608,7 @@ class ClusterMaker(ABC):
     This is an abstract class that selects indices from a Zeolite to return a cluster.
     Multiple implementations of a cluster maker are possible.
     """
+
     def get_cluster_indices(self, zeolite: PerfectZeolite, start_site: int, **kwargs) -> List[int]:
         """
         Get the cluster indices of a zeo
@@ -670,6 +663,7 @@ class DefaultClusterMaker(ClusterMaker):
     """
     This is an implementation of a Cluster Maker that is used if no cluster maker object is specified
     """
+
     def __init__(self):
         pass
 
