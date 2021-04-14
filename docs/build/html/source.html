@@ -692,12 +692,13 @@ the tags of the current zeolite must be equal to the parent indices.
 
 <dl class="py method">
 <dt id="zeolite.Zeolite.remove_caps">
-<code class="sig-name descname"><span class="pre">remove_caps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cap_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'h_cap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cap_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'cap'</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#zeolite.Zeolite" title="zeolite.Zeolite"><span class="pre">zeolite.Zeolite</span></a><a class="reference internal" href="_modules/zeolite.html#Zeolite.remove_caps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.Zeolite.remove_caps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove caps from an imperfect MAZE-sim</p>
+<code class="sig-name descname"><span class="pre">remove_caps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cap_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'cap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cap_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#zeolite.Zeolite" title="zeolite.Zeolite"><span class="pre">zeolite.Zeolite</span></a><a class="reference internal" href="_modules/zeolite.html#Zeolite.remove_caps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zeolite.Zeolite.remove_caps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove caps from an imperfect MAZE-sim, if no arguments are provided all
+caps are removed from the Zeolite</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cap_type</strong> – The type of cap (h_cap, o_cap)</p></li>
+<li><p><strong>cap_type</strong> – The type of cap (h_cap, o_cap or cap for both) partial matching will work</p></li>
 <li><p><strong>cap_name</strong> – The name of the cap</p></li>
 </ul>
 </dd>

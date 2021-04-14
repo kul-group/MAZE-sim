@@ -233,18 +233,39 @@
 
         <span class="k">return</span> <span class="n">new_self</span></div>
 
-<div class="viewcode-block" id="Zeolite.remove_caps"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.remove_caps">[docs]</a>    <span class="k">def</span> <span class="nf">remove_caps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cap_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;h_cap&#39;</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cap&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
+<div class="viewcode-block" id="Zeolite.remove_caps"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.remove_caps">[docs]</a>    <span class="k">def</span> <span class="nf">remove_caps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cap_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cap&#39;</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Zeolite&#39;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove caps from an imperfect MAZE-sim</span>
+<span class="sd">        Remove caps from an imperfect MAZE-sim, if no arguments are provided all</span>
+<span class="sd">        caps are removed from the Zeolite</span>
 
-<span class="sd">        :param cap_type: The type of cap (h_cap, o_cap)</span>
+<span class="sd">        :param cap_type: The type of cap (h_cap, o_cap or cap for both) partial matching will work</span>
 <span class="sd">        :param cap_name: The name of the cap</span>
 <span class="sd">        :return: A copy of self with the caps removed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">],</span> <span class="s1">&#39;cap not in additions&#39;</span>
-        <span class="n">indices_to_delete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">)</span>
+        <span class="n">cap_names_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cap_names_to_delete_dict</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">addition_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">cap_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">addition_type</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">cap_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># select all names</span>
+                <span class="n">cap_names_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">addition_type</span><span class="p">])</span>
+                <span class="n">cap_names_to_delete_dict</span><span class="p">[</span><span class="n">addition_type</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">addition_type</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">matching_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">addition_type</span><span class="p">]</span> <span class="k">if</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="n">name</span><span class="p">]</span>
+                <span class="n">cap_names_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">matching_names</span><span class="p">)</span>
+                <span class="n">cap_names_to_delete_dict</span><span class="p">[</span><span class="n">addition_type</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">matching_names</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">cap_names_to_delete</span><span class="p">,</span> <span class="s1">&#39;no matching caps found&#39;</span>
+
+        <span class="n">indices_to_delete</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="n">cap_names_to_delete</span><span class="p">:</span>
+            <span class="n">indices_to_delete</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index_mapper</span><span class="o">.</span><span class="n">get_overlap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cap_name</span><span class="p">))</span>
+
         <span class="n">new_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete_atoms</span><span class="p">(</span><span class="n">indices_to_delete</span><span class="p">)</span>
-        <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cap_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cap_type</span> <span class="ow">in</span> <span class="n">cap_names_to_delete_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">cap_name</span> <span class="ow">in</span> <span class="n">cap_names_to_delete_dict</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]:</span>
+                <span class="n">new_self</span><span class="o">.</span><span class="n">additions</span><span class="p">[</span><span class="n">cap_type</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">cap_name</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">new_self</span></div>
 
 <div class="viewcode-block" id="Zeolite.integrate_adsorbate"><a class="viewcode-back" href="../source.html#zeolite.Zeolite.integrate_adsorbate">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_adsorbate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">adsorbate</span><span class="p">:</span> <span class="n">Atoms</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Zeolite&#39;</span><span class="p">,</span> <span class="n">Adsorbate</span><span class="p">]:</span>

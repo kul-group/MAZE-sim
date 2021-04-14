@@ -30,6 +30,8 @@ Cif Fetching from the Database of Zeolite Structures
 
 The `database of zeolite structures <http://www.iza-structure.org/databases/>`_ is a useful resource for zeolite simulation experiments. It contains cif files for all synthesized zeolites, organized by their three letter zeolite code. Downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. To facilitate smoother workflows, a simple python function which downloads cif files from the database was created. An example of using this to download a few different cif files is shown below.
 
+**Note:** Some users have had trouble using the ``cif_download`` function and the ``make`` method. The cause of this issue is typically latency issues with the IZA database's website. If you encounter these issues you can download all of the CIF files in the database by going to this `google drive link <https://drive.google.com/file/d/1-sw5rdKWSUd0a9f1RzbCgjMzCRoUvmJl/view?usp=sharing>`_, downloading the zip folder and extracting the `data` folder. Place this data folder in your working directory. You can see your working directory by running the python command ``import os`` followed by ``print(os.getcwd())``.  After placing the ``data`` folder, which contains all of the CIF files from the IZA database, in your working directory, you will be able to run the `make` command without accessing the IZA database.
+
 First, we import the MAZE package, the glob package, and the ``download_cif`` function from the ``maze.cif_download`` module.
 
     >>> import maze
