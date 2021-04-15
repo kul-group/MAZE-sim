@@ -320,10 +320,10 @@ class Zeolite(PerfectZeolite):
         Returns a copy of self with applied translation
         :param displacement: atomic positions
         :type displacement: Iterable
-        :return: new self translated
+        :return: new self translatedß
         :rtype: Zeolite
         """
-        new_self = self.apply(lambda a: a.translate_self(displacement))
+        new_self = self.apply(lambda a: a.translate(displacement))
         new_self._calc = self._calc
         return new_self
 

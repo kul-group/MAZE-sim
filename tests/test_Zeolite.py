@@ -36,21 +36,20 @@ class TestImperfectZeotype(TestCase):
                         break
                 self.assertTrue(array_in)
 
-
     def test_cap_atom(self):
         with self.subTest(msg="test hydrogen capping"):
-            iz = Zeolite(Atoms('OSiOSi', positions=[[0, 0, 0], [0, 0, -1], [0, 0, 1], [1,1,1]]))
+            iz = Zeolite(Atoms('OSiOSi', positions=[[0, 0, 0], [0, 0, -1], [0, 0, 1], [1, 1, 1]]))
             iz = iz.delete_atoms(2)  # delete Si
             iz = iz.cap_atoms()
             x = 0
-            #self.assertEqual(len(iz), 3)
+            # self.assertEqual(len(iz), 3)
             for atom in iz:
                 if atom.symbol == "H":
                     pass
-                    #self.assertTrue(np.all(atom.position == np.array([0, 0, 1])))
+                    # self.assertTrue(np.all(atom.position == np.array([0, 0, 1])))
                 if atom.symbol == "O":
                     pass
-                    #self.assertTrue(np.all(atom.position == np.array([0, 0, -1])))
+                    # self.assertTrue(np.all(atom.position == np.array([0, 0, -1])))
 
         with self.subTest('oxygen and hydrogen capping'):
             cha = Zeolite.make('CHA')
@@ -89,7 +88,6 @@ class TestImperfectZeotype(TestCase):
             self.assertTrue(cluster.index_mapper.get_reverse_main_index(iz.name))
             self.assertTrue(od.index_mapper.get_reverse_main_index(iz.name))
 
-
     def test_integrate(self):
         iz = Zeolite.make('BEA')
         cluster, od = iz.get_cluster(174)
@@ -97,13 +95,12 @@ class TestImperfectZeotype(TestCase):
             new_iz = cluster.integrate(od)
             self.assertEqual(len(new_iz), len(iz))
             # this should be fixed eventually
-                #new_iz_index = iz.index_mapper.get_index(iz.name, new_iz.name, atom.index)
-                #print(new_iz_index)
-                #print(atom.symbol, new_iz[new_iz_index].symbol)
-                #print()
-                #self.assertEqual(atom.symbol, new_iz[new_iz_index].symbol)
-                #self.assertEqual(atom.position, new_iz[new_iz_index].position)
-
+            # new_iz_index = iz.index_mapper.get_index(iz.name, new_iz.name, atom.index)
+            # print(new_iz_index)
+            # print(atom.symbol, new_iz[new_iz_index].symbol)
+            # print()
+            # self.assertEqual(atom.symbol, new_iz[new_iz_index].symbol)
+            # self.assertEqual(atom.position, new_iz[new_iz_index].position)
 
     def test_integrate_adsorbate(self):
         iz = Zeolite.make('BEA')
@@ -132,12 +129,12 @@ class TestImperfectZeotype(TestCase):
 
     def test_change_atom_properties(self):
         self.fail()
+
     def test_build_h_atoms_cap_dict(self):
         self.fail()
 
     def test_build_o_atoms_cap_dict(self):
-       pass
-
+        pass
 
     def test_build_all_atoms_cap_dict(self):
         self.fail()
@@ -176,13 +173,13 @@ class TestImperfectZeotype(TestCase):
 
     def test_add_atoms(self):
         iz = Zeolite.make('BEA')
-        iz_name_index = int( str(iz.name.split('_')[-1]))
+        iz_name_index = int(str(iz.name.split('_')[-1]))
         n3 = Atoms('N3', [(0, 0, 0), (1, 0, 0), (0, 0, 1)])
         addition_type = 'fish'
         addition_name = addition_type + '_' + str(iz_name_index + 1)
         iz2 = iz.add_atoms(n3, addition_type)
         with self.subTest(msg='test that added atom is in the index map'):
-            self.assertIn(addition_name, iz2.index_mapper.names) # this should be the second addition
+            self.assertIn(addition_name, iz2.index_mapper.names)  # this should be the second addition
         with self.subTest(msg='test that added atoms is in additions'):
             self.assertIn(addition_name, iz2.additions[addition_type])
         with self.subTest(msg='test that the length is correct'):
@@ -199,8 +196,6 @@ class TestImperfectZeotype(TestCase):
         with self.subTest(msg='test that all of the indices of the main z are there'):
             for key, value in iz2.index_mapper.main_index.items():
                 self.assertIsNotNone(value[iz2.name])
-
-
 
     def test_needs_cap(self):
         self.fail()
@@ -234,7 +229,7 @@ class TestImperfectZeotype(TestCase):
 
     def test_build_additions_map(self):
         z = Zeolite.make('CHA')
-        water = Adsorbate(Atoms('H2O', positions=[[-1,-1,0], [0,0,0], [1,1,0]]))
+        water = Adsorbate(Atoms('H2O', positions=[[-1, -1, 0], [0, 0, 0], [1, 1, 0]]))
         z, ads = z.integrate_adsorbate(water)
         z, ads = z.integrate_adsorbate(water)
         z, ads = z.integrate_adsorbate(water)
@@ -255,7 +250,7 @@ class TestImperfectZeotype(TestCase):
             parent = PerfectZeolite.make('BEA')
             additions_dict = copy.deepcopy(parent.additions)
             child = Zeolite.make('BEA')
-            child = child.add_atoms(Atoms("H2", positions=[[0,0,0], [1,1,1]]), 'H2').delete_atoms([1, 2, 3, 4])
+            child = child.add_atoms(Atoms("H2", positions=[[0, 0, 0], [1, 1, 1]]), 'H2').delete_atoms([1, 2, 3, 4])
             ads_map = child.build_additions_map()
             child.additions = additions_dict
             child = child.retag_self()
@@ -273,16 +268,16 @@ class TestImperfectZeotype(TestCase):
         # TODO: This function isn't needed and can be removed
         import pandas as pd
         z = Zeolite.make('BEA')
-        z = z.add_atoms(Atoms("H2",  positions=[[0,0,0], [1,1,1]]), 'H2').delete_atoms([1, 2, 3, 4]).cap_atoms()
+        z = z.add_atoms(Atoms("H2", positions=[[0, 0, 0], [1, 1, 1]]), 'H2').delete_atoms([1, 2, 3, 4]).cap_atoms()
         for atom in z:
             if atom.index == 194:
                 atom.symbol = 'He'
         view(z)
         print(z.additions['o_caps'])
-        #z = z.add_atoms(Atoms("H2", positions=[[0,0,0], [1,1,1]]), 'H2') #.cap_atoms()
+        # z = z.add_atoms(Atoms("H2", positions=[[0,0,0], [1,1,1]]), 'H2') #.cap_atoms()
         df = pd.DataFrame(z.index_mapper.main_index)
         print(df.T.to_string())
-        #print(z.get_self_to_main_index_map())
+        # print(z.get_self_to_main_index_map())
 
     def test__check_unique_positions(self):
         overlapping = Atoms('H2')
@@ -312,7 +307,7 @@ class TestImperfectZeotype(TestCase):
                 self.assertFalse(uncapped_cluster.additions[cap_type])  # assert empty
             self.assertEqual(len(uncapped_cluster), len(cluster), msg='num atoms in uncapped = num atoms in original')
             for atom in uncapped_cluster:
-                self.assertFalse(atom.symbol=='H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
+                self.assertFalse(atom.symbol == 'H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
 
         with self.subTest('testing oxygen and hydrogen caps'):
             cluster_wo_o = cluster.delete_atoms([1])
@@ -324,7 +319,7 @@ class TestImperfectZeotype(TestCase):
                 self.assertFalse(uncapped_cluster.additions[cap_type])  # assert empty
             self.assertEqual(len(uncapped_cluster), len(cluster_wo_o), 'num atoms in uncapped = num atoms in original')
             for atom in uncapped_cluster:
-                self.assertFalse(atom.symbol=='H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
+                self.assertFalse(atom.symbol == 'H', msg='no hydrogen in uncapped cluster')  # check for no hydrogens
 
         with self.subTest('remove only H caps'):
             cluster_wo_o = cluster.delete_atoms([1])
@@ -341,3 +336,58 @@ class TestImperfectZeotype(TestCase):
                                  msg='no hydrogen in uncapped cluster')  # check for no hydrogens
 
         view(uncapped_cluster)
+
+    def test_apply(self):
+        with self.subTest('test simple substitution'):
+            bea = Zeolite.make("BEA")
+            sites_to_change = bea.site_to_atom_indices['T1']
+
+            def fun(atoms):
+                for a in atoms:
+                    if a.index in sites_to_change:
+                        atoms[a.index].symbol = 'Sn'
+
+            bea2 = bea.apply(fun)
+            self.assertEqual(bea2.parent_zeotype, bea.parent_zeotype)
+            self.assertIn(bea2.name, bea.index_mapper.names)
+            for t1 in bea2.site_to_atom_indices['T1']:
+                self.assertEqual(bea2[t1].symbol, 'Sn')
+
+    def test_workflow(self):
+        def change_atoms(atoms):
+            for atom in atoms:
+                if atom.symbol == 'Si' and atom.tag != 154:
+                    atoms[atom.index].symbol = 'Sn'
+
+        bea = Zeolite.make('BEA')
+        cluster = bea.get_cluster(154)[0].cap_atoms().apply(change_atoms).remove_caps()
+        bea_sn = bea.integrate(cluster)
+        #view(bea_sn)
+
+    def test_wrap_self(self):
+        bea = Zeolite.make("BEA")
+        bea_wrapped = bea.wrap_self()
+        for value in bea_wrapped.index_mapper.main_index.values():
+            self.assertEqual(value[bea.name], value[bea_wrapped.name])
+        for a1, a2 in zip(bea, bea_wrapped):
+            for p1, p2 in zip(a1.position, a2.position):
+                if p1 != p2:
+                    pass
+
+    def test_translate_self(self):
+        bea = Zeolite.make("BEA")
+        bea_translated = bea.translate_self([5, 5, 5])
+        with self.subTest('test mapping preserved'):
+            for value in bea_translated.index_mapper.main_index.values():
+                self.assertEqual(value[bea.name], value[bea_translated.name])
+
+        with self.subTest('test for no overlap'):
+            for a1, a2 in zip(bea, bea_translated):
+                for p1, p2 in zip(a1.position, a2.position):
+                    if p1 != p2:
+                        break
+                else:
+                    self.fail("Overlapping atoms found")
+
+
+
