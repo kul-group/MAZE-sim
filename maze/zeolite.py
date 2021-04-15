@@ -324,12 +324,10 @@ class Zeolite(PerfectZeolite):
         :rtype: Zeolite
         """
         new_self = self.apply(lambda a: a.translate(displacement))
-        new_self._calc = self._calc
         return new_self
 
     def wrap_self(self, **wrap_kw) -> "Zeolite":
         new_self = self.apply(lambda a: a.wrap(**wrap_kw))
-        new_self._calc = self._calc
         return new_self
 
     @staticmethod
