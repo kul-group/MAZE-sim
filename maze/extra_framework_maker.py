@@ -26,7 +26,7 @@ class ExtraFrameworkMaker(object):
         self.traj_2Al = []
         self.count_all_Al_pairs = 0
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
-        self.dict_t_sites_1Al_replaced = {}
+        self.dict_1Al_replaced = {}
         self.dict_2Al_replaced = {}
         self.T_site_pair = []
         self.T_index_pair = []
@@ -77,7 +77,7 @@ class ExtraFrameworkMaker(object):
                 new_zeo = Zeolite(new_zeo, ztype=new_ztype)
                 self.traj_1Al.append(new_zeo)
                 traj_t_sites.append(new_zeo)
-            self.dict_t_sites_1Al_replaced[site_name] = traj_t_sites
+            self.dict_1Al_replaced[site_name] = traj_t_sites
 
     def get_T_site_from_atom_index(self, index):
         return [k for k, v in self.t_site_indices.items() if index in v]
@@ -261,7 +261,7 @@ class ExtraFrameworkMaker(object):
         """
 
         if case_1Al is True:
-            my_dict = copy.copy(self.dict_t_sites_1Al_replaced)
+            my_dict = copy.copy(self.dict_1Al_replaced)
         if case_2Al is True:
             my_dict = copy.copy(self.dict_2Al_replaced)
 
@@ -298,6 +298,35 @@ class ExtraFrameworkMaker(object):
 
             dict_ZH[site_name] = traj
         return dict_ZH
+
+    def get_Bronsted_sites(self, atoms):
+        # for each input structure
+        nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+        nl.update(atoms)
+        index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        indices = []
+        for each_Al in index_Al:
+            indices.append(list(nl.get_neighbors(each_Al)[0]))
+
+        dict_H = {}
+        if len(indices) == 2:
+            all_pairs = []
+            for count, value1 in enumerate(indices[0]):
+                all_pairs.extend([value1, value2] for value2 in indices[1])
+            assert len(all_pairs) == 16
+            for index_pair in all_pairs:
+                new_atoms = copy.copy(atoms)
+                for index in index_pair:
+                    new_atoms = self._insert_H(new_atoms, index)
+                key_tag = 'O' + str(index_pair[0]) + '_O' + str(index_pair[1])
+                dict_H[key_tag] = new_atoms
+        else:
+            for count, index in enumerate(indices[0]):
+                new_atoms = self._insert_H(atoms, index)
+                key_tag = 'O' + str(index)
+                dict_H[key_tag] = new_atoms
+
+        return dict_H
 
     @staticmethod
     def get_cluster_radius(EF_atoms):
@@ -363,7 +392,9 @@ class ExtraFrameworkAnalyzer(object):
     def __init__(self, atoms):
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
         self.dict_EF_atoms = {}
+        self.dict_EF_neighbors = {}
         self.EF_indices = []
+        self.o_between_T_Cu = []
         self.centering_atom_index = 0
         self.atoms = PerfectZeolite(atoms)
 
@@ -384,20 +415,18 @@ class ExtraFrameworkAnalyzer(object):
         assert len(index_EF_TM) == 2
         assert len(index_Al) == 2
 
-        self.atoms.update_nl(1.2)
+        # self.atoms.update_nl(1.2) need larger cutoff for tracking ZOCu oxygens
 
         TM_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
                                         self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0]))
-
         Al_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_Al[0])[0],
                                         self.atoms.neighbor_list.get_neighbors(index_Al[1])[0]))
 
         # print(TM_neigh_list, Al_neigh_list)
         centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1][0]]
         # print(centering_o)
-
         o_between_T_Cu = [val for val in TM_neigh_list if val in Al_neigh_list and self.atoms[val].symbol == 'O']
-        print(o_between_T_Cu)
+        # print(o_between_T_Cu)
 
         self.centering_atom_index = centering_o[0]
         assert len(centering_o) == 1
@@ -414,14 +443,31 @@ class ExtraFrameworkAnalyzer(object):
         for count, index in enumerate(EF_indices):
             self.dict_EF_atoms[EF_symbols[count]] = index
 
-    def get_closest_O_near_EF_atoms(self, num_sites=4):
-        # oxygen connecting Cu and T sites (Al)
-        index_So= [a.index for a in self.atoms if a.symbol in self.TM_list]
+        self.o_between_T_Cu = o_between_T_Cu
+        # self.dict_EF_atoms['OZ'] = self.o_between_T_Cu
 
+    def get_extraframework_cluster(self):
+        # extraframework atoms, 2 Al and surrounding 8 O
+        index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
+        index_Al = [a.index for a in self.atoms if a.symbol == 'Al']
+        assert len(index_EF_TM) == 2
+        assert len(index_Al) == 2
 
+        TM_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
+                                        self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0]))
+        Al_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_Al[0])[0],
+                                        self.atoms.neighbor_list.get_neighbors(index_Al[1])[0]))
+        centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1][0]]
+        self.centering_atom_index = centering_o[0]
+        assert len(centering_o) == 1
+        assert self.atoms[centering_o].symbols == 'O'
+
+        self.EF_indices = list(centering_o)
+        self.EF_indices.extend([value for value in index_EF_TM])
+
+        return np.unique(list(Al_neigh_list) + centering_o + index_Al + index_EF_TM)
 
     def get_all_bonds(self):
-        #TODO: NEED TO INCLUDE THE BONDS THAT CONNECTS EF ATOMS TO ZEOLITE BACKBONE, MAY NEED TO EXTEND UPDATE_NL MUL VAL
         d_vec = []
         d_mag = []
         for symbol, index_list in self.dict_EF_atoms.items():
@@ -431,9 +477,22 @@ class ExtraFrameworkAnalyzer(object):
                     d_mag.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=False))
         return d_vec, d_mag
 
+    def get_all_bonds_include_OZ_VERSION(self):
+        d_vec = []
+        d_mag = []
+        for symbol, index_list in self.dict_EF_atoms.items():
+            if symbol in self.TM_list:
+                for count, index in enumerate(index_list):
+                    d_vec.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=True))
+                    d_mag.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=False))
+                    for o_index in self.o_between_T_Cu[(count+1)*count: (count+1)*(count+2)]:  # need simplification
+                        d_vec.append(self.atoms.get_distance(o_index, index, mic=True, vector=True))
+                        d_mag.append(self.atoms.get_distance(o_index, index, mic=True, vector=False))
+        return d_vec, d_mag
+
     def get_angle_at_centering_atom(self):
         for symbol, index_list in self.dict_EF_atoms.items():
-            if symbol != self.atoms[self.centering_atom_index].symbol:
+            if symbol in self.TM_list:
                 angle = self.atoms.get_angle(index_list[0], self.centering_atom_index, index_list[1], mic=True)
                 return angle
 
