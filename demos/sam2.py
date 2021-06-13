@@ -1,5 +1,5 @@
 from ase.io import read
-from maze import Zeotype, Cluster
+from maze.zeotype import Zeotype, Cluster
 import os
 from ase.visualize import view
 from pathlib import Path

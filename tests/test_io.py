@@ -1,6 +1,6 @@
 from unittest import TestCase
 from maze.zeolite import Zeolite
-from maze.io_zeolite import save_zeolites, read_zeolites, tag_zeolite
+from maze.io_zeolite import save_zeolites, read_zeolites
 import glob
 import os
 from ase import Atoms
@@ -29,47 +29,45 @@ class IOZeolites(TestCase):
         # import pandas as pd
         # print(pd.DataFrame(cha.index_mapper.main_index).T.to_string())
 
-    def test_read_zeolites(self):
-        input_filepath = 'zeolite_output/test_zeo'
-        zeotype_dict = read_zeolites(input_filepath, str_ext='.traj', zipped=False)
-        with self.subTest('test same index mapper and same parent'):
-            zeotypes = list(zeotype_dict.values())
-            for i in range(1, len(zeotypes)):
-                self.assertEqual(zeotypes[0].index_mapper, zeotypes[i].index_mapper)
-                self.assertEqual(zeotypes[0].parent_zeotype, zeotypes[i].parent_zeotype)
-
-        with open(os.path.join(input_filepath, 'index_mapper.json')) as f:
-            original_index_mapper = json.load(f)['main_index']
-        with self.subTest('test index mapper recreated'):
-            for row_index, row in original_index_mapper.items():
-                for name, item_index in row.items():
-                    if item_index is not None:
-                        item_index = int(item_index)
-                    self.assertEqual(item_index, zeotypes[0].index_mapper.main_index[int(row_index)][name],
-                                     msg=f'testing main index {row_index}, name {name}, item_index {item_index}')
-
-        # TODO: Add in glob cmd
-        #import pandas as pd
-        #print(pd.DataFrame(zeotypes[0].index_mapper.main_index).T.to_string())
-
-    def test_tag_zeolite(self):
-        with self.subTest('test overlapping atoms'):
-            cha1 = Zeolite.make('CHA')
-            cha2 = Zeolite.make('CHA')
-            for atom in cha2:
-                cha2[atom.index].tag = atom.index + 5
-            tag_zeolite(cha1, cha2)
-            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
-            for a1, a2 in zip(cha1, cha2):
-                self.assertEqual(a1.tag, a2.tag)
-
-        with self.subTest('test offset atoms'):
-            cha1 = Zeolite.make('CHA')
-            cha2 = Zeolite.make('CHA')
-            for atom in cha2:
-                cha2[atom.index].position = cha2[atom.index].position + np.random.random(3)
-                cha2[atom.index].tag = atom.index + 5
-            tag_zeolite(cha1, cha2)
-            self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
-            for a1, a2 in zip(cha1, cha2):
-                self.assertEqual(a1.tag, a2.tag)
+    # def test_read_zeolites(self):
+    #     input_filepath = 'zeolite_output/test_zeo'
+    #     zeotype_dict = read_zeolites(input_filepath, str_ext='.traj', zipped=False)
+    #     with self.subTest('test same index mapper and same parent'):
+    #         zeotypes = list(zeotype_dict.values())
+    #         for i in range(1, len(zeotypes)):
+    #             self.assertEqual(zeotypes[0].index_mapper, zeotypes[i].index_mapper)
+    #             self.assertEqual(zeotypes[0].parent_zeotype, zeotypes[i].parent_zeotype)
+    #
+    #     with open(os.path.join(input_filepath, 'index_mapper.json')) as f:
+    #         original_index_mapper = json.load(f)['main_index']
+    #     with self.subTest('test index mapper recreated'):
+    #         for row_index, row in original_index_mapper.items():
+    #             for name, item_index in row.items():
+    #                 if item_index is not None:
+    #                     item_index = int(item_index)
+    #                 self.assertEqual(item_index, zeotypes[0].index_mapper.main_index[int(row_index)][name],
+    #                                  msg=f'testing main index {row_index}, name {name}, item_index {item_index}')
+    #
+    #     # TODO: Add in glob cmd
+    #     #import pandas as pd
+    #     #print(pd.DataFrame(zeotypes[0].index_mapper.main_index).T.to_string())
+    #
+    # def test_tag_zeolite(self):
+    #     with self.subTest('test overlapping atoms'):
+    #         cha1 = Zeolite.make('CHA')
+    #         cha2 = Zeolite.make('CHA')
+    #         for atom in cha2:
+    #             cha2[atom.index].tag = atom.index + 5
+    #         self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+    #         for a1, a2 in zip(cha1, cha2):
+    #             self.assertEqual(a1.tag, a2.tag)
+    #
+    #     with self.subTest('test offset atoms'):
+    #         cha1 = Zeolite.make('CHA')
+    #         cha2 = Zeolite.make('CHA')
+    #         for atom in cha2:
+    #             cha2[atom.index].position = cha2[atom.index].position + np.random.random(3)
+    #             cha2[atom.index].tag = atom.index + 5
+    #         self.assertCountEqual(cha1.get_tags(), cha2.get_tags())
+    #         for a1, a2 in zip(cha1, cha2):
+    #             self.assertEqual(a1.tag, a2.tag)

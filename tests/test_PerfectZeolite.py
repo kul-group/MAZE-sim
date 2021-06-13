@@ -1,5 +1,5 @@
 from unittest import TestCase
-from maze.zeolite import PerfectZeolite
+from maze.zeolite import PerfectZeolite, Zeolite
 import ase
 import ase.data
 from ase import Atoms
@@ -26,8 +26,8 @@ class TestPerfectZeolite(TestCase):
         my_zeotype = PerfectZeolite(symbols='H', positions=[[0, 0, 10]], numbers=None, tags=[3], momenta=None,
                                     masses=None, magmoms=None, charges=None, scaled_positions=None, cell=None,
                                     pbc=None, celldisp=None, constraint=None, calculator=None, info=None,
-                                    velocities=None, zeolite_type='friendly',
-                                    site_to_atom_indices={'T1': 0}, atom_indices_to_site={0: 'T1'}, ztype='good_friend')
+                                    velocities=None,
+                                    site_to_atom_indices={'T1': 0}, atom_indices_to_site={0: 'T1'})
         # TODO: Add in reasonable numbers, tags, momenta, ect.
         # tests inheritance
         self.assertIsInstance(my_zeotype, PerfectZeolite)
@@ -36,12 +36,12 @@ class TestPerfectZeolite(TestCase):
         # tests corretly defined parameters
         self.assertEqual(my_zeotype._site_to_atom_indices, {'T1': 0})
         self.assertEqual(my_zeotype._atom_indices_to_site, {0: 'T1'})
-        self.assertEqual(my_zeotype.name, 'good_friend')
         self.assertEqual(my_zeotype.parent_zeotype, my_zeotype)
         self.assertNotEqual(my_zeotype.index_mapper, None)
 
     def test_init_with_atoms_obj(self):
-        my_atoms = read('GOO.cif')
+        tmp_goo = PerfectZeolite.make('GOO')
+        my_atoms = read('data/GOO.cif')
         my_zeotype = PerfectZeolite(my_atoms)
         # tests inheritance
         self.assertIsInstance(my_zeotype, PerfectZeolite)
@@ -57,7 +57,8 @@ class TestPerfectZeolite(TestCase):
         self.assertCountEqual(my_zeotype.get_chemical_symbols(), my_atoms.get_chemical_symbols())
 
     def test_init_with_zeolite_obj(self):
-        z = PerfectZeolite.build_from_cif_with_labels('GOO.cif')
+        tmp_goo = PerfectZeolite.make('GOO')
+        z = PerfectZeolite.build_from_cif_with_labels('data/GOO.cif')
         my_zeotype = PerfectZeolite(z)
         print(os.getcwd())
         # tests inheritance
@@ -78,7 +79,8 @@ class TestPerfectZeolite(TestCase):
         self.assertNotEqual(my_zeotype.index_mapper, None)
 
     def test_build_iz_from_z(self):
-        z = PerfectZeolite.build_from_cif_with_labels('GOO.cif')
+        tmp_goo = PerfectZeolite.make('GOO')
+        z = PerfectZeolite.build_from_cif_with_labels('data/GOO.cif')
         iz = Zeolite(z)
         # tests inheritance
         self.assertIsInstance(iz, Zeolite)
@@ -149,13 +151,6 @@ class TestPerfectZeolite(TestCase):
     def test_read_cif_note_sites(self):
         pass
 
-    def test_get_imperfect_zeolite(self):
-        z = PerfectZeolite.make('CHA')
-        iz = z.get_imperfect_zeotype()
-        self.assertIsInstance(iz, Zeolite)
-        self.assertIs(iz.parent_zeotype, z)
-        self.assertIs(iz.index_mapper, z.index_mapper)
-
     def test_update_nl(self):
         pass
 
@@ -199,14 +194,6 @@ class TestPerfectZeolite(TestCase):
         for key in indices.keys():
             self.assertCountEqual(indices[key], indices_dict[key])
         self.assertDictEqual(count_dict, count)
-
-
-    def test_get_cluster(self):
-        z = PerfectZeolite.make('CHA')
-        cluster, opendefect = z.get_cluster(0, 100, 3)
-        self.assertIsInstance(cluster, Cluster)
-        self.assertIsInstance(opendefect, OpenDefect)
-
 
     def test_find_silanol_groups(self):
         pass

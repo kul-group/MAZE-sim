@@ -1,5 +1,5 @@
 from ase.io import read, write
-from maze.zeolite import PerfectZeolite, Cluster
+from maze.zeolite import PerfectZeolite
 import os
 from pathlib import Path
 from ase.neighborlist import natural_cutoffs, NeighborList

@@ -9,7 +9,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name='MAZE-sim',
-    version='0.1.0',
+    version='0.1.1',
     description='Multiscale Zeolite Atomic simulation Environment (MAZE)',
     long_description="This project aims to extend the Atomic Simulation Environment (ASE) "
                      "to more naturally represent the properties of zeolites and facilitate "
