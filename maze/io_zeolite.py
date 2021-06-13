@@ -107,7 +107,11 @@ def save_zeolites(folder_path: str, zeotype_list: Iterable[PerfectZeolite], ase_
 
         binary_path = os.path.join(zeotype_folder, z.name + ase_ext)
         dict_path = os.path.join(zeotype_folder, z.name + '.json')
-        z.retag_self()
+        try:
+            z.retag_self()
+        except AttributeError:
+            pass # is a Perfect Zeolite or Atoms object
+
         write(binary_path, z)
         with open(dict_path, 'w') as f:
             json.dump(dict_json, f, indent=4, ensure_ascii=True)
