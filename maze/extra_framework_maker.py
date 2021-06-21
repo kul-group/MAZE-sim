@@ -1,4 +1,5 @@
 from maze.zeolite import PerfectZeolite, Zeolite
+from maze.io_zeolite import read_vasp
 from ase import Atoms, db
 from typing import Union, Tuple
 from collections import defaultdict
@@ -14,12 +15,18 @@ from scipy.optimize import least_squares
 
 class ExtraFrameworkMaker(object):
 
-    def __init__(self, iza_code=None):
+    def __init__(self, iza_code=None, optimized_zeolite_path=None, user_input_path=None):
         """ This is an extra-framework class
         :param iza_code: 3 letter code for the zeolite structures (IZA database)
         """
         if iza_code is not None:
             self.EFzeolite = Zeolite.make(iza_code)
+        if optimized_zeolite_path is not None:
+            read_vasp(optimized_zeolite_path, Zeolite.make(iza_code))
+        if user_input_path is not None:
+            # self.EFzeolite = read(user_input_path, '0')
+            self.EFzeolite = Zeolite(PerfectZeolite.build_from_cif_with_labels(filepath=user_input_path))
+
         self.t_site_indices = {}
         self.t_site_indices_count = {}
         self.traj_1Al = []
@@ -132,81 +139,6 @@ class ExtraFrameworkMaker(object):
                             done_indices.append([index, index_Al])
 
     @staticmethod
-    def _get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
-        """ This function detects all atoms on the input zeolite named "atoms" within certain "radius_cutoff" around the
-        "centering_index" atom, and save all atoms positions into a list.
-        :param centering_index: reference position of the extra-framework cluster to be inserted (currently placed with
-        an S atom)
-        :param atoms: the zeolite backbone
-        :param radius_cutoff: 6 angstrom by default
-        :return:
-        """
-        close_framework_atom_positions = []
-        for count in range(len(atoms)):
-            dist = atoms.get_distance(centering_index, count, mic=True)
-            if dist <= radius_cutoff:
-                close_framework_atom_positions.append(atoms[count].position)
-        return close_framework_atom_positions
-
-    def _get_reference_with_S_in_between_Al_pairs(self, atoms, cluster_radius):
-        # TODO: write into smaller functions (check functions from the adsorbate class)
-        """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
-        The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
-        into account from input "cluster_radius".
-        :param atoms: zeolite framework with 2 Al atoms adjacent to each other
-        :param cluster_radius: the approximated cluster radius
-        :return:
-        """
-        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        mid_Al = 0.5 * (atoms.get_positions()[Al_index[0]] + atoms.get_positions()[Al_index[1]])
-        atoms = atoms + Atoms('S', positions=[mid_Al])
-
-        closest_distance = 1.5 + cluster_radius  # radius of Si atom = 1.5 Ang
-
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        d_thres = 6.0  # might need to scale it with respect to the zeolite size
-        close_framework_atom_positions = self._get_close_framework_atom_positions(index_S, atoms, d_thres)
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
-
-        max_iter = 500
-        num_iter = 0
-        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        u_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
-
-        final_pos = []
-        d_min = 0.0
-        while num_iter <= max_iter:
-            rand_vec = np.array([2.0 * np.random.random() - 1 for i in np.arange(3)])
-            u_rand = rand_vec / np.linalg.norm(rand_vec)  # random unit vector
-            u_dir = np.cross(u_Al, u_rand) / np.linalg.norm(np.cross(u_Al, u_rand))
-            # some random vector perpendicular to the Al-Al vector
-            u_dir = int(2 * np.round(np.random.random()) - 1) * u_dir
-            # This takes a random number between 0 and 1, rounds it (0 or 1) and then shifts it to (-1 or 1)
-            step_size = 0.5 * np.random.random_sample() * d_thres  # Pick step size randomly from 0 to half radius
-            trial_pos = np.array(mid_Al + u_dir * step_size)
-
-            distance_from_close_atoms = (close_framework_atom_positions - trial_pos)
-            d_min = min(np.linalg.norm(distance_from_close_atoms, axis=1))
-
-            num_iter += 1
-            if closest_distance <= d_min:
-                final_pos = trial_pos
-                # closest_distance = d_min
-                break
-
-        cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
-        mic_constrained_pos = []
-        for index, item in enumerate(final_pos):
-            if item > cell_dimension[index]:
-                item -= cell_dimension[index]
-            elif item < 0:
-                item += cell_dimension[index]
-            mic_constrained_pos.append(item)
-
-        atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
-        return atoms
-
-    @staticmethod
     def _get_direction_of_insertion(atoms, index1, index2, index3):
         v1 = atoms.get_distance(index1, index2, vector=True, mic=True)
         v2 = atoms.get_distance(index1, index3, vector=True, mic=True)
@@ -220,7 +152,7 @@ class ExtraFrameworkMaker(object):
         :return: a dictionary of structures for each T site name
         """
         dict_Z_TM = {}
-        for site_name, all_zeo_with_same_T in self.dict_t_sites_1Al_replaced.items():
+        for site_name, all_zeo_with_same_T in self.dict_1Al_replaced.items():
             atoms = copy.copy(all_zeo_with_same_T[0])
             nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
             nl.update(atoms)
@@ -236,6 +168,27 @@ class ExtraFrameworkMaker(object):
                 atoms = atoms + Atoms(TM_type, positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
                 traj.append(atoms)
             dict_Z_TM[site_name] = traj
+
+        return dict_Z_TM
+
+    def get_Z_TM(self, atoms, d_Z_TM, TM_type):
+
+        nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+        nl.update(atoms)
+        index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        indices, offsets = nl.get_neighbors(index_Al[0])
+        assert len(indices) == 4
+
+        dict_Z_TM = {}
+        original_atoms = copy.copy(atoms)
+        pairs = list(itertools.combinations(indices, 2))
+        for i, pair in enumerate(pairs):
+            atoms = copy.copy(original_atoms)
+            v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1])
+            atoms = atoms + Atoms(TM_type, positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
+            atoms.wrap()
+            key_tag = 'O' + str(pair[0]) + '_O' + str(pair[1])
+            dict_Z_TM[key_tag] = atoms
 
         return dict_Z_TM
 
@@ -309,7 +262,7 @@ class ExtraFrameworkMaker(object):
             indices.append(list(nl.get_neighbors(each_Al)[0]))
 
         dict_H = {}
-        if len(indices) == 2:
+        if len(index_Al) == 2:
             all_pairs = []
             for count, value1 in enumerate(indices[0]):
                 all_pairs.extend([value1, value2] for value2 in indices[1])
@@ -325,7 +278,6 @@ class ExtraFrameworkMaker(object):
                 new_atoms = self._insert_H(atoms, index)
                 key_tag = 'O' + str(index)
                 dict_H[key_tag] = new_atoms
-
         return dict_H
 
     @staticmethod
@@ -341,6 +293,83 @@ class ExtraFrameworkMaker(object):
         for vector in abs(all_position - EF_center):
             radius_list.append(np.linalg.norm(vector))
         return np.mean(radius_list)
+
+    @staticmethod
+    def _get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
+        """ This function detects all atoms on the input zeolite named "atoms" within certain "radius_cutoff" around the
+        "centering_index" atom, and save all atoms positions into a list.
+        :param centering_index: reference position of the extra-framework cluster to be inserted (currently placed with
+        an S atom)
+        :param atoms: the zeolite backbone
+        :param radius_cutoff: 6 angstrom by default
+        :return:
+        """
+        close_framework_atom_positions = []
+        for count in range(len(atoms)):
+            dist = atoms.get_distance(centering_index, count, mic=True)
+            if dist <= radius_cutoff:
+                close_framework_atom_positions.append(atoms[count].position)
+        return close_framework_atom_positions
+
+    def _get_random_dir(self, atoms):
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        u_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
+
+        rand_vec = np.array([2.0 * np.random.random() - 1 for i in np.arange(3)])
+        u_rand = rand_vec / np.linalg.norm(rand_vec)  # random unit vector
+        u_dir = np.cross(u_Al, u_rand) / np.linalg.norm(np.cross(u_Al, u_rand))
+        # some random vector perpendicular to the Al-Al vector
+        u_dir = int(2 * np.round(np.random.random()) - 1) * u_dir
+        # This takes a random number between 0 and 1, rounds it (0 or 1) and then shifts it to (-1 or 1)
+        return u_dir
+
+    def _get_reference_with_S_in_between_Al_pairs(self, atoms, cluster_radius):
+        """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
+        The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
+        into account from input "cluster_radius".
+        :param atoms: zeolite framework with 2 Al atoms adjacent to each other
+        :param cluster_radius: the approximated cluster radius
+        :return:
+        """
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+        mid_Al = 0.5 * (atoms.get_positions()[Al_index[0]] + atoms.get_positions()[Al_index[1]])
+        atoms = atoms + Atoms('S', positions=[mid_Al])
+
+        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
+        d_thres = 6.0  # might need to scale it with respect to the zeolite size
+        close_framework_atom_positions = self._get_close_framework_atom_positions(index_S, atoms, d_thres)
+        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+
+        max_iter, num_iter, d_min, closest_distance = 1000, 0, 0, 1.5 + cluster_radius  # radius of Si atom = 1.5 Ang
+        final_pos = []
+        while num_iter <= max_iter:
+            u_dir = self._get_random_dir(atoms)
+            step_size = d_thres * np.random.random_sample()  # Pick step size randomly from 0 to closest_distance
+            trial_pos = np.array(mid_Al + u_dir * step_size)
+
+            distance_from_close_atoms = (close_framework_atom_positions - trial_pos)
+            d_min = min(np.linalg.norm(distance_from_close_atoms, axis=1))
+            print(d_min)
+
+            num_iter += 1
+            if closest_distance <= d_min:
+                final_pos = trial_pos
+                # closest_distance = d_min
+                break
+        print(final_pos)
+
+        cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
+        mic_constrained_pos = []
+        for index, item in enumerate(final_pos):
+            if item > cell_dimension[index]:
+                item -= cell_dimension[index]
+            elif item < 0:
+                item += cell_dimension[index]
+            mic_constrained_pos.append(item)
+
+        atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
+        return atoms
 
     def insert_ExtraFrameworkAtoms(self, my_zeolite, EF_atoms):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
