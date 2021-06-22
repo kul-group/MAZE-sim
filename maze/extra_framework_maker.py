@@ -420,11 +420,7 @@ class ExtraFrameworkAnalyzer(object):
 
     def __init__(self, atoms):
         self.TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
-        self.dict_EF_atoms = {}
-        self.dict_EF_neighbors = {}
-        self.EF_indices = []
-        self.o_between_T_Cu = []
-        self.centering_atom_index = 0
+        self.dict_EF = {}
         self.atoms = PerfectZeolite(atoms)
 
     @property
@@ -434,8 +430,9 @@ class ExtraFrameworkAnalyzer(object):
 
     @property
     def EF_angles(self):
-        return self.get_angle_at_centering_atom()
+        return self.get_all_angles()
 
+    """
     def get_extraframework_atoms(self):
         #TODO: MORE GENERAL EXTRA FRAMEWORK DETECTION (CUFRRENTLY LIMITED TO TM-O-TM)
 
@@ -452,8 +449,11 @@ class ExtraFrameworkAnalyzer(object):
                                         self.atoms.neighbor_list.get_neighbors(index_Al[1])[0]))
 
         # print(TM_neigh_list, Al_neigh_list)
+
+        # This is wrong! Not always return desired O index!
         centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1][0]]
         # print(centering_o)
+
         o_between_T_Cu = [val for val in TM_neigh_list if val in Al_neigh_list and self.atoms[val].symbol == 'O']
         # print(o_between_T_Cu)
 
@@ -474,7 +474,7 @@ class ExtraFrameworkAnalyzer(object):
 
         self.o_between_T_Cu = o_between_T_Cu
         # self.dict_EF_atoms['OZ'] = self.o_between_T_Cu
-
+        
     def get_extraframework_cluster(self):
         # extraframework atoms, 2 Al and surrounding 8 O
         index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
@@ -495,35 +495,78 @@ class ExtraFrameworkAnalyzer(object):
         self.EF_indices.extend([value for value in index_EF_TM])
 
         return np.unique(list(Al_neigh_list) + centering_o + index_Al + index_EF_TM)
+    """
+
+    def get_O_index_between_atoms(self, index_1, index_2, scale=3.0, O_count=2):
+        # find the closest O in between two atoms since nl of ASE is so annoying
+
+        self.atoms.update_nl(scale)
+        nl_1 = self.atoms.neighbor_list.get_neighbors(index_1)[0]
+        nl_2 = self.atoms.neighbor_list.get_neighbors(index_2)[0]
+        index_O = [val for val in nl_1 if val in nl_2 and self.atoms[val].symbol == 'O']
+
+        index_list = []
+        dist_list = []
+        for index in index_O:
+            index_list.append(index)
+            dist_list.append(0.5 * (self.atoms.get_distance(index_1, index, mic=True) + self.atoms.get_distance(index_2, index, mic=True)))
+
+        unsorted_dist_list = copy.copy(dist_list)
+        dist_list.sort()
+        closed_O_index = []
+        if O_count == 1:
+            for index, element in enumerate(unsorted_dist_list):
+                if element == dist_list[0]:
+                    closed_O_index.append(index_list[index])
+        else:
+            for index, element in enumerate(unsorted_dist_list):
+                if element == dist_list[0]:
+                    closed_O_index.append(index_list[index])
+                if element == dist_list[1]:
+                    closed_O_index.append(index_list[index])
+        return closed_O_index
+
+    def get_extraframework(self):
+        index_Al = [a.index for a in self.atoms if a.symbol == 'Al']
+        index_Cu = [a.index for a in self.atoms if a.symbol == 'Cu']
+        index_Al1, index_Al2 = index_Al[0], index_Al[1]
+        if self.atoms.get_distance(index_Al1, index_Cu[0], mic=True) < self.atoms.get_distance(index_Al1, index_Cu[1], mic=True):
+            index_Cu1, index_Cu2 = index_Cu[0], index_Cu[1]
+        else:
+            index_Cu1, index_Cu2 = index_Cu[1], index_Cu[0]
+        centering_O = [288]  # self.get_O_index_between_atoms(index_Cu1, index_Cu2, scale=0.85, O_count=1)
+        Cu1_O_neigh = self.get_O_index_between_atoms(index_Al1, index_Cu1)
+        Cu2_O_neigh = self.get_O_index_between_atoms(index_Al2, index_Cu2)
+        self.dict_EF['Cu1'] = [index_Cu1, Cu1_O_neigh+centering_O]
+        self.dict_EF['Cu2'] = [index_Cu1, Cu2_O_neigh+centering_O]
+        self.dict_EF['O'] = [centering_O[0], [index_Cu1, index_Cu2]]
 
     def get_all_bonds(self):
-        d_vec = []
-        d_mag = []
-        for symbol, index_list in self.dict_EF_atoms.items():
-            if symbol != self.atoms[self.centering_atom_index].symbol:
-                for index in index_list:
-                    d_vec.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=True))
-                    d_mag.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=False))
-        return d_vec, d_mag
+        dict_EF_bonds = {}
+        for atom_tag, index_list in self.dict_EF.items():
+            atom_index = index_list[0]
+            neighbor_index = index_list[1]
+            d_vec = []
+            d_mag = []
+            for index in neighbor_index:
+                d_vec.append(self.atoms.get_distance(index, atom_index, mic=True, vector=True))
+                d_mag.append(self.atoms.get_distance(index, atom_index, mic=True, vector=False))
+            dict_EF_bonds[atom_tag] = [d_vec, d_mag]
+        return dict_EF_bonds
 
-    def get_all_bonds_include_OZ_VERSION(self):
-        d_vec = []
-        d_mag = []
-        for symbol, index_list in self.dict_EF_atoms.items():
-            if symbol in self.TM_list:
-                for count, index in enumerate(index_list):
-                    d_vec.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=True))
-                    d_mag.append(self.atoms.get_distance(index, self.centering_atom_index, mic=True, vector=False))
-                    for o_index in self.o_between_T_Cu[(count+1)*count: (count+1)*(count+2)]:  # need simplification
-                        d_vec.append(self.atoms.get_distance(o_index, index, mic=True, vector=True))
-                        d_mag.append(self.atoms.get_distance(o_index, index, mic=True, vector=False))
-        return d_vec, d_mag
-
-    def get_angle_at_centering_atom(self):
-        for symbol, index_list in self.dict_EF_atoms.items():
-            if symbol in self.TM_list:
-                angle = self.atoms.get_angle(index_list[0], self.centering_atom_index, index_list[1], mic=True)
-                return angle
+    def get_all_angles(self):
+        dict_EF_angles = {}
+        for atom_tag, index_list in self.dict_EF.items():
+            atom_index = index_list[0]
+            neighbor_index = index_list[1][0:2]
+            if 'Cu' in atom_tag:
+                angle = []
+                for index in neighbor_index:
+                    angle.append(self.atoms.get_angle(index, atom_index, index_list[1][2], mic=True))  # O, Cu, O
+            else:
+                angle = [self.atoms.get_angle(neighbor_index[0], atom_index, neighbor_index[1], mic=True)]
+            dict_EF_angles[atom_tag] = angle
+        return dict_EF_angles
 
     def get_forces_on_centering_atom(self):
         f_vec = self.atoms.get_forces()[self.centering_atom_index]
@@ -548,53 +591,16 @@ class ExtraFrameworkAnalyzer(object):
 
 
 def main():
-    '''
-    zeolite_traj = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', ':')
-    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
-    EF_atoms = Atoms('Co', positions=[[0, 0, 0]])
+    ...
 
-    count = 0
-    inserted_traj = []
-    for zeolite in zeolite_traj:
-        try:
-            EFzeolite = ExtraFrameworkMaker()
-            inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
-            inserted_traj.append(inserted_atoms)
-            count += 1
-            print(count)
-        except AttributeError:
-            print('Error!')
-    # view(inserted_traj)
-    '''
-    # TESTING
-    zeolite = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/MFI_2Al_replaced.traj', '0')
-    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
-    EFzeolite = ExtraFrameworkMaker()
-    inserted_atoms = EFzeolite.insert_ExtraFrameworkAtoms(zeolite, EF_atoms)
-    view(inserted_atoms)
-
-    # write('MFI_Co.traj', inserted_atoms)
-
-
-def test_detect_EF():
-    traj = []
-    database = db.connect('/Users/jiaweiguo/Box/CuOCu_systematic/systematic_cuocu.db')
-    for row in database.select(min_energy_structure=True):
-        traj.append(database.get_atoms(id=row.id))
-    print(len(traj))
-
+if __name__ == '__main__':
+    traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '0:2')
     for atoms in traj:
         try:
             EF_analyzer = ExtraFrameworkAnalyzer(atoms)
-            EF_analyzer.get_extraframework_atoms()
-            print(EF_analyzer.dict_EF_atoms)
+            EF_analyzer.get_extraframework()
+            print(EF_analyzer.dict_EF)
             print(EF_analyzer.get_all_bonds())
-            print(EF_analyzer.get_angle_at_centering_atom())
-            print(EF_analyzer.get_forces_on_centering_atom())
-            print(EF_analyzer.get_predicted_forces([1, 1, 2, 1, 1]))
+            print(EF_analyzer.get_all_angles())
         except:
             print('Error')
-
-
-if __name__ == '__main__':
-    test_detect_EF()
