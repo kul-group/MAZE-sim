@@ -553,7 +553,7 @@ class ExtraFrameworkAnalyzer(object):
                 d_mag.append(self.atoms.get_distance(index, atom_index, mic=True, vector=False))
             dict_EF_bonds[atom_tag] = [d_vec, d_mag]
         return dict_EF_bonds
-
+    
     def get_all_angles(self):
         dict_EF_angles = {}
         for atom_tag, index_list in self.dict_EF.items():
@@ -568,10 +568,14 @@ class ExtraFrameworkAnalyzer(object):
             dict_EF_angles[atom_tag] = angle
         return dict_EF_angles
 
-    def get_forces_on_centering_atom(self):
-        f_vec = self.atoms.get_forces()[self.centering_atom_index]
-        f_mag = np.linalg.norm(f_vec)
-        return f_vec, f_mag
+    def get_forces(self):
+        dict_EF_forces = {}
+        for atom_tag, index_list in self.dict_EF.items():
+            atom_index = index_list[0]
+            f_vec = self.atoms.get_forces()[atom_index]
+            f_mag = np.linalg.norm(f_vec)
+            dict_EF_forces[atom_tag] = [f_vec, f_mag]
+        return dict_EF_forces
 
     @staticmethod
     def morse_force(r, a, e, rm):
@@ -582,16 +586,25 @@ class ExtraFrameworkAnalyzer(object):
         return 2 * k * (theta - theta_o)
 
     def get_predicted_forces(self, param):
+        # ignore angular terms for now, param = [a, e, rm]
         # param = [a, e, rm, k, theta_o]
-        f = [0, 0, 0]
-        d_vec, d_mag = self.get_all_bonds()
-        for count, vec in enumerate(d_vec):
-            f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count]
-        return np.linalg.norm(f) + self.harmonic(self.get_angle_at_centering_atom(), *param[3:5])
 
+        dict_EF_predicted_forces = {}
+        dict_EF_bonds = self.get_all_bonds()
+        # dict_EF_angles = self.get_all_angles()
 
-def main():
-    ...
+        for atom_tag, dist_list in dict_EF_bonds.items():
+            d_vec, d_mag, f = [], [], [0, 0, 0]
+            for vec, mag in zip(dist_list[0], dist_list[1]):
+                d_vec.append(vec)
+                d_mag.append(mag)
+            for count, vec in enumerate(d_vec):
+                f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count]
+
+            dict_EF_predicted_forces[atom_tag] = np.linalg.norm(f)
+            # self.harmonic(self.get_angle_at_centering_atom(), *param[3:5])
+        return dict_EF_predicted_forces
+
 
 if __name__ == '__main__':
     traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '0:2')
@@ -602,5 +615,7 @@ if __name__ == '__main__':
             print(EF_analyzer.dict_EF)
             print(EF_analyzer.get_all_bonds())
             print(EF_analyzer.get_all_angles())
+            print(EF_analyzer.get_forces())
+            print(EF_analyzer.get_predicted_forces([1, 1, 1]))
         except:
             print('Error')
