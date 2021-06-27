@@ -425,8 +425,7 @@ class ExtraFrameworkAnalyzer(object):
 
     @property
     def EF_bond_vectors(self):
-        d_vec, d_mag = self.get_all_bonds()
-        return d_vec
+        return self.get_all_bonds()
 
     @property
     def EF_angles(self):
@@ -534,11 +533,11 @@ class ExtraFrameworkAnalyzer(object):
             index_Cu1, index_Cu2 = index_Cu[0], index_Cu[1]
         else:
             index_Cu1, index_Cu2 = index_Cu[1], index_Cu[0]
-        centering_O = [288]  # self.get_O_index_between_atoms(index_Cu1, index_Cu2, scale=0.85, O_count=1)
+        centering_O = [288]  # [108]  # self.get_O_index_between_atoms(index_Cu1, index_Cu2, scale=0.85, O_count=1)
         Cu1_O_neigh = self.get_O_index_between_atoms(index_Al1, index_Cu1)
         Cu2_O_neigh = self.get_O_index_between_atoms(index_Al2, index_Cu2)
-        self.dict_EF['Cu1'] = [index_Cu1, Cu1_O_neigh+centering_O]
-        self.dict_EF['Cu2'] = [index_Cu1, Cu2_O_neigh+centering_O]
+        self.dict_EF['Cu1'] = [index_Cu1, [index_Al1]+centering_O]  # [index_Cu1, Cu1_O_neigh+centering_O]
+        self.dict_EF['Cu2'] = [index_Cu2, [index_Al2]+centering_O]  # [index_Cu2, Cu2_O_neigh+centering_O]
         self.dict_EF['O'] = [centering_O[0], [index_Cu1, index_Cu2]]
 
     def get_all_bonds(self):
@@ -553,29 +552,46 @@ class ExtraFrameworkAnalyzer(object):
                 d_mag.append(self.atoms.get_distance(index, atom_index, mic=True, vector=False))
             dict_EF_bonds[atom_tag] = [d_vec, d_mag]
         return dict_EF_bonds
-    
+
     def get_all_angles(self):
         dict_EF_angles = {}
         for atom_tag, index_list in self.dict_EF.items():
             atom_index = index_list[0]
+            """
             neighbor_index = index_list[1][0:2]
             if 'Cu' in atom_tag:
                 angle = []
                 for index in neighbor_index:
-                    angle.append(self.atoms.get_angle(index, atom_index, index_list[1][2], mic=True))  # O, Cu, O
+                    angle.append(self.atoms.get_angle(index, atom_index, index_list[1][2], mic=True) / 180 * np.pi)  # O, Cu, O
             else:
-                angle = [self.atoms.get_angle(neighbor_index[0], atom_index, neighbor_index[1], mic=True)]
+                angle = [self.atoms.get_angle(neighbor_index[0], atom_index, neighbor_index[1], mic=True) / 180 * np.pi]
+            """
+            neighbor_index = index_list[1]
+            angle = [self.atoms.get_angle(neighbor_index[0], atom_index, neighbor_index[1], mic=True) / 180 * np.pi]
             dict_EF_angles[atom_tag] = angle
         return dict_EF_angles
+
+    def get_angle_force_dir(self):
+        angle_dir = []
+        dict_EF_bonds = self.get_all_bonds()
+        for atom_tag, val in dict_EF_bonds.items():
+            vector = val[0]
+            angle_dir.append(-0.5 * (vector[0] + vector[1]))
+        return angle_dir
 
     def get_forces(self):
         dict_EF_forces = {}
         for atom_tag, index_list in self.dict_EF.items():
             atom_index = index_list[0]
-            f_vec = self.atoms.get_forces()[atom_index]
+            f_vec = self.atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
             f_mag = np.linalg.norm(f_vec)
             dict_EF_forces[atom_tag] = [f_vec, f_mag]
         return dict_EF_forces
+
+    """
+    @staticmethod
+    def bonding_force(r, K1, K2, K3, R):
+        return 2 * K1 * (r - R) + 3 * K2 * (r - R) ** 2 + 4 * K3 * (r - R) ** 3
 
     @staticmethod
     def morse_force(r, a, e, rm):
@@ -586,36 +602,52 @@ class ExtraFrameworkAnalyzer(object):
         return 2 * k * (theta - theta_o)
 
     def get_predicted_forces(self, param):
-        # ignore angular terms for now, param = [a, e, rm]
-        # param = [a, e, rm, k, theta_o]
+        # param = [a, e, rm, k_Cu, theta_o_Cu, k_O, theta_o_O, K, R]
 
         dict_EF_predicted_forces = {}
         dict_EF_bonds = self.get_all_bonds()
-        # dict_EF_angles = self.get_all_angles()
+        dict_EF_angles = self.get_all_angles()
 
+        dict_morse = {}
         for atom_tag, dist_list in dict_EF_bonds.items():
             d_vec, d_mag, f = [], [], [0, 0, 0]
             for vec, mag in zip(dist_list[0], dist_list[1]):
                 d_vec.append(vec)
                 d_mag.append(mag)
             for count, vec in enumerate(d_vec):
-                f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count]
+                f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count] + \
+                     self.bonding_force(d_mag[count], *param[7:11]) * vec / d_mag[count]
+            dict_morse[atom_tag] = np.linalg.norm(f)
 
-            dict_EF_predicted_forces[atom_tag] = np.linalg.norm(f)
-            # self.harmonic(self.get_angle_at_centering_atom(), *param[3:5])
+        for atom_tag, angle_list in dict_EF_angles.items():
+            angle, f = [], 0
+            if 'Cu' in atom_tag:
+                my_param = param[3:5]
+            else:
+                my_param = param[5:7]
+            for count, ang in enumerate(angle_list):
+                f += self.harmonic(ang, *my_param)
+            dict_EF_predicted_forces[atom_tag] = dict_morse[atom_tag] + f
+
+            if 'O' in atom_tag:
+                for count, ang in enumerate(angle_list):
+                    f += self.harmonic(ang, *param[3:5])
+            dict_EF_predicted_forces[atom_tag] = dict_morse[atom_tag] + f
+
         return dict_EF_predicted_forces
+    """
 
 
 if __name__ == '__main__':
-    traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '0:2')
+    traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '4:5')
     for atoms in traj:
         try:
             EF_analyzer = ExtraFrameworkAnalyzer(atoms)
             EF_analyzer.get_extraframework()
-            print(EF_analyzer.dict_EF)
-            print(EF_analyzer.get_all_bonds())
-            print(EF_analyzer.get_all_angles())
-            print(EF_analyzer.get_forces())
-            print(EF_analyzer.get_predicted_forces([1, 1, 1]))
+            print('atom index: \n', EF_analyzer.dict_EF)
+            print('bonds: \n', EF_analyzer.get_all_bonds())
+            print('angles: \n', EF_analyzer.get_all_angles())
+            # print(EF_analyzer.get_angle_force_dir())
+            print('DFT forces: \n', EF_analyzer.get_forces())
         except:
             print('Error')
