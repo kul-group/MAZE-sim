@@ -278,7 +278,21 @@ class ExtraFrameworkMaker(object):
                 key_tag = 'O' + str(index)
                 dict_H[key_tag] = new_atoms
         return dict_H
-
+    
+    @staticmethod
+    def get_cluster_radius(EF_atoms):
+        """ This function returns the averaged distance between atoms on the extra-framework cluster and the
+        center-of-mass coordinate, which is used to represent/approximate the cluster size.
+        :param EF_atoms: extra-framework cluster
+        :return:
+        """
+        EF_center = EF_atoms.get_center_of_mass()
+        all_position = EF_atoms.get_positions()
+        radius_list = []
+        for vector in abs(all_position - EF_center):
+            radius_list.append(np.linalg.norm(vector))
+        return np.mean(radius_list)
+    
     @staticmethod
     def _get_random_dir(atoms):
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
