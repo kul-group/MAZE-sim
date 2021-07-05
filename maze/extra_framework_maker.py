@@ -287,11 +287,9 @@ class ExtraFrameworkMaker(object):
         :return:
         """
         EF_center = EF_atoms.get_center_of_mass()
-        all_position = EF_atoms.get_positions()
-        radius_list = []
-        for vector in abs(all_position - EF_center):
-            radius_list.append(np.linalg.norm(vector))
-        return np.mean(radius_list)
+        distances = mic(EF_center - EF_atoms.positions, EF_atoms.cell)
+        distances = np.linalg.norm(distances, axis=1)
+        return np.mean(distances)
     
     @staticmethod
     def _get_random_dir(atoms):
