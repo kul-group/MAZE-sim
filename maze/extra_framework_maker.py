@@ -3,7 +3,7 @@ from maze.io_zeolite import read_vasp
 from ase import Atoms, db
 from typing import Union, Tuple
 from collections import defaultdict
-from ase.neighborlist import natural_cutoffs, NeighborList
+from ase.neighborlist import natural_cutoffs, NeighborList, mic
 from ase import Atoms
 import numpy as np
 from ase.visualize import view
@@ -172,7 +172,6 @@ class ExtraFrameworkMaker(object):
         return dict_Z_TM
 
     def get_Z_TM(self, atoms, d_Z_TM, TM_type):
-
         nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
         nl.update(atoms)
         index_Al = [a.index for a in atoms if a.symbol == 'Al']
@@ -281,50 +280,18 @@ class ExtraFrameworkMaker(object):
         return dict_H
 
     @staticmethod
-    def get_cluster_radius(EF_atoms):
-        """ This function returns the averaged distance between atoms on the extra-framework cluster and the
-        center-of-mass coordinate, which is used to represent/approximate the cluster size.
-        :param EF_atoms: extra-framework cluster
-        :return:
-        """
-        EF_center = EF_atoms.get_center_of_mass()
-        all_position = EF_atoms.get_positions()
-        radius_list = []
-        for vector in abs(all_position - EF_center):
-            radius_list.append(np.linalg.norm(vector))
-        return np.mean(radius_list)
-
-    @staticmethod
-    def _get_close_framework_atom_positions(centering_index, atoms, radius_cutoff):
-        """ This function detects all atoms on the input zeolite named "atoms" within certain "radius_cutoff" around the
-        "centering_index" atom, and save all atoms positions into a list.
-        :param centering_index: reference position of the extra-framework cluster to be inserted (currently placed with
-        an S atom)
-        :param atoms: the zeolite backbone
-        :param radius_cutoff: 6 angstrom by default
-        :return:
-        """
-        close_framework_atom_positions = []
-        for count in range(len(atoms)):
-            dist = atoms.get_distance(centering_index, count, mic=True)
-            if dist <= radius_cutoff:
-                close_framework_atom_positions.append(atoms[count].position)
-        return close_framework_atom_positions
-
-    def _get_random_dir(self, atoms):
+    def _get_random_dir(atoms):
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        u_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
+        vec_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
 
-        rand_vec = np.array([2.0 * np.random.random() - 1 for i in np.arange(3)])
-        u_rand = rand_vec / np.linalg.norm(rand_vec)  # random unit vector
-        u_dir = np.cross(u_Al, u_rand) / np.linalg.norm(np.cross(u_Al, u_rand))
-        # some random vector perpendicular to the Al-Al vector
-        u_dir = int(2 * np.round(np.random.random()) - 1) * u_dir
-        # This takes a random number between 0 and 1, rounds it (0 or 1) and then shifts it to (-1 or 1)
+        vec_rand = np.random.normal(size=(3,))
+        vec_rand = vec_rand / np.linalg.norm(vec_rand)  # some random unit vector
+
+        u_dir = np.cross(vec_Al, vec_rand) / np.linalg.norm(np.cross(vec_Al, vec_rand))
         return u_dir
 
-    def _get_reference_with_S_in_between_Al_pairs(self, atoms, cluster_radius):
+    def _get_reference_with_S_in_between_Al_pairs(self, atoms, EF_atoms, cluster_radius):
         """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
         The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
         into account from input "cluster_radius".
@@ -332,44 +299,45 @@ class ExtraFrameworkMaker(object):
         :param cluster_radius: the approximated cluster radius
         :return:
         """
+        EF_atoms_ini = copy.deepcopy(EF_atoms)
+
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        mid_Al = 0.5 * (atoms.get_positions()[Al_index[0]] + atoms.get_positions()[Al_index[1]])
-        atoms = atoms + Atoms('S', positions=[mid_Al])
+        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        print('mid_Al = ', mid_Al)
 
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        d_thres = 6.0  # might need to scale it with respect to the zeolite size
-        close_framework_atom_positions = self._get_close_framework_atom_positions(index_S, atoms, d_thres)
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
+        d_thres, closest_distance = 6.0, 1 + cluster_radius  # radius of Si atom ~ 1 Ang
+        u_dir = self._get_random_dir(atoms)
+        step_size = d_thres * np.random.random_sample()
+        trial_pos = np.array(mid_Al + u_dir * step_size)
+        print('trial_pos = ', trial_pos)
 
-        max_iter, num_iter, d_min, closest_distance = 1000, 0, 0, 1.5 + cluster_radius  # radius of Si atom = 1.5 Ang
+        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+        EF_atoms.translate(trial_pos - EF_atoms_cop)
+        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+        print('EF_atoms_cop = ', EF_atoms_cop)
+
+        distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
+        distances = np.linalg.norm(distances, axis=1)
+        print(distances)
+
         final_pos = []
-        while num_iter <= max_iter:
+        while min(distances) <= closest_distance:
+            EF_atoms = copy.deepcopy(EF_atoms_ini)
+
             u_dir = self._get_random_dir(atoms)
-            step_size = d_thres * np.random.random_sample()  # Pick step size randomly from 0 to closest_distance
+            step_size = d_thres * np.random.random_sample()
             trial_pos = np.array(mid_Al + u_dir * step_size)
 
-            distance_from_close_atoms = (close_framework_atom_positions - trial_pos)
-            d_min = min(np.linalg.norm(distance_from_close_atoms, axis=1))
-            print(d_min)
+            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
 
-            num_iter += 1
-            if closest_distance <= d_min:
-                final_pos = trial_pos
-                # closest_distance = d_min
-                break
-        print(final_pos)
+            EF_atoms.translate(trial_pos - EF_atoms_cop)
+            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+            print('EF_atoms_cop = ', EF_atoms_cop)
 
-        cell_dimension = np.matmul(np.ones(3), atoms.get_cell())
-        mic_constrained_pos = []
-        for index, item in enumerate(final_pos):
-            if item > cell_dimension[index]:
-                item -= cell_dimension[index]
-            elif item < 0:
-                item += cell_dimension[index]
-            mic_constrained_pos.append(item)
+            distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
+            distances = np.linalg.norm(distances, axis=1)
 
-        atoms = atoms + Atoms('S', positions=[mic_constrained_pos])
-        return atoms
+        return atoms + EF_atoms
 
     def insert_ExtraFrameworkAtoms(self, my_zeolite, EF_atoms):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
@@ -380,10 +348,13 @@ class ExtraFrameworkMaker(object):
         :param EF_atoms: the extra-framework cluster to be inserted in between the Al pair
         :return:
         """
+
+        """
         cluster_radius = self.get_cluster_radius(EF_atoms)
+        print(cluster_radius)
         atoms = self._get_reference_with_S_in_between_Al_pairs(my_zeolite, 0)  # cluster_radius = 0
 
-        ## move S to the center of frame to aviod complicatio when inserting
+        ## move S to the center of frame to avoid complication when inserting
         index_S = [a.index for a in atoms if a.symbol == 'S'][0]
         com_cell = np.matmul([0.5, 0.5, 0.5], atoms.get_cell())
         translate_vector = com_cell - atoms.get_positions()[index_S]
@@ -414,6 +385,58 @@ class ExtraFrameworkMaker(object):
         atoms.translate(-1 * translate_vector)
         atoms.wrap()
         return atoms
+        """
+        EF_atoms_ini = copy.deepcopy(EF_atoms)
+
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        print('mid_Al = ', mid_Al)
+
+        d_thres, closest_distance = 6.0, 1 + cluster_radius  # radius of Si atom ~ 1 Ang
+        u_dir = self._get_random_dir(atoms)
+        step_size = d_thres * np.random.random_sample()
+        trial_pos = np.array(mid_Al + u_dir * step_size)
+        print('trial_pos = ', trial_pos)
+
+        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+        EF_atoms.translate(trial_pos - EF_atoms_cop)
+        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+        print('EF_atoms_cop = ', EF_atoms_cop)
+
+        distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
+        distances = np.linalg.norm(distances, axis=1)
+        print(distances)
+
+        final_pos = []
+        while min(distances) <= closest_distance:
+            EF_atoms = copy.deepcopy(EF_atoms_ini)
+
+            u_dir = self._get_random_dir(atoms)
+            step_size = d_thres * np.random.random_sample()
+            trial_pos = np.array(mid_Al + u_dir * step_size)
+
+            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+
+            EF_atoms.translate(trial_pos - EF_atoms_cop)
+            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+            print('EF_atoms_cop = ', EF_atoms_cop)
+
+            distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
+            distances = np.linalg.norm(distances, axis=1)
+
+        return atoms + EF_atoms
+
+
+if __name__ == '__main__':
+    my_zeolite = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/MFI_2Al.traj', '28:29')[0]
+    EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+    """
+    h2o_cop = np.sum(EF_atoms.positions, 0) / 3
+    print(h2o_cop)
+    """
+    EFzeolite = ExtraFrameworkMaker()
+    atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms)
+    # view(atoms)
 
 
 class ExtraFrameworkAnalyzer(object):
@@ -588,25 +611,22 @@ class ExtraFrameworkAnalyzer(object):
             dict_EF_forces[atom_tag] = [f_vec, f_mag]
         return dict_EF_forces
 
-    """
-    @staticmethod
-    def bonding_force(r, K1, K2, K3, R):
-        return 2 * K1 * (r - R) + 3 * K2 * (r - R) ** 2 + 4 * K3 * (r - R) ** 3
-
     @staticmethod
     def morse_force(r, a, e, rm):
         return 2 * a * e * np.exp(-a * (r - rm)) * (1 - np.exp(-a * (r - rm)))
 
     @staticmethod
-    def harmonic(theta, k, theta_o):
-        return 2 * k * (theta - theta_o)
+    def harmonic(theta, k, k1, theta_o):
+        return 2 * k * (theta - theta_o) + 3 * k1 * (theta - theta_o) ** 2
 
     def get_predicted_forces(self, param):
-        # param = [a, e, rm, k_Cu, theta_o_Cu, k_O, theta_o_O, K, R]
+        O_param = param[0]
+        Cu_param = param[1]
 
         dict_EF_predicted_forces = {}
         dict_EF_bonds = self.get_all_bonds()
         dict_EF_angles = self.get_all_angles()
+        angle_dir = self.get_angle_force_dir()
 
         dict_morse = {}
         for atom_tag, dist_list in dict_EF_bonds.items():
@@ -614,40 +634,39 @@ class ExtraFrameworkAnalyzer(object):
             for vec, mag in zip(dist_list[0], dist_list[1]):
                 d_vec.append(vec)
                 d_mag.append(mag)
-            for count, vec in enumerate(d_vec):
-                f += self.morse_force(d_mag[count], *param[0:3]) * vec / d_mag[count] + \
-                     self.bonding_force(d_mag[count], *param[7:11]) * vec / d_mag[count]
-            dict_morse[atom_tag] = np.linalg.norm(f)
-
-        for atom_tag, angle_list in dict_EF_angles.items():
-            angle, f = [], 0
             if 'Cu' in atom_tag:
-                my_param = param[3:5]
-            else:
-                my_param = param[5:7]
-            for count, ang in enumerate(angle_list):
-                f += self.harmonic(ang, *my_param)
-            dict_EF_predicted_forces[atom_tag] = dict_morse[atom_tag] + f
-
+                my_param = Cu_param
+                f += self.morse_force(d_mag[0], *my_param[0:3]) * d_vec[0] / d_mag[0]  # for Cu-O-Z bond
+                f += self.morse_force(d_mag[1], *my_param[6:9]) * d_vec[1] / d_mag[1]  # for Cu-O-Cu bond
             if 'O' in atom_tag:
-                for count, ang in enumerate(angle_list):
-                    f += self.harmonic(ang, *param[3:5])
+                my_param = O_param
+                for count, vec in enumerate(d_vec):
+                    f += self.morse_force(d_mag[count], *my_param[0:3]) * vec / d_mag[count]
+            dict_morse[atom_tag] = f
+
+        for index, (atom_tag, angle_list) in enumerate(dict_EF_angles.items()):
+            if 'Cu' in atom_tag:
+                my_param = Cu_param[3:6]
+            else:
+                my_param = O_param[3:6]
+            f = np.array(self.harmonic(angle_list[0], *my_param) * angle_dir[index]) / np.linalg.norm(angle_dir[index])
             dict_EF_predicted_forces[atom_tag] = dict_morse[atom_tag] + f
 
         return dict_EF_predicted_forces
-    """
 
 
+"""
 if __name__ == '__main__':
     traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '4:5')
+    params = [[2.01e-06, 0.431, 4.82, -0.704, -0.285, 2.96],
+              [9.63e-06, 0.899, 3.14, 7.69e-06, 0.235, 2.09, -1.87e-07, 1.72, 2.10]]
     for atoms in traj:
-        try:
-            EF_analyzer = ExtraFrameworkAnalyzer(atoms)
-            EF_analyzer.get_extraframework()
-            print('atom index: \n', EF_analyzer.dict_EF)
-            print('bonds: \n', EF_analyzer.get_all_bonds())
-            print('angles: \n', EF_analyzer.get_all_angles())
-            # print(EF_analyzer.get_angle_force_dir())
-            print('DFT forces: \n', EF_analyzer.get_forces())
-        except:
-            print('Error')
+        EF_analyzer = ExtraFrameworkAnalyzer(atoms)
+        EF_analyzer.get_extraframework()
+        print('atom index: \n', EF_analyzer.dict_EF)
+        print('bonds: \n', EF_analyzer.get_all_bonds())
+        print('angles: \n', EF_analyzer.get_all_angles())
+        # print(EF_analyzer.get_angle_force_dir())
+        print('DFT forces: \n', EF_analyzer.get_forces())
+        print('FF forces: \n', EF_analyzer.get_predicted_forces(params))
+"""
