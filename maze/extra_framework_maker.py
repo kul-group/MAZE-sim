@@ -290,9 +290,14 @@ class ExtraFrameworkMaker(object):
         distances = mic(EF_center - EF_atoms.positions, EF_atoms.cell)
         distances = np.linalg.norm(distances, axis=1)
         return np.mean(distances)
-    
+
     @staticmethod
     def _get_random_dir(atoms):
+        """ This function returns a unit vector that is perpendicular to the Al-Al direction and some random direction.
+        This is the direction where the Extraframework atoms will be inserted.
+        :param atoms: zeolite backbone with two Al inserted
+        :return: unit direction vector
+        """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
         vec_Al = vec_Al / np.linalg.norm(vec_Al)  # unit direction along the Al-Al pair
@@ -303,152 +308,101 @@ class ExtraFrameworkMaker(object):
         u_dir = np.cross(vec_Al, vec_rand) / np.linalg.norm(np.cross(vec_Al, vec_rand))
         return u_dir
 
-    def _get_reference_with_S_in_between_Al_pairs(self, atoms, EF_atoms, cluster_radius):
-        """ This function finds the best position for the extra-framework cluster to be inserted (labeled as S for now).
-        The reference S is placed in a way that it's not overlapping with the backbone atoms. The cluster size is taken
-        into account from input "cluster_radius".
-        :param atoms: zeolite framework with 2 Al atoms adjacent to each other
-        :param cluster_radius: the approximated cluster radius
+    def rotate_EF_based_on_Als(self, atoms, EF_atoms):
+        """ This function rotates the ExtraFramework atoms in some random initial orientations, such that the Cu-Cu
+        vector is now in parallel with the Al-Al vector.
+        :param atoms: zeolite backbone with two Al inserted
+        :param EF_atoms: extra-framework atoms
         :return:
         """
-        EF_atoms_ini = copy.deepcopy(EF_atoms)
-
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        print('mid_Al = ', mid_Al)
+        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
 
-        d_thres, closest_distance = 6.0, 1 + cluster_radius  # radius of Si atom ~ 1 Ang
-        u_dir = self._get_random_dir(atoms)
-        step_size = d_thres * np.random.random_sample()
-        trial_pos = np.array(mid_Al + u_dir * step_size)
-        print('trial_pos = ', trial_pos)
+        TM_index = [atom.index for atom in EF_atoms if atom.symbol in self.TM_list]
+        vec_ini_TM = EF_atoms.get_distance(TM_index[0], TM_index[1], mic=True, vector=True)
 
-        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-        EF_atoms.translate(trial_pos - EF_atoms_cop)
-        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-        print('EF_atoms_cop = ', EF_atoms_cop)
+        EF_atoms.rotate(vec_ini_TM, vec_Al, center=EF_atoms.get_center_of_mass())
+        return EF_atoms
 
-        distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
-        distances = np.linalg.norm(distances, axis=1)
-        print(distances)
+    def rotate_EF_away_from_Als(self, EF_atoms, u_dir):
+        """ This function rotates the ExtraFramework atoms again, after the "rotate_EF_based_on_Als" function, such that
+         the ExtraFramework oxygen is pointing aways from the Al-Al vector.
+        :param EF_atoms: extra-framework atoms
+        :param u_dir: direction to move the ExtraFramework atoms away from
+        :return:
+        """
+        O_index = [atom.index for atom in EF_atoms if atom.symbol not in self.TM_list]
+        EF_center = EF_atoms.get_center_of_mass()
+        vec_ini_O = mic(EF_atoms.positions[O_index] - EF_center, EF_atoms.cell)[0]
 
-        final_pos = []
-        while min(distances) <= closest_distance:
-            EF_atoms = copy.deepcopy(EF_atoms_ini)
+        EF_atoms.rotate(vec_ini_O, u_dir, center=EF_center)
+        return EF_atoms
 
-            u_dir = self._get_random_dir(atoms)
-            step_size = d_thres * np.random.random_sample()
-            trial_pos = np.array(mid_Al + u_dir * step_size)
+    @staticmethod
+    def recentering_atoms(atoms, pos_to_center):
+        """ This function recenters the atoms object by translating the the input position "pos_to_center" to the center
+        of the cell.
+        :param atoms: zeolite backbone with two Al inserted
+        :param pos_to_center: some positions to be centered
+        :return: recentered atoms object, translation vector
+        """
+        vec_translate = np.matmul([0.5, 0.5, 0.5], atoms.get_cell()) - pos_to_center
+        atoms.translate(vec_translate)
+        atoms.wrap()
+        return atoms, vec_translate
 
-            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-
-            EF_atoms.translate(trial_pos - EF_atoms_cop)
-            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-            print('EF_atoms_cop = ', EF_atoms_cop)
-
-            distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
-            distances = np.linalg.norm(distances, axis=1)
-
-        return atoms + EF_atoms
-
-    def insert_ExtraFrameworkAtoms(self, my_zeolite, EF_atoms):
+    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
         there are more than one TMs in the cluster, the cluster is rotated so that the TM-TM vector is aligned with the
         Al-Al vector. Last, insert the cluster into "my_zeolite".
-        :param my_zeolite: zeolite backbone with 2 Al atoms close to each other
+        :param atoms: zeolite backbone with 2 Al atoms close to each other
         :param EF_atoms: the extra-framework cluster to be inserted in between the Al pair
         :return:
         """
-
-        """
-        cluster_radius = self.get_cluster_radius(EF_atoms)
-        print(cluster_radius)
-        atoms = self._get_reference_with_S_in_between_Al_pairs(my_zeolite, 0)  # cluster_radius = 0
-
-        ## move S to the center of frame to avoid complication when inserting
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        com_cell = np.matmul([0.5, 0.5, 0.5], atoms.get_cell())
-        translate_vector = com_cell - atoms.get_positions()[index_S]
-        atoms.translate(translate_vector)
-        atoms.wrap()
-
-        EF_atoms.set_cell(atoms.get_cell())
-        index_S = [a.index for a in atoms if a.symbol == 'S'][0]
-        ref_center = atoms.get_positions()[index_S]
-        EF_atoms.translate(ref_center - EF_atoms.get_center_of_mass())
-        EF_atoms.wrap()
-
-        TM_index = [atom.index for atom in EF_atoms if atom.symbol in self.TM_list]
-        Al_index = [atom.index for atom in atoms if atom.symbol == 'Al']
-
-        if len(TM_index) == 2:
-            ini_TM_vec = EF_atoms.get_positions()[TM_index[0]] - EF_atoms.get_positions()[TM_index[1]]
-            final_vec = atoms.get_positions()[Al_index[0]] - atoms.get_positions()[Al_index[1]]
-            EF_atoms.rotate(ini_TM_vec, final_vec, center=EF_atoms.get_center_of_mass())
-            # ini_TM_vec is rotated into final_vec
-
-        pos = EF_atoms.get_positions()
-        atom_name = ''.join(EF_atoms.get_chemical_symbols())
-        atoms = atoms + Atoms(atom_name, positions=pos, cell=atoms.get_cell())
-        del atoms[[atom.index for atom in atoms if atom.symbol == 'S']]
-
-        # Move the atoms back to the original position
-        atoms.translate(-1 * translate_vector)
-        atoms.wrap()
-        return atoms
-        """
-        EF_atoms_ini = copy.deepcopy(EF_atoms)
-
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        print('mid_Al = ', mid_Al)
+        atoms, vec_translate = self.recentering_atoms(atoms, mid_Al)
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms)
+        EF_atoms_ini = copy.deepcopy(EF_atoms)
+        EF_atoms_radius = self.get_cluster_radius(EF_atoms)
 
-        d_thres, closest_distance = 6.0, 1 + cluster_radius  # radius of Si atom ~ 1 Ang
-        u_dir = self._get_random_dir(atoms)
-        step_size = d_thres * np.random.random_sample()
-        trial_pos = np.array(mid_Al + u_dir * step_size)
-        print('trial_pos = ', trial_pos)
+        max_count, closest_distance = 500, 1.5 + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
+        for d_thres in np.arange(4, 7, 0.5):
+            count = 0
+            while count < max_count:
+                EF_atoms = copy.deepcopy(EF_atoms_ini)
 
-        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-        EF_atoms.translate(trial_pos - EF_atoms_cop)
-        EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-        print('EF_atoms_cop = ', EF_atoms_cop)
+                u_dir, step_size = self._get_random_dir(atoms), d_thres * np.random.random_sample()
+                trial_pos = np.array(mid_Al + u_dir * step_size)
 
-        distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
-        distances = np.linalg.norm(distances, axis=1)
-        print(distances)
+                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
+                EF_atoms.translate(trial_pos - EF_atoms_cop)
+                EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir)
+                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
 
-        final_pos = []
-        while min(distances) <= closest_distance:
-            EF_atoms = copy.deepcopy(EF_atoms_ini)
+                distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
+                distances = np.linalg.norm(distances, axis=1)
 
-            u_dir = self._get_random_dir(atoms)
-            step_size = d_thres * np.random.random_sample()
-            trial_pos = np.array(mid_Al + u_dir * step_size)
-
-            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-
-            EF_atoms.translate(trial_pos - EF_atoms_cop)
-            EF_atoms_cop = np.sum(EF_atoms.positions, 0) / 3
-            print('EF_atoms_cop = ', EF_atoms_cop)
-
-            distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
-            distances = np.linalg.norm(distances, axis=1)
-
-        return atoms + EF_atoms
+                if min(distances) > closest_distance:
+                    atoms = atoms + EF_atoms
+                    atoms.translate(-1 * vec_translate)
+                    atoms.wrap()
+                    return atoms
+                else:
+                    count += 1
 
 
 if __name__ == '__main__':
     my_zeolite = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/MFI_2Al.traj', '28:29')[0]
     EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
-    """
-    h2o_cop = np.sum(EF_atoms.positions, 0) / 3
-    print(h2o_cop)
-    """
+
+    # view(EF_atoms)
     EFzeolite = ExtraFrameworkMaker()
     atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms)
-    # view(atoms)
+    view(atoms)
 
 
 class ExtraFrameworkAnalyzer(object):
