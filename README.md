@@ -46,12 +46,18 @@ Features
 
 - Complete compatibility with the Atomic Simulation Environment (ASE)
 - Automatic site labeling when building from CIF files from the iza structure database  
--  Automatic downloading of CIF files from the IZA database
--  Atom relationship tracking across related zeolite structures
+- Automatic downloading of CIF files from the IZA database
+- Atom relationship tracking across related zeolite structures
 - Simple atom capping and uncapping 
- - Simple cluster extraction and cluster reintegration  
+- Simple cluster extraction and cluster reintegration  
 -	Interface for adding adsorbates, automatically positioning adsorbates and removing adsorbates 
 - Save collections of Zeolites and reload them while preserving their atomic relationships 
+- Single Al replacement for all unique T-sites
+- Get all unique Al pairs within some pre-defined distance cutoff
+- Extra-framework atoms insertion around each Al sites, Z-TM, Z-H; easily extendable to Z-XX, XX being -CO, -OH, -OOH, etc.
+- Extra-framework atoms insertion and positioning in between pair sites, allowing user-defined extra-framework atom types, such as TM, TM oxides, OSDA, etc.
+- Automated folder generation and output structure saving
+
 
 
 Contribute
