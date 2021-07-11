@@ -58,7 +58,7 @@ def label_pdb(file_name):
             name_list.append(name)
             name = name + str(name_list.count(name))
             name = name.rjust(4)
-            line = line.replace(line[12:16], name)
+            line = line.replace(line[12:16], name, 1)
         fileout.writelines(line)
 
     filein.close()
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     for val in range(len(traj)):
-        label_pdb('cluster_%s' %str(val))   # now also replaced the symbol, need fix
+        label_pdb('cluster_%s' % str(val))
 
 
 
@@ -143,4 +143,3 @@ if __name__ == '__main__':
     forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
     print(forces)
     """
-
