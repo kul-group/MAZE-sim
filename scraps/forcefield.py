@@ -47,6 +47,24 @@ def get_all_bonds():
     return bond_list, bond_list_wo_H
 
 
+def label_pdb(file_name):
+    filein = open('/Users/jiaweiguo/Box/openMM_test/%s.pdb' % file_name, 'r')
+    fileout = open('/Users/jiaweiguo/Box/openMM_test/%s_labeled.pdb' % file_name, 'w')
+
+    name_list = []
+    for line in filein.readlines():
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            name = line[12:16].strip()
+            name_list.append(name)
+            name = name + str(name_list.count(name))
+            name = name.rjust(4)
+            line = line.replace(line[12:16], name)
+        fileout.writelines(line)
+
+    filein.close()
+    fileout.close()
+
+
 def some_random_stuff():
     """
     # example from the OpenMM doc
@@ -64,15 +82,17 @@ def some_random_stuff():
 if __name__ == '__main__':
 
     # print(get_all_bonds())
-
+    """
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     cluster_traj = []
     for count, atoms in enumerate(traj):
         cluster_traj.append(get_capped_cluster(atoms, 'cluster_'+str(count)))
     view(cluster_traj)
+    """
 
-
-
+    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    for val in range(len(traj)):
+        label_pdb('cluster_%s' %str(val))   # now also replaced the symbol, need fix
 
 
 
@@ -123,3 +143,4 @@ if __name__ == '__main__':
     forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
     print(forces)
     """
+
