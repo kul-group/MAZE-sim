@@ -17,6 +17,9 @@ from sys import stdout
 from ase.geometry.analysis import Analysis
 import numpy as np
 from itertools import permutations
+from lxml import etree
+from contextlib import closing
+from collections import OrderedDict
 
 
 def get_capped_cluster(atoms, file_name):
@@ -121,6 +124,84 @@ def get_angles(cluster, excluded_index=None, excluded_pair=None):
     return angle_list, shortened_list
 
 
+def get_forces(my_pdb, my_system):
+    """
+    integrator used for advancing the equations of motion in MD
+    doesn't matter what we pick here since we only need the forces on the initial structure, but do need to have it
+    :return: forces on atoms in units of eV/A
+    """
+    integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
+    simulation = Simulation(my_pdb.topology, my_system, integrator)
+    simulation.context.setPositions(my_pdb.positions)
+    state = simulation.context.getState(getForces=True)
+    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
+    return forces
+
+
+def get_DFT_forces_single(atoms, atom_index):
+    """
+    DFT forces for single atoms
+    """
+    f_vec = atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
+    f_mag = np.linalg.norm(f_vec)
+    return f_vec
+
+
+def get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track):
+    """
+    use numb to keep track of individual configurations
+    """
+    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
+    atoms = list(pdb.topology.atoms())
+
+    for index in shortened_bond_list:
+        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
+    bonds = list(pdb.topology.bonds())
+
+    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_v2.xml')
+    system = FF.createSystem(pdb.topology)
+
+    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
+    force.addPerBondParameter("D")
+    force.addPerBondParameter("alpha")
+    force.addPerBondParameter("r0")
+
+    for index in shortened_bond_list:
+        force.addBond(int(index[0]), int(index[1]), [1.0, 1.0, 2.0])
+    system.addForce(force)
+
+    force = HarmonicAngleForce()  # Harmonic angle
+    for index in shortened_angle_list:
+        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
+    system.addForce(force)
+
+    return get_forces(pdb, system)[index_to_track]
+
+
+def write_xml(atoms, bonds):
+    # on-the-fly generation of force field xml file, matching atoms and bonds with pdb file
+    root = etree.Element('ForceField')
+
+    xml_section = etree.SubElement(root, "AtomTypes")
+    for atom in atoms:
+        properties = {'name': atom.name, 'class': atom.name, 'element': ''.join(filter(lambda x: not x.isdigit(),
+                                                                                       atom.name)), 'mass': '0.0'}
+        etree.SubElement(xml_section, 'Type', **properties)
+
+    xml_section = etree.SubElement(root, 'Residues')
+    xml_residue = etree.SubElement(xml_section, 'Residue', name='MOL')
+    for atom in atoms:
+        etree.SubElement(xml_residue, 'Atom', name=atom.name, type=atom.name)
+    for bond in bonds:
+        etree.SubElement(xml_residue, 'Bond', atomName1=bond[0].name, atomName2=bond[1].name)
+
+    tree = etree.ElementTree(root)
+    xml = etree.tostring(tree, pretty_print=True).decode('utf-8')
+
+    with closing(open('/Users/jiaweiguo/Box/openMM_test/template_test.xml', 'w')) as f:
+        f.write(xml)
+
+
 def some_random_stuff():
     """
     # example from the OpenMM doc
@@ -183,11 +264,13 @@ if __name__ == '__main__':
     print([[bond[0].name, bond[1].name] for bond in bonds])
     print([[bond[0].index, bond[1].index] for bond in bonds])
 
-    # force field xml file need a bit attention, but majority of works are one-time-thing
-    # all pdb files converted from ase.traj are automatically named as MOL for residual name (need to define in the xml 
+    # force field xml file need a bit attention, but majority of works are one-time-thing (???? maybe not)
+    # all pdb files converted from ase.traj are automatically named as MOL for residual name (need to define in the xml
     # file)
     # simplest xml file only need atoms type in residual section, bonds and angles can be added later
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_v2.xml')
+
+    write_xml(atoms, bonds)
+    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
     # v2.xml removed all force functions in xml
     system = FF.createSystem(pdb.topology)
 
@@ -203,23 +286,28 @@ if __name__ == '__main__':
     # print(force.getNumBonds())
     system.addForce(force)
 
-    # randomly chosen an integrator, need to figure out what it does and how it works
-    integrator = LangevinMiddleIntegrator(300 * kelvin, 1 / picosecond, 0.004 * picoseconds)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-    state = simulation.context.getState(getForces=True)
-    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
-    print(forces)
+    # print(get_forces(pdb, system))
+    print(get_forces(pdb, system)[10])
 
     force = HarmonicAngleForce()  # Harmonic angle
     for index in shortened_angle_list:
         force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
-    print(force.getNumAngles())
+    # print(force.getNumAngles())
     system.addForce(force)
 
-    integrator = LangevinMiddleIntegrator(300 * kelvin, 1 / picosecond, 0.004 * picoseconds)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-    state = simulation.context.getState(getForces=True)
-    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
-    print(forces)
+    #print(get_forces(pdb, system))
+    print(get_forces(pdb, system)[10])  # predicted forces on O
+
+    """
+    # need to work on xml file generation first, bond list different, or save all possible bonds (might be better) 
+    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    DFT_f_on_O = []
+    for atoms in traj:
+        DFT_f_on_O.append(get_DFT_forces_single(traj[0], 288))
+    print(DFT_f_on_O)
+
+    FF_f_on_O = []
+    for numb in range(1):
+        FF_f_on_O.append(get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track=10))
+    print(FF_f_on_O)
+    """
