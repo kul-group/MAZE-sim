@@ -230,6 +230,23 @@ def func():
         label_pdb('cluster_%s' % str(val))
 
 
+def check_atom_types(index):
+    if index in class_Al:
+        return 'class_Al'
+    if index in class_Cu:
+        return 'class_Cu'
+    if index in class_H:
+        return 'class_H'
+    if index in class_O_EF:
+        return 'class_O_EF'
+    if index in class_O_Cu:
+        return 'class_O_Cu'
+    if index in class_O_H:
+        return 'class_O_H'
+    else:
+        return 'None'
+
+
 if __name__ == '__main__':
     # func()
     '''
@@ -316,8 +333,9 @@ if __name__ == '__main__':
 
     # assign bonds into different types
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
-    bond_list, shortened_bond_list = get_bonds(cluster)
-    print(bond_list)
+    bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
+                                               excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
+    # print(bond_list)
 
     nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
     nl.update(cluster)
@@ -328,45 +346,64 @@ if __name__ == '__main__':
     class_O_EF = [10]
     class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
                   all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
-    class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF+class_O_Cu]
-    print(class_O_Cu)
-    print(class_O_H)
+    class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF + class_O_Cu]
+    # print(class_O_Cu)
+    # print(class_O_H)
 
-    def check_atom_types(index):
-        if index in class_Al:
-            return 'class_Al'
-        if index in class_Cu:
-            return 'class_Cu'
-        if index in class_H:
-            return 'class_H'
-        if index in class_O_EF:
-            return 'class_O_EF'
-        if index in class_O_Cu:
-            return 'class_O_Cu'
-        if index in class_O_H:
-            return 'class_O_H'
-        else:
-            return 'None'
-
-    bond_type, repeated_list, count = {}, [], 0
-    whole_list = []
+    atom_class_dict, repeated_list, whole_list, count = {}, [], [], 0
     for bond in bond_list:
-        my_type = [check_atom_types(bond[0]), check_atom_types(bond[1])]
-        whole_list.append(my_type)
-        if all(list(pair) not in repeated_list for pair in list(permutations(my_type))):
-            repeated_list.append(my_type)
-            bond_type[count] = my_type
+        my_list = [check_atom_types(bond[0]), check_atom_types(bond[1])]
+        whole_list.append(my_list)
+        if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
+            repeated_list.append(my_list)
+            atom_class_dict[count] = my_list
             count += 1
-    print(bond_type)
-    print(whole_list)
+    # print(atom_class_dict)
+    # print(whole_list)
 
-    need_better_name = {}
-    for key, value in bond_type.items():
+    bond_pair_dict = {}
+    for key, value in atom_class_dict.items():
         list_2 = []
         for count, bond in enumerate(whole_list):
             if any(list(pair) == value for pair in list(permutations(bond))):
                 list_2.append(bond_list[count])
-        need_better_name[key] = list_2
-    print(need_better_name)
-    
-    
+        bond_pair_dict[key] = list_2
+
+
+    # print(bond_pair_dict)
+
+    def show_key_value_pair():
+        for key, value in atom_class_dict.items():
+            print(value, '-->', bond_pair_dict[key])
+
+
+    show_key_value_pair()
+
+    initial_param_dict = {0: [1, 1, 1], 1: [1.1, 2, 1], 2: [1.2, 4, 2], 3: [1.3, 3, 5], 4: [1.4, 2, 1], 5: [1.5, 1, 1],
+                          6: [1.6, 1, 1]}
+
+    numb = 0
+    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
+    atoms = list(pdb.topology.atoms())
+
+    for index in shortened_bond_list:
+        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
+    bonds = list(pdb.topology.bonds())
+
+    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    system = FF.createSystem(pdb.topology)
+
+    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
+    force.addPerBondParameter("D")
+    force.addPerBondParameter("alpha")
+    force.addPerBondParameter("r0")
+
+    for bond in shortened_bond_list:
+        for key, ref in bond_pair_dict.items():
+            if any(list(val) in ref for val in list(permutations(bond))):
+                print(initial_param_dict[key])
+                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict[key])
+
+    system.addForce(force)
+    print(get_forces(pdb, system))
