@@ -147,38 +147,7 @@ def get_DFT_forces_single(atoms, atom_index):
     return f_vec
 
 
-def get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track):
-    """
-    use numb to keep track of individual configurations
-    """
-    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
-    atoms = list(pdb.topology.atoms())
-
-    for index in shortened_bond_list:
-        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
-    bonds = list(pdb.topology.bonds())
-
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_v2.xml')
-    system = FF.createSystem(pdb.topology)
-
-    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
-    force.addPerBondParameter("D")
-    force.addPerBondParameter("alpha")
-    force.addPerBondParameter("r0")
-
-    for index in shortened_bond_list:
-        force.addBond(int(index[0]), int(index[1]), [1.0, 1.0, 2.0])
-    system.addForce(force)
-
-    force = HarmonicAngleForce()  # Harmonic angle
-    for index in shortened_angle_list:
-        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
-    system.addForce(force)
-
-    return get_forces(pdb, system)[index_to_track]
-
-
-def write_xml(atoms, bonds):
+def write_xml(atoms, bonds, save_as):
     # on-the-fly generation of force field xml file, matching atoms and bonds with pdb file
     root = etree.Element('ForceField')
 
@@ -198,8 +167,41 @@ def write_xml(atoms, bonds):
     tree = etree.ElementTree(root)
     xml = etree.tostring(tree, pretty_print=True).decode('utf-8')
 
-    with closing(open('/Users/jiaweiguo/Box/openMM_test/template_test.xml', 'w')) as f:
+    with closing(open(save_as, 'w')) as f:
         f.write(xml)
+
+
+def get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track):
+    """
+    #todo: separate out the force design part
+    use numb to keep track of individual configurations
+    """
+    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
+    atoms = list(pdb.topology.atoms())
+
+    for index in shortened_bond_list:
+        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
+    bonds = list(pdb.topology.bonds())
+
+    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    system = FF.createSystem(pdb.topology)
+
+    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
+    force.addPerBondParameter("D")
+    force.addPerBondParameter("alpha")
+    force.addPerBondParameter("r0")
+
+    for index in shortened_bond_list:
+        force.addBond(int(index[0]), int(index[1]), [1.0, 1.0, 2.0])
+    system.addForce(force)
+
+    force = HarmonicAngleForce()  # Harmonic angle
+    for index in shortened_angle_list:
+        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
+    system.addForce(force)
+
+    return get_forces(pdb, system)[index_to_track]
 
 
 def some_random_stuff():
@@ -230,7 +232,7 @@ def func():
 
 if __name__ == '__main__':
     # func()
-
+    '''
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
     print(shortened_bond_list == bond_list)
@@ -269,9 +271,8 @@ if __name__ == '__main__':
     # file)
     # simplest xml file only need atoms type in residual section, bonds and angles can be added later
 
-    write_xml(atoms, bonds)
+    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')   # on-the-fly generation of ff xml
     FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    # v2.xml removed all force functions in xml
     system = FF.createSystem(pdb.topology)
 
     # example of customized force function
@@ -295,11 +296,12 @@ if __name__ == '__main__':
     # print(force.getNumAngles())
     system.addForce(force)
 
-    #print(get_forces(pdb, system))
+    # print(get_forces(pdb, system))
     print(get_forces(pdb, system)[10])  # predicted forces on O
+    '''
 
     """
-    # need to work on xml file generation first, bond list different, or save all possible bonds (might be better) 
+    # forces on EF-O only
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     DFT_f_on_O = []
     for atoms in traj:
@@ -307,7 +309,63 @@ if __name__ == '__main__':
     print(DFT_f_on_O)
 
     FF_f_on_O = []
-    for numb in range(1):
+    for numb in range(len(traj)):
         FF_f_on_O.append(get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track=10))
     print(FF_f_on_O)
     """
+
+    # assign bonds into different types
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
+    bond_list, shortened_bond_list = get_bonds(cluster)
+    print(bond_list)
+
+    nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
+    nl.update(cluster)
+
+    class_Al = [atom.index for atom in cluster if atom.symbol == 'Al']
+    class_Cu = [atom.index for atom in cluster if atom.symbol == 'Cu']
+    class_H = [atom.index for atom in cluster if atom.symbol == 'H']
+    class_O_EF = [10]
+    class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
+                  all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
+    class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF+class_O_Cu]
+    print(class_O_Cu)
+    print(class_O_H)
+
+    def check_atom_types(index):
+        if index in class_Al:
+            return 'class_Al'
+        if index in class_Cu:
+            return 'class_Cu'
+        if index in class_H:
+            return 'class_H'
+        if index in class_O_EF:
+            return 'class_O_EF'
+        if index in class_O_Cu:
+            return 'class_O_Cu'
+        if index in class_O_H:
+            return 'class_O_H'
+        else:
+            return 'None'
+
+    bond_type, repeated_list, count = {}, [], 0
+    whole_list = []
+    for bond in bond_list:
+        my_type = [check_atom_types(bond[0]), check_atom_types(bond[1])]
+        whole_list.append(my_type)
+        if all(list(pair) not in repeated_list for pair in list(permutations(my_type))):
+            repeated_list.append(my_type)
+            bond_type[count] = my_type
+            count += 1
+    print(bond_type)
+    print(whole_list)
+
+    need_better_name = {}
+    for key, value in bond_type.items():
+        list_2 = []
+        for bond in whole_list:
+            if any(list(pair) in value for pair in list(permutations(bond))):    #todo: need fix
+                list_2.append(bond)
+        need_better_name[key] = list_2
+
+    print(need_better_name)
