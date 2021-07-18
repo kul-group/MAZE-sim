@@ -299,20 +299,39 @@ def get_bond_types(bond_list):
     return bond_type_dict, whole_type_list
 
 
-def get_bond_pair_dict(bond_types_dict, whole_type_list, bond_list):
-    """ assign bond pairs indices into different bond types, all the pairs within the same bond types will share the
-    same set of force field parameters.
-    :return bond_index_dict: return a dictionary of all bond-pairs indices for each unique bond type, using the the same
-    keys as bond_type_dict.
+def get_angle_types(angle_list):
     """
-    bond_index_dict = {}
-    for key, value in bond_types_dict.items():
+    #todo: consider combining get_bond_types and get_angle_types, leaving it as it is for now.
+    """
+    angle_type_dict, repeated_list, whole_type_list, count = {}, [], [], 0
+    for angle in angle_list:
+        my_list = [check_atom_types(cluster, angle[0]), check_atom_types(cluster, angle[1]),
+                   check_atom_types(cluster, angle[2])]
+        whole_type_list.append(my_list)
+        if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
+            repeated_list.append(my_list)
+            angle_type_dict[count] = my_list
+            count += 1
+    return angle_type_dict, whole_type_list
+
+
+def get_index_dict(type_dict, whole_type_list, whole_index_list):
+    """ assign bond pairs or angles indices into different bond or angle types, all the pairs or angles within the same 
+    types will share the same set of force field parameters.
+    :param type_dict:
+    :param whole_type_list:
+    :param whole_index_list:
+    :return index_dict: return a dictionary of all bond-pairs or angle indices for each unique bond or angle type, 
+    using the the same keys as type_dict.
+    """
+    index_dict = {}
+    for key, value in type_dict.items():
         temp_list = []
-        for count, bond in enumerate(whole_type_list):
-            if any(list(pair) == value for pair in list(permutations(bond))):
-                temp_list.append(bond_list[count])
-        bond_index_dict[key] = temp_list
-    return bond_index_dict
+        for count, items in enumerate(whole_type_list):
+            if any(list(pair) == value for pair in list(permutations(items))):
+                temp_list.append(whole_index_list[count])
+        index_dict[key] = temp_list
+    return index_dict
 
 
 def show_key_value_pair(dict1, dict2):
@@ -415,18 +434,42 @@ if __name__ == '__main__':
     # print(bond_list)
 
     bond_type_dict, whole_type_list = get_bond_types(bond_list)
-    print(bond_type_dict)
-    print(whole_type_list)
+    # print(bond_type_dict)
+    # print(whole_type_list)
 
     bond_index_dict = get_bond_pair_dict(bond_type_dict, whole_type_list, bond_list)
     # print(bond_index_dict)
 
-    show_key_value_pair(bond_type_dict, bond_index_dict)
+    # show_key_value_pair(bond_type_dict, bond_index_dict)
+
+    # print('Number of unique bond types:', len(bond_type_dict))
 
     initial_param_dict = {0: [1, 1, 1], 1: [1.1, 2, 1], 2: [1.2, 4, 2], 3: [1.3, 3, 5], 4: [1.4, 2, 1], 5: [1.5, 1, 1],
                           6: [1.6, 1, 1]}
 
     # print(get_FF_forces_single(0, shortened_bond_list, bond_pair_dict, initial_param_dict))
 
+    # todo: shortened_angle_list exclusion by atom types or angle types, instead of indices
+    angle_list, shortened_angle_list = get_angles(cluster, excluded_index=[13, 14, 15, 16],
+                                                  excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
 
-    # todo: same tasks for angular terms, angle_dict
+    angle_type_dict, repeated_list, whole_type_list, count = {}, [], [], 0
+    for angle in angle_list:
+        my_list = [check_atom_types(cluster, angle[0]), check_atom_types(cluster, angle[1]),
+                   check_atom_types(cluster, angle[2])]
+        whole_type_list.append(my_list)
+
+        if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
+            repeated_list.append(my_list)
+            angle_type_dict[count] = my_list
+            count += 1
+
+    angle_index_dict = {}
+    for key, value in angle_type_dict.items():
+        temp_list = []
+        for count, items in enumerate(whole_type_list):
+            if any(list(pair) == value for pair in list(permutations(items))):
+                temp_list.append(angle_list[count])
+        angle_index_dict[key] = temp_list
+
+    show_key_value_pair(angle_type_dict, angle_index_dict)
