@@ -282,13 +282,13 @@ def check_atom_types(cluster, index):
 def get_bond_types(bond_list):
     """ assign all bonding pairs into different types based on differences in atom types. For example,
     O(extra-framework)-Cu is different from O(framework)-Cu.
-    :return bond_type_dict: get a dictionary of all unique bond-pairs types, with "keys" being integers starting from 0,
-    and "values" being a list of two atom types string.
+    :return bond_type_dict: return a dictionary of all unique bond-pairs types, with "keys" being integers starting from 
+    0, and "values" being a list of two atom types string.
         eg. {0: [AtomClass1, AtomClass2], 1: [AtomClass1, AtomClass3], ...}
         Bond types such as [AtomClass1, AtomClass2] and [AtomClass2, AtomClass1] are considered the same.
-    :return whole_list: return the entire list of bond_types assignment of the input. len(whole_list) = len(bond_list)
+    :return whole_type_list: return the entire list of bond_types assignment of the input. len(whole_list) = len(bond_list)
     """
-    bond_type_dict, repeated_list, whole_list, count = {}, [], [], 0
+    bond_type_dict, repeated_list, whole_type_list, count = {}, [], [], 0
     for bond in bond_list:
         my_list = [check_atom_types(cluster, bond[0]), check_atom_types(cluster, bond[1])]
         whole_list.append(my_list)
@@ -296,24 +296,29 @@ def get_bond_types(bond_list):
             repeated_list.append(my_list)
             bond_type_dict[count] = my_list
             count += 1
-    return bond_type_dict, whole_list
+    return bond_type_dict, whole_type_list
 
 
-def get_bond_pair_dict(atom_class_dict, whole_list, bond_list):
+def get_bond_pair_dict(bond_types_dict, whole_type_list, bond_list):
+    """ assign bond pairs indices into different bond types, all the pairs within the same bond types will share the
+    same set of force field parameters.
+    :return bond_index_dict: return a dictionary of all bond-pairs indices for each unique bond type, using the the same 
+    keys as bond_type_dict.
     """
-    assign bond pairs based on atom classes, instead of individual atoms
-    """
-    bond_pair_dict = {}
-    for key, value in atom_class_dict.items():
-        list_2 = []
-        for count, bond in enumerate(whole_list):
+    bond_index_dict = {}
+    for key, value in bond_types_dict.items():
+        temp_list = []
+        for count, bond in enumerate(whole_type_list):
             if any(list(pair) == value for pair in list(permutations(bond))):
-                list_2.append(bond_list[count])
-        bond_pair_dict[key] = list_2
-    return bond_pair_dict
+                temp_list.append(bond_list[count])
+        bond_index_dict[key] = temp_list
+    return bond_index_dict
 
 
 def show_key_value_pair(dict1, dict2):
+    """ for better visualization of the bond types and bond indices that belong to certain types. 
+    eg. dict1 = bond_type_dict, dict = bond_index_dict
+    """
     for key, value in dict1.items():
         print(value, '-->', dict2[key])
 
@@ -409,14 +414,14 @@ if __name__ == '__main__':
                                                excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
     # print(bond_list)
 
-    atom_class_dict, whole_list = get_atoms_class(bond_list)
-    print(atom_class_dict)
-    print(whole_list)
+    bond_type_dict, whole_type_list = get_atoms_class(bond_list)
+    print(bond_type_dict)
+    print(whole_type_list)
 
-    bond_pair_dict = get_bond_pair_dict(atom_class_dict, whole_list, bond_list)
-    # print(bond_pair_dict)
+    bond_index_dict = get_bond_pair_dict(bond_type_dict, whole_type_list, bond_list)
+    # print(bond_index_dict)
 
-    show_key_value_pair(atom_class_dict, bond_pair_dict)
+    show_key_value_pair(bond_type_dict, bond_index_dict)
 
     initial_param_dict = {0: [1, 1, 1], 1: [1.1, 2, 1], 2: [1.2, 4, 2], 3: [1.3, 3, 5], 4: [1.4, 2, 1], 5: [1.5, 1, 1],
                           6: [1.6, 1, 1]}
