@@ -171,7 +171,8 @@ def write_xml(atoms, bonds, save_as):
         f.write(xml)
 
 
-def get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track):
+def get_FF_forces_single(numb, shortened_bond_list, bond_pair_dict, initial_param_dict, index_to_track=None,
+                         shortened_angle_list=None):
     """
     #todo: separate out the force design part
     use numb to keep track of individual configurations
@@ -187,21 +188,32 @@ def get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_
     FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
     system = FF.createSystem(pdb.topology)
 
+    force = add_custom_forces(shortened_bond_list, bond_pair_dict, initial_param_dict)
+    system.addForce(force)
+    """
+    force = HarmonicAngleForce()  # Harmonic angle
+    for index in shortened_angle_list:
+        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
+    system.addForce(force)
+    """
+    if index_to_track is not None:
+        return get_forces(pdb, system)[index_to_track]
+    else:
+        return get_forces(pdb, system)
+
+
+def add_custom_forces(shortened_bond_list, bond_pair_dict, initial_param_dict):
     force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
     force.addPerBondParameter("D")
     force.addPerBondParameter("alpha")
     force.addPerBondParameter("r0")
 
-    for index in shortened_bond_list:
-        force.addBond(int(index[0]), int(index[1]), [1.0, 1.0, 2.0])
-    system.addForce(force)
-
-    force = HarmonicAngleForce()  # Harmonic angle
-    for index in shortened_angle_list:
-        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
-    system.addForce(force)
-
-    return get_forces(pdb, system)[index_to_track]
+    for bond in shortened_bond_list:
+        for key, ref in bond_pair_dict.items():
+            if any(list(val) in ref for val in list(permutations(bond))):
+                # print(initial_param_dict[key])
+                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict[key])
+    return force
 
 
 def some_random_stuff():
@@ -230,7 +242,22 @@ def func():
         label_pdb('cluster_%s' % str(val))
 
 
-def check_atom_types(index):
+def check_atom_types(cluster, index):
+    # assign atom types
+
+    nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
+    nl.update(cluster)
+
+    class_Al = [atom.index for atom in cluster if atom.symbol == 'Al']
+    class_Cu = [atom.index for atom in cluster if atom.symbol == 'Cu']
+    class_H = [atom.index for atom in cluster if atom.symbol == 'H']
+    class_O_EF = [10]
+    class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
+                  all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
+    class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF + class_O_Cu]
+    # print(class_O_Cu)
+    # print(class_O_H)
+
     if index in class_Al:
         return 'class_Al'
     if index in class_Cu:
@@ -245,6 +272,40 @@ def check_atom_types(index):
         return 'class_O_H'
     else:
         return 'None'
+
+
+def get_atoms_class(bond_list):
+    """
+
+    """
+    atom_class_dict, repeated_list, whole_list, count = {}, [], [], 0
+    for bond in bond_list:
+        my_list = [check_atom_types(cluster, bond[0]), check_atom_types(cluster, bond[1])]
+        whole_list.append(my_list)
+        if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
+            repeated_list.append(my_list)
+            atom_class_dict[count] = my_list
+            count += 1
+    return atom_class_dict, whole_list
+
+
+def get_bond_pair_dict(atom_class_dict, whole_list, bond_list):
+    """
+    assign bond pairs based on atom classes, instead of individual atoms
+    """
+    bond_pair_dict = {}
+    for key, value in atom_class_dict.items():
+        list_2 = []
+        for count, bond in enumerate(whole_list):
+            if any(list(pair) == value for pair in list(permutations(bond))):
+                list_2.append(bond_list[count])
+        bond_pair_dict[key] = list_2
+    return bond_pair_dict
+
+
+def show_key_value_pair(dict1, dict2):
+    for key, value in dict1.items():
+        print(value, '-->', dict2[key])
 
 
 if __name__ == '__main__':
@@ -333,77 +394,24 @@ if __name__ == '__main__':
 
     # assign bonds into different types
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
+
     bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
                                                excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
     # print(bond_list)
 
-    nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
-    nl.update(cluster)
-
-    class_Al = [atom.index for atom in cluster if atom.symbol == 'Al']
-    class_Cu = [atom.index for atom in cluster if atom.symbol == 'Cu']
-    class_H = [atom.index for atom in cluster if atom.symbol == 'H']
-    class_O_EF = [10]
-    class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
-                  all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
-    class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF + class_O_Cu]
-    # print(class_O_Cu)
-    # print(class_O_H)
-
-    atom_class_dict, repeated_list, whole_list, count = {}, [], [], 0
-    for bond in bond_list:
-        my_list = [check_atom_types(bond[0]), check_atom_types(bond[1])]
-        whole_list.append(my_list)
-        if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
-            repeated_list.append(my_list)
-            atom_class_dict[count] = my_list
-            count += 1
+    atom_class_dict, whole_list = get_atoms_class(bond_list)
     # print(atom_class_dict)
     # print(whole_list)
 
-    bond_pair_dict = {}
-    for key, value in atom_class_dict.items():
-        list_2 = []
-        for count, bond in enumerate(whole_list):
-            if any(list(pair) == value for pair in list(permutations(bond))):
-                list_2.append(bond_list[count])
-        bond_pair_dict[key] = list_2
-
-
+    bond_pair_dict = get_bond_pair_dict(atom_class_dict, whole_list, bond_list)
     # print(bond_pair_dict)
 
-    def show_key_value_pair():
-        for key, value in atom_class_dict.items():
-            print(value, '-->', bond_pair_dict[key])
-
-
-    show_key_value_pair()
+    show_key_value_pair(atom_class_dict, bond_pair_dict)
 
     initial_param_dict = {0: [1, 1, 1], 1: [1.1, 2, 1], 2: [1.2, 4, 2], 3: [1.3, 3, 5], 4: [1.4, 2, 1], 5: [1.5, 1, 1],
                           6: [1.6, 1, 1]}
 
-    numb = 0
-    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
-    atoms = list(pdb.topology.atoms())
+    print(get_FF_forces_single(0, shortened_bond_list, bond_pair_dict, initial_param_dict))
 
-    for index in shortened_bond_list:
-        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
-    bonds = list(pdb.topology.bonds())
 
-    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    system = FF.createSystem(pdb.topology)
-
-    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
-    force.addPerBondParameter("D")
-    force.addPerBondParameter("alpha")
-    force.addPerBondParameter("r0")
-
-    for bond in shortened_bond_list:
-        for key, ref in bond_pair_dict.items():
-            if any(list(val) in ref for val in list(permutations(bond))):
-                print(initial_param_dict[key])
-                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict[key])
-
-    system.addForce(force)
-    print(get_forces(pdb, system))
+    # todo: same tasks for angular terms, angle_dict
