@@ -363,9 +363,10 @@ if __name__ == '__main__':
     need_better_name = {}
     for key, value in bond_type.items():
         list_2 = []
-        for bond in whole_list:
-            if any(list(pair) in value for pair in list(permutations(bond))):    #todo: need fix
-                list_2.append(bond)
+        for count, bond in enumerate(whole_list):
+            if any(list(pair) == value for pair in list(permutations(bond))):
+                list_2.append(bond_list[count])
         need_better_name[key] = list_2
-
     print(need_better_name)
+    
+    
