@@ -243,8 +243,13 @@ def func():
 
 
 def check_atom_types(cluster, index):
-    # assign atom types
-
+    """ assign atom types, same element connected to different neighbors are assigned into different classes.
+    For example, extra-framework O (in Cu-O-Cu) is in a different class from framework O (Si-O-Si). Each class
+    assignment is unique (each atom belongs to one class and one class only).
+    O_EF: extra-framework O
+    O-Cu: framework O, connecting to one T-site(Al) and Cu
+    O-H: framework O, connecting to one T-site(Al) and H (capping)
+    """
     nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
     nl.update(cluster)
 
@@ -274,19 +279,24 @@ def check_atom_types(cluster, index):
         return 'None'
 
 
-def get_atoms_class(bond_list):
+def get_bond_types(bond_list):
+    """ assign all bonding pairs into different types based on differences in atom types. For example,
+    O(extra-framework)-Cu is different from O(framework)-Cu.
+    :return bond_type_dict: get a dictionary of all unique bond-pairs types, with "keys" being integers starting from 0,
+    and "values" being a list of two atom types string.
+        eg. {0: [AtomClass1, AtomClass2], 1: [AtomClass1, AtomClass3], ...}
+        Bond types such as [AtomClass1, AtomClass2] and [AtomClass2, AtomClass1] are considered the same.
+    :return whole_list: return the entire list of bond_types assignment of the input. len(whole_list) = len(bond_list)
     """
-
-    """
-    atom_class_dict, repeated_list, whole_list, count = {}, [], [], 0
+    bond_type_dict, repeated_list, whole_list, count = {}, [], [], 0
     for bond in bond_list:
         my_list = [check_atom_types(cluster, bond[0]), check_atom_types(cluster, bond[1])]
         whole_list.append(my_list)
         if all(list(pair) not in repeated_list for pair in list(permutations(my_list))):
             repeated_list.append(my_list)
-            atom_class_dict[count] = my_list
+            bond_type_dict[count] = my_list
             count += 1
-    return atom_class_dict, whole_list
+    return bond_type_dict, whole_list
 
 
 def get_bond_pair_dict(atom_class_dict, whole_list, bond_list):
@@ -400,8 +410,8 @@ if __name__ == '__main__':
     # print(bond_list)
 
     atom_class_dict, whole_list = get_atoms_class(bond_list)
-    # print(atom_class_dict)
-    # print(whole_list)
+    print(atom_class_dict)
+    print(whole_list)
 
     bond_pair_dict = get_bond_pair_dict(atom_class_dict, whole_list, bond_list)
     # print(bond_pair_dict)
@@ -411,7 +421,7 @@ if __name__ == '__main__':
     initial_param_dict = {0: [1, 1, 1], 1: [1.1, 2, 1], 2: [1.2, 4, 2], 3: [1.3, 3, 5], 4: [1.4, 2, 1], 5: [1.5, 1, 1],
                           6: [1.6, 1, 1]}
 
-    print(get_FF_forces_single(0, shortened_bond_list, bond_pair_dict, initial_param_dict))
+    # print(get_FF_forces_single(0, shortened_bond_list, bond_pair_dict, initial_param_dict))
 
 
     # todo: same tasks for angular terms, angle_dict
