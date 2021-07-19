@@ -1,4 +1,4 @@
-.extra_framework_maker import ExtraFrameworkMaker, ExtraFrameworkAnalyzer
+from maze.extra_framework_maker import ExtraFrameworkMaker, ExtraFrameworkAnalyzer
 from maze.io_zeolite import read_vasp
 from maze.zeolite import PerfectZeolite, Zeolite
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -334,6 +334,22 @@ def show_key_value_pair(dict1, dict2):
         print('Tag', key, '-->', value, '-->', dict2[key])
 
 
+def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=None, include_type_tag=None):
+    """
+    allow excluding certain bond or angle type or including certain types only
+    #todo: include options of excluding types by atoms types or bonding pair types
+    """
+    shortened_list = []
+    for num_key, atom_type_list in type_dict.items():
+        if exclude_type_tag is not None and num_key not in exclude_type_tag:
+            shortened_list.extend(index_dict[num_key])
+        if include_type_tag is not None and num_key in include_type_tag:
+            shortened_list.extend(index_dict[num_key])
+        if exclude_type_tag is not None and include_type_tag is not None:
+            print('Error!')
+    return shortened_list
+
+
 def demo():
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
@@ -441,7 +457,6 @@ if __name__ == '__main__':
     # print(get_FF_forces_single(0, shortened_bond_list, bond_index_dict, initial_param_dict))
     """
 
-    """
     angle_list, shortened_angle_list = get_angles(cluster, excluded_index=[13, 14, 15, 16],
                                                   excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
 
@@ -455,6 +470,7 @@ if __name__ == '__main__':
     show_key_value_pair(angle_type_dict, angle_index_dict)
     print('Number of unique angle types:', len(angle_type_dict))
 
+    """
     # can be done on shortened list (exclusion based on index)
     angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(shortened_angle_list)
     print(angle_type_dict)
@@ -467,13 +483,14 @@ if __name__ == '__main__':
     print('Number of unique angle types:', len(angle_type_dict))
     """
 
-    # new function, exclude bonds or angles by types
-    # starting with bonds
+    exclude_bond_tag = [0, 1, 3, 6]  # exclude bonds or angles based on the tag number
+    print(shorten_index_list_by_atom_types(bond_type_dict,  bond_index_dict, exclude_bond_tag))
 
-    excluded_type_tag = [0, 1, 3, 6]  # exclude bonds or angles based on the tag number
-
-    shortened_bond_list = []
-    for num_key, atom_type_list in bond_type_dict.items():
-        if num_key not in excluded_type_tag:
-            shortened_bond_list.extend(bond_index_dict[num_key])
-    print(shortened_bond_list)
+    exclude_angle_tag = [0, 2, 3, 4, 5, 6, 10]
+    include_angle_tag = [11]
+    # excluding all class_H and class_O_H (3,4,5,6), angle related to Cu-Cu bond (2,10), and some specific angles (0)
+    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, include_type_tag=include_angle_tag))
+    
+    
+    
+    
