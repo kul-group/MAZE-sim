@@ -1,4 +1,4 @@
-from maze.extra_framework_maker import ExtraFrameworkMaker, ExtraFrameworkAnalyzer
+.extra_framework_maker import ExtraFrameworkMaker, ExtraFrameworkAnalyzer
 from maze.io_zeolite import read_vasp
 from maze.zeolite import PerfectZeolite, Zeolite
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -327,15 +327,14 @@ def get_index_dict(type_dict, whole_type_list, whole_index_list):
 
 def show_key_value_pair(dict1, dict2):
     """ for better visualization of the bond (or angle) types and bond (or angle) indices that belong to certain types.
+    Also displaying the tag (key) of each dict entries, useful for excluding certain types by calling the tags.
     eg. dict1 = bond_type_dict, dict = bond_index_dict
     """
     for key, value in dict1.items():
-        print(value, '-->', dict2[key])
+        print('Tag', key, '-->', value, '-->', dict2[key])
 
 
-if __name__ == '__main__':
-    # func()
-    '''
+def demo():
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
     print(shortened_bond_list == bond_list)
@@ -401,7 +400,9 @@ if __name__ == '__main__':
 
     # print(get_forces(pdb, system))
     print(get_forces(pdb, system)[10])  # predicted forces on O
-    '''
+
+
+if __name__ == '__main__':
 
     """
     # forces on EF-O only
@@ -417,7 +418,6 @@ if __name__ == '__main__':
     print(FF_f_on_O)
     """
 
-    # assign bonds into different types
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
 
     bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
@@ -432,7 +432,6 @@ if __name__ == '__main__':
     print(bond_index_dict)
 
     show_key_value_pair(bond_type_dict, bond_index_dict)
-
     print('Number of unique bond types:', len(bond_type_dict))
 
     """
@@ -442,7 +441,7 @@ if __name__ == '__main__':
     # print(get_FF_forces_single(0, shortened_bond_list, bond_index_dict, initial_param_dict))
     """
 
-    # todo: exclusion based on atom classes or angle types instead of by indices
+    """
     angle_list, shortened_angle_list = get_angles(cluster, excluded_index=[13, 14, 15, 16],
                                                   excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
 
@@ -454,5 +453,27 @@ if __name__ == '__main__':
     print(angle_index_dict)
 
     show_key_value_pair(angle_type_dict, angle_index_dict)
-
     print('Number of unique angle types:', len(angle_type_dict))
+
+    # can be done on shortened list (exclusion based on index)
+    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(shortened_angle_list)
+    print(angle_type_dict)
+    print(whole_angle_type_list)
+
+    angle_index_dict = get_index_dict(angle_type_dict, whole_angle_type_list, shortened_angle_list)
+    print(angle_index_dict)
+
+    show_key_value_pair(angle_type_dict, angle_index_dict)
+    print('Number of unique angle types:', len(angle_type_dict))
+    """
+
+    # new function, exclude bonds or angles by types
+    # starting with bonds
+
+    excluded_type_tag = [0, 1, 3, 6]  # exclude bonds or angles based on the tag number
+
+    shortened_bond_list = []
+    for num_key, atom_type_list in bond_type_dict.items():
+        if num_key not in excluded_type_tag:
+            shortened_bond_list.extend(bond_index_dict[num_key])
+    print(shortened_bond_list)
