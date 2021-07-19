@@ -334,19 +334,37 @@ def show_key_value_pair(dict1, dict2):
         print('Tag', key, '-->', value, '-->', dict2[key])
 
 
-def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=None, include_type_tag=None):
+def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=None, include_type_tag=None,
+                                     exclude_atom_type=None, exclude_bond_type=None, case=0):
     """
     allow excluding certain bond or angle type or including certain types only
-    #todo: include options of excluding types by atoms types or bonding pair types
     """
+
+    if exclude_atom_type is not None and exclude_bond_type is None:
+        case = 1
+    if exclude_bond_type is not None and exclude_atom_type is None:
+        case = 2
+    if exclude_bond_type is not None and exclude_atom_type is not None:
+        case = 3
+
     shortened_list = []
     for num_key, atom_type_list in type_dict.items():
+
+        # exclusion by tag might need to be removed, so excluded from the case definition above
         if exclude_type_tag is not None and num_key not in exclude_type_tag:
             shortened_list.extend(index_dict[num_key])
         if include_type_tag is not None and num_key in include_type_tag:
             shortened_list.extend(index_dict[num_key])
         if exclude_type_tag is not None and include_type_tag is not None:
             print('Error!')
+
+        if case == 1 and all(single_type not in atom_type_list for single_type in exclude_atom_type):
+            shortened_list.extend(index_dict[num_key])
+        elif case == 2 and all(list(value) not in exclude_bond_type for value in list(permutations(atom_type_list))):
+            shortened_list.extend(index_dict[num_key])
+        elif case == 3 and all(single_type not in atom_type_list for single_type in exclude_atom_type) and \
+                all(list(value) not in exclude_bond_type for value in list(permutations(atom_type_list))):
+            shortened_list.extend(index_dict[num_key])
     return shortened_list
 
 
@@ -489,8 +507,11 @@ if __name__ == '__main__':
     exclude_angle_tag = [0, 2, 3, 4, 5, 6, 10]
     include_angle_tag = [11]
     # excluding all class_H and class_O_H (3,4,5,6), angle related to Cu-Cu bond (2,10), and some specific angles (0)
-    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, include_type_tag=include_angle_tag))
-    
-    
-    
+    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, exclude_type_tag=exclude_angle_tag))
+    # print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, include_type_tag=include_angle_tag))
+
+    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, exclude_atom_type=['class_H', 'class_O_H'],
+                                           exclude_bond_type=[['class_Cu', 'class_Cu', 'class_O_Cu'],
+                                                              ['class_Al', 'class_Cu', 'class_Cu'],
+                                                              ['class_Al', 'class_Cu', 'class_O_Cu']]))
     
