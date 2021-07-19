@@ -434,9 +434,8 @@ def demo():
 
     # print(get_forces(pdb, system))
     print(get_forces(pdb, system)[10])  # predicted forces on O
-
-
-if __name__ == '__main__':
+    # print(get_forces(pdb, system))
+    print(get_forces(pdb, system)[10])  # predicted forces on O
 
     """
     # forces on EF-O only
@@ -452,7 +451,9 @@ if __name__ == '__main__':
     print(FF_f_on_O)
     """
 
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
+
+if __name__ == '__main__':
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_1.traj', '0')
 
     bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
                                                excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
@@ -514,4 +515,6 @@ if __name__ == '__main__':
                                            exclude_bond_type=[['class_Cu', 'class_Cu', 'class_O_Cu'],
                                                               ['class_Al', 'class_Cu', 'class_Cu'],
                                                               ['class_Al', 'class_Cu', 'class_O_Cu']]))
+
+    # testing performance on other clusters
     
