@@ -32,7 +32,7 @@ def get_capped_cluster(atoms, file_name):
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
     cluster = atoms[[index for index in EFMaker.get_extraframework_cluster()]]
-    cluster = Zeolite(cluster).cap_atoms()
+    # cluster = Zeolite(cluster).cap_atoms()
 
     write('/Users/jiaweiguo/Box/openMM_test/%s.traj' % file_name, cluster)
     proteindatabank.write_proteindatabank('/Users/jiaweiguo/Box/openMM_test/%s.pdb' % file_name, cluster)
@@ -64,11 +64,13 @@ def label_pdb(file_name):
     fileout.close()
 
 
-def get_bonds(cluster, excluded_index=None, excluded_pair=None):
+def get_bonds(cluster, mult=1, excluded_index=None, excluded_pair=None):
     """
     Using ase.geometry.analysis.Analysis to get all bonds, then remove the repeated ones.
     Function also allows removing certain bonding pair defined by user (excluded_pair).
     Or removing pairs including certain atomic indices (excluded_index).
+    :param cluster:
+    :param mult:
     :param excluded_index: list of integers
     :param excluded_pair: list of lists
     :return: full bonding list, shortened list.
@@ -79,7 +81,7 @@ def get_bonds(cluster, excluded_index=None, excluded_pair=None):
     if excluded_pair is None:
         excluded_pair = []
 
-    nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
+    nl = NeighborList(natural_cutoffs(cluster, mult=mult), bothways=True, self_interaction=False)
     nl.update(cluster)
 
     bond_list, shortened_list = [], []
@@ -96,7 +98,7 @@ def get_bonds(cluster, excluded_index=None, excluded_pair=None):
     return bond_list, shortened_list
 
 
-def get_angles(cluster, excluded_index=None, excluded_pair=None):
+def get_angles(cluster , mult=1, excluded_index=None, excluded_pair=None):
     """
     ase.geometry.analysis.Analysis.unique_angles function does not work, return all angles.
     three-body interactions.
@@ -107,7 +109,7 @@ def get_angles(cluster, excluded_index=None, excluded_pair=None):
     if excluded_pair is None:
         excluded_pair = []
 
-    nl = NeighborList(natural_cutoffs(cluster), bothways=True, self_interaction=False)
+    nl = NeighborList(natural_cutoffs(cluster, mult=mult), bothways=True, self_interaction=False)
     nl.update(cluster)
 
     angle_list, shortened_list = [], []
@@ -335,7 +337,7 @@ def show_key_value_pair(dict1, dict2):
 
 
 def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=None, include_type_tag=None,
-                                     exclude_atom_type=None, exclude_bond_type=None, case=0):
+                                     exclude_atom_type=None, exclude_bond_type=None, include_bond_type=None, case=0):
     """
     allow excluding certain bond or angle type or including certain types only
     """
@@ -346,6 +348,8 @@ def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=Non
         case = 2
     if exclude_bond_type is not None and exclude_atom_type is not None:
         case = 3
+    if include_bond_type is not None:
+        case = 4
 
     shortened_list = []
     for num_key, atom_type_list in type_dict.items():
@@ -365,6 +369,9 @@ def shorten_index_list_by_atom_types(type_dict, index_dict, exclude_type_tag=Non
         elif case == 3 and all(single_type not in atom_type_list for single_type in exclude_atom_type) and \
                 all(list(value) not in exclude_bond_type for value in list(permutations(atom_type_list))):
             shortened_list.extend(index_dict[num_key])
+        elif case == 4 and any(list(value) in include_bond_type for value in list(permutations(atom_type_list))):
+            shortened_list.extend(index_dict[num_key])
+
     return shortened_list
 
 
@@ -434,8 +441,6 @@ def demo():
 
     # print(get_forces(pdb, system))
     print(get_forces(pdb, system)[10])  # predicted forces on O
-    # print(get_forces(pdb, system))
-    print(get_forces(pdb, system)[10])  # predicted forces on O
 
     """
     # forces on EF-O only
@@ -452,8 +457,8 @@ def demo():
     """
 
 
-if __name__ == '__main__':
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_1.traj', '0')
+def demo1():
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
 
     bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
                                                excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
@@ -503,7 +508,7 @@ if __name__ == '__main__':
     """
 
     exclude_bond_tag = [0, 1, 3, 6]  # exclude bonds or angles based on the tag number
-    print(shorten_index_list_by_atom_types(bond_type_dict,  bond_index_dict, exclude_bond_tag))
+    print(shorten_index_list_by_atom_types(bond_type_dict, bond_index_dict, exclude_bond_tag))
 
     exclude_angle_tag = [0, 2, 3, 4, 5, 6, 10]
     include_angle_tag = [11]
@@ -511,10 +516,33 @@ if __name__ == '__main__':
     print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, exclude_type_tag=exclude_angle_tag))
     # print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, include_type_tag=include_angle_tag))
 
-    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, exclude_atom_type=['class_H', 'class_O_H'],
-                                           exclude_bond_type=[['class_Cu', 'class_Cu', 'class_O_Cu'],
-                                                              ['class_Al', 'class_Cu', 'class_Cu'],
-                                                              ['class_Al', 'class_Cu', 'class_O_Cu']]))
+    print(
+        shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict, exclude_atom_type=['class_H', 'class_O_H'],
+                                         exclude_bond_type=[['class_Cu', 'class_Cu', 'class_O_Cu'],
+                                                            ['class_Al', 'class_Cu', 'class_Cu'],
+                                                            ['class_Al', 'class_Cu', 'class_O_Cu']]))
 
+
+if __name__ == '__main__':
     # testing performance on other clusters
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_3.traj', '0')
+
+    bond_list, shortened_bond_list = get_bonds(cluster, mult=2)
+    bond_type_dict, whole_bond_type_list = get_bond_or_angle_types(bond_list)
+    bond_index_dict = get_index_dict(bond_type_dict, whole_bond_type_list, bond_list)
+    show_key_value_pair(bond_type_dict, bond_index_dict)
+    # print('Number of unique bond types:', len(bond_type_dict))
+
+    angle_list, shortened_angle_list = get_angles(cluster, mult=2)
+    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(angle_list)
+    angle_index_dict = get_index_dict(angle_type_dict, whole_angle_type_list, angle_list)
+    # show_key_value_pair(angle_type_dict, angle_index_dict)
+    # print('Number of unique angle types:', len(angle_type_dict))
+
+    print(shorten_index_list_by_atom_types(bond_type_dict, bond_index_dict,
+                                           include_bond_type=[['class_Al', 'class_Cu'], ['class_O_Cu', 'class_Cu'],
+                                                              ['class_O_EF', 'class_Cu']]))
+
+    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict,
+                                           include_bond_type=[['class_Cu', 'class_O_EF', 'class_Cu']]))
     
