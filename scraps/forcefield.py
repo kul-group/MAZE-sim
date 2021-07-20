@@ -256,7 +256,7 @@ def pretty_print(my_dict):
 
 
 def shorten_index_list_by_types(type_index_dict, exclude_atom_type=None, exclude_property_type=None,
-                                include_bond_type=None, case=0):
+                                include_property_type=None, case=0):
     """
     allow excluding certain property types or only including certain types
     """
@@ -267,7 +267,7 @@ def shorten_index_list_by_types(type_index_dict, exclude_atom_type=None, exclude
         case = 2
     if exclude_property_type is not None and exclude_atom_type is not None:
         case = 3
-    if include_bond_type is not None:
+    if include_property_type is not None:
         case = 4
 
     shortened_list = []
@@ -279,40 +279,18 @@ def shorten_index_list_by_types(type_index_dict, exclude_atom_type=None, exclude
         elif case == 3 and all(single_type not in type_list for single_type in exclude_atom_type) and \
                 all(list(value) not in exclude_property_type for value in list(permutations(type_list))):
             shortened_list.extend(index_list)
-        elif case == 4 and any(list(value) in include_bond_type for value in list(permutations(type_list))):
+        elif case == 4 and any(list(value) in include_property_type for value in list(permutations(type_list))):
             shortened_list.extend(index_list)
 
     return shortened_list
 
 
-def get_forces(my_pdb, my_system):
+def set_up_openMM_system(numb, shortened_bond_list):
+    """ Feed pdb topology file and xml force field file into openMM, generate a system for the MD simulation/force
+    calculation.
+    :return pdb:
+    :return system:
     """
-    integrator used for advancing the equations of motion in MD
-    doesn't matter what we pick here since we only need the forces on the initial structure, but do need to have it
-    :return: forces on atoms in units of eV/A
-    """
-    integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
-    simulation = Simulation(my_pdb.topology, my_system, integrator)
-    simulation.context.setPositions(my_pdb.positions)
-    state = simulation.context.getState(getForces=True)
-    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
-    return forces
-
-
-def get_DFT_forces_single(atoms, atom_index):
-    """
-    DFT forces for single atoms
-    """
-    f_vec = atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
-    f_mag = np.linalg.norm(f_vec)
-    return f_vec
-
-
-def get_FF_forces(numb, shortened_bond_list, type_index_dict, initial_param_dict, shortened_angle_list=None):
-    """
-    use numb to keep track of individual configurations
-    """
-
     pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
     atoms = list(pdb.topology.atoms())
 
@@ -323,34 +301,53 @@ def get_FF_forces(numb, shortened_bond_list, type_index_dict, initial_param_dict
     write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
     FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
     system = FF.createSystem(pdb.topology)
-
-    force = add_custom_forces(shortened_bond_list, type_index_dict, initial_param_dict)
-    system.addForce(force)
-    """
-    force = HarmonicAngleForce()  # Harmonic angle
-    for index in shortened_angle_list:
-        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
-    system.addForce(force)
-    """
-    return get_forces(pdb, system)
+    return pdb, system
 
 
-def add_custom_forces(shortened_bond_list, type_index_dict, initial_param_dict):
-    """
-    :param shortened_bond_list: list to be included into force field
+def custom_openMM_force_object(bond_list, type_index_dict, param_dict, angle_list=None):
+    """ #todo: make this function for flexible for addition/manipulation; currently not including angular terms
+    :param bond_list: list to be included into force field
+    :param angle_list:
     :param type_index_dict: {(type): [index], ...}
-    :param initial_param_dict: {(type): [param], ...}
+    :param param_dict: {(type): [param], ...} Note: parameters here uses the standard units, kJ, nm, ...
+    :return force: openMM force object
     """
     force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
     force.addPerBondParameter("D")
     force.addPerBondParameter("alpha")
     force.addPerBondParameter("r0")
 
-    for bond in shortened_bond_list:
+    for bond in bond_list:
         for my_type, my_index in type_index_dict.items():
             if any(list(val) in my_index for val in list(permutations(bond))):
-                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict.get(my_type))
+                force.addBond(int(bond[0]), int(bond[1]), param_dict.get(my_type))
+    """
+    force = HarmonicAngleForce()  # Harmonic angle
+    for index in shortened_angle_list:
+        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
+    system.addForce(force)
+    """
     return force
+
+
+def get_FF_forces(pdb, system, shortened_bond_list, type_index_dict, initial_param_dict, shortened_angle_list=None):
+    """
+    use numb to keep track of individual configurations
+    integrator used for advancing the equations of motion in MD
+    doesn't matter what we pick here since we only need the forces on the initial structure, but do need to have it
+    :return: forces values on atoms in units of eV/A
+    """
+    force = custom_openMM_force_object(shortened_bond_list, type_index_dict, initial_param_dict)
+    system.addForce(force)
+    # include angular forces
+
+    integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
+    simulation = Simulation(pdb.topology, system, integrator)
+    simulation.context.setPositions(pdb.positions)
+    state = simulation.context.getState(getForces=True)
+    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
+
+    return forces
 
 
 def some_random_stuff():
@@ -367,16 +364,57 @@ def some_random_stuff():
     """
 
 
-def func():
+# section below deals with multiple input structures for force field training
+def prep_topologies():
+    """
+    Save clusters into .traj as well, for later comparison and trouble shooting
+    """
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     cluster_traj = []
     for count, atoms in enumerate(traj):
         cluster_traj.append(get_capped_cluster(atoms, 'cluster_' + str(count)))
-    view(cluster_traj)
+    # view(cluster_traj)
 
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     for val in range(len(traj)):
         label_pdb('cluster_%s' % str(val))
+
+
+def get_DFT_forces_single(atoms, atom_index):
+    """
+    reference DFT forces on single atoms
+    """
+    f_vec = atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
+    f_mag = np.linalg.norm(f_vec)
+    return f_vec
+
+
+def get_required_objects_for_ff(numb, included_bond_type, included_angle_type):
+    """ To reduce computational cost, objects such as pdb, system, shortened_bond_list, bond_type_index_dict are kept
+    fixed for each configuration during the optimization (only run once).
+    """
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_%s.traj' % numb, '0')
+
+    bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
+    bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
+    # print('Number of unique bond types:', len(bond_type_dict))
+
+    angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
+    angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
+    # print('Number of unique angle types:', len(angle_type_dict))
+
+    bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
+    # pretty_print(bond_type_index_dict)
+
+    angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
+    # pretty_print(angle_type_index_dict)
+
+    shortened_bond_list = shorten_index_list_by_types(bond_type_index_dict, include_property_type=included_bond_type)
+    shortened_angle_list = shorten_index_list_by_types(angle_type_index_dict, include_property_type=included_angle_type)
+    # print(shortened_bond_list)
+
+    pdb, system = set_up_openMM_system(numb, shortened_bond_list)
+
+    return pdb, system, shortened_bond_list, bond_type_index_dict
 
 
 def demo():
@@ -447,66 +485,44 @@ def demo():
     print(get_forces(pdb, system)[10])  # predicted forces on O
 
 
-def func_get_multiple_ff_forces(numb):
-    # testing performance on other clusters
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_%s.traj' % numb, '0')
-
-    bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
-    bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-    # print('Number of unique bond types:', len(bond_type_dict))
-
-    angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
-    angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-    # print('Number of unique angle types:', len(angle_type_dict))
-
-    bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
-    # pretty_print(bond_type_index_dict)
-
-    angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
-    # pretty_print(angle_type_index_dict)
-
-    shortened_bond_list = shorten_index_list_by_types(bond_type_index_dict,
-                                                      include_bond_type=[['class_Al', 'class_Cu'],
-                                                                         ['class_O_Cu', 'class_Cu'],
-                                                                         ['class_O_EF', 'class_Cu']])
-
-    shortened_angle_list = shorten_index_list_by_types(angle_type_index_dict,
-                                                       include_bond_type=[['class_Cu', 'class_O_EF', 'class_Cu']])
-    print(shortened_bond_list)
-
-    initial_param_dict = {('class_Al', 'class_Cu'): [1, 1, 0.1], ('class_O_Cu', 'class_Cu'): [1.1, 2, 0.1],
-                          ('class_O_EF', 'class_Cu'): [1.2, 4, 0.2]}
-
-    ff_forces = get_FF_forces(numb, shortened_bond_list, bond_type_index_dict, initial_param_dict)[11]  # forces on O
-    return ff_forces, shortened_bond_list, bond_type_index_dict
-
-
 if __name__ == '__main__':
-    func_get_multiple_ff_forces(1)
-    """
+    # save openMM properties of each configuration into dict
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    included_bond_type, included_angle_type = [['Al', 'Cu'], ['O-Cu', 'Cu'], ['O-EF', 'Cu']], [['Cu', 'O-EF', 'Cu']]
+
+    info_dict = {}
+    for numb in range(len(traj)):
+        pdb, system, shortened_bond_list, bond_type_index_dict = \
+            get_required_objects_for_ff(numb, included_bond_type, included_angle_type)
+        info_dict[numb] = [pdb, system, shortened_bond_list, bond_type_index_dict]
+    print(info_dict)
+
+    # get force field forces
+    initial_param_dict = {('Al', 'Cu'): [1.0, 1.0, 0.1], ('O-Cu', 'Cu'): [1.1, 2.0, 0.1], ('O-EF', 'Cu'): [1.2, 4.0, 0.2]}
+    ff_f_on_O = []
+    for config_tag, info_list in info_dict.items():
+        ff_forces = get_FF_forces(info_list[0], info_list[1], info_list[2], info_list[3], initial_param_dict)[11]
+        ff_f_on_O.append(ff_forces)
+    print(ff_f_on_O)
+
     DFT_f_on_O = []
     for atoms in traj:
-        DFT_f_on_O.append(get_DFT_forces_single(traj[0], 288))
+        DFT_f_on_O.append(get_DFT_forces_single(traj[0], atom_index=288))
     print(DFT_f_on_O)
 
-    FF_f_on_O, bond_dict, type_index_dict = [], {}, {}
-    for numb in range(len(traj)):
-        val0, val1, val2 = func_get_multiple_ff_forces(numb)
-        FF_f_on_O.append(val0)
-        bond_dict[numb] = val1
-        type_index_dict[numb] = val2
-    print(FF_f_on_O)
-    print(bond_dict)
-    print(type_index_dict)
-
     def get_residue(param):
+        # todo: rewrite into class, self.included_bond_type and self.info_dict are better
+
+        param_dict = {tuple(included_bond_type[0]): param[0], tuple(included_bond_type[1]): param[1],
+                      tuple(included_bond_type[2]): param[2]}
+
         predicted_f = []
-        initial_param_dict = {('class_Al', 'class_Cu'): param[0], ('class_O_Cu', 'class_Cu'): param[1],
-                              ('class_O_EF', 'class_Cu'): param[2]}
-        for numb in range(len(traj)):
-            predicted_f.append(get_FF_forces(numb, bond_dict.get(numb), type_index_dict.get(numb), initial_param_dict)[11])
+        for config_tag, info_list in info_dict.items():
+            ff_forces = get_FF_forces(info_list[0], info_list[1], info_list[2], info_list[3], param_dict)[11]
+            predicted_f.append(ff_forces)
+
         residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(DFT_f_on_O), -1)
+
         return np.mean(residue ** 2)
 
     def get_fitting_parameters(initial_param_dict):
@@ -515,27 +531,6 @@ if __name__ == '__main__':
         print(res.success)
         return res.x
 
-
-    initial_param_dict = {('class_Al', 'class_Cu'): [1, 1, 0.1], ('class_O_Cu', 'class_Cu'): [1.1, 2, 0.1],
-                          ('class_O_EF', 'class_Cu'): [1.2, 4, 0.2]}
     print(get_fitting_parameters(initial_param_dict))  # todo: fix bug
     # print(get_residue([[1, 1, 0.1], [1.1, 2, 0.1], [1.2, 4, 0.2]]))
-    """
-    """
-    #todo: fix problems in get_FF_forces
-    # separate the section below into a different function, save each of the original system into a dict
-    # when fitting params, copy the system and add forces
-
-    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
-    atoms = list(pdb.topology.atoms())
-
-    for index in shortened_bond_list:
-        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
-    bonds = list(pdb.topology.bonds())
-
-    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    system = FF.createSystem(pdb.topology)
-    """
-
-
+    
