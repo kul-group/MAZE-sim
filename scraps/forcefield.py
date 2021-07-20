@@ -20,10 +20,11 @@ from itertools import permutations
 from lxml import etree
 from contextlib import closing
 from collections import OrderedDict
+from scipy.optimize import least_squares, minimize
 
 
 def get_capped_cluster(atoms, file_name):
-    """
+    """ #TODO: check whether capping is necessary
     Extract smaller cluster containing the extra-framework atoms and then cap all the O.
     Save cluster in both .traj file and .pdb format.
     :param :
@@ -100,6 +101,7 @@ def get_bonds(cluster, mult=1, excluded_index=None, excluded_pair=None):
 
 def get_angles(cluster , mult=1, excluded_index=None, excluded_pair=None):
     """
+    #TODO: consider combining get_bonds and get_angles function
     ase.geometry.analysis.Analysis.unique_angles function does not work, return all angles.
     three-body interactions.
     :param excluded_pair: excluding all [particle1, particle2, particle3] lists involving the excluded pair
@@ -173,12 +175,11 @@ def write_xml(atoms, bonds, save_as):
         f.write(xml)
 
 
-def get_FF_forces_single(numb, shortened_bond_list, bond_pair_dict, initial_param_dict, index_to_track=None,
-                         shortened_angle_list=None):
+def get_FF_forces(numb, shortened_bond_list, type_index_dict, initial_param_dict, shortened_angle_list=None):
     """
-    #todo: separate out the force design part
     use numb to keep track of individual configurations
     """
+
     pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
     atoms = list(pdb.topology.atoms())
 
@@ -190,7 +191,7 @@ def get_FF_forces_single(numb, shortened_bond_list, bond_pair_dict, initial_para
     FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
     system = FF.createSystem(pdb.topology)
 
-    force = add_custom_forces(shortened_bond_list, bond_pair_dict, initial_param_dict)
+    force = add_custom_forces(shortened_bond_list, type_index_dict, initial_param_dict)
     system.addForce(force)
     """
     force = HarmonicAngleForce()  # Harmonic angle
@@ -198,23 +199,24 @@ def get_FF_forces_single(numb, shortened_bond_list, bond_pair_dict, initial_para
         force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
     system.addForce(force)
     """
-    if index_to_track is not None:
-        return get_forces(pdb, system)[index_to_track]
-    else:
-        return get_forces(pdb, system)
+    return get_forces(pdb, system)
 
 
-def add_custom_forces(shortened_bond_list, bond_pair_dict, initial_param_dict):
+def add_custom_forces(shortened_bond_list, type_index_dict, initial_param_dict):
+    """
+    :param shortened_bond_list: list to be included into force field
+    :param type_index_dict: {(type): [index], ...}
+    :param initial_param_dict: {(type): [param], ...}
+    """
     force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
     force.addPerBondParameter("D")
     force.addPerBondParameter("alpha")
     force.addPerBondParameter("r0")
 
     for bond in shortened_bond_list:
-        for key, ref in bond_pair_dict.items():
-            if any(list(val) in ref for val in list(permutations(bond))):
-                # print(initial_param_dict[key])
-                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict[key])
+        for my_type, my_index in type_index_dict.items():
+            if any(list(val) in my_index for val in list(permutations(bond))):
+                force.addBond(int(bond[0]), int(bond[1]), initial_param_dict.get(my_type))
     return force
 
 
@@ -281,7 +283,7 @@ def check_atom_types(cluster, index):
         return 'None'
 
 
-def get_bond_or_angle_types(my_list):
+def get_bond_or_angle_types(cluster, my_list):
     """ assign all bonding pairs or angles into different types based on differences in atom types. For example,
     O(extra-framework)-Cu is different from O(framework)-Cu.
     :param my_list: bond or angle index list of the cluster of interests
@@ -442,20 +444,6 @@ def demo():
     # print(get_forces(pdb, system))
     print(get_forces(pdb, system)[10])  # predicted forces on O
 
-    """
-    # forces on EF-O only
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
-    DFT_f_on_O = []
-    for atoms in traj:
-        DFT_f_on_O.append(get_DFT_forces_single(traj[0], 288))
-    print(DFT_f_on_O)
-
-    FF_f_on_O = []
-    for numb in range(len(traj)):
-        FF_f_on_O.append(get_FF_forces_single(numb, shortened_bond_list, shortened_angle_list, index_to_track=10))
-    print(FF_f_on_O)
-    """
-
 
 def demo1():
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
@@ -464,7 +452,7 @@ def demo1():
                                                excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
     # print(bond_list)
 
-    bond_type_dict, whole_bond_type_list = get_bond_or_angle_types(bond_list)
+    bond_type_dict, whole_bond_type_list = get_bond_or_angle_types(cluster, bond_list)
     print(bond_type_dict)
     print(whole_bond_type_list)
 
@@ -484,7 +472,7 @@ def demo1():
     angle_list, shortened_angle_list = get_angles(cluster, excluded_index=[13, 14, 15, 16],
                                                   excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
 
-    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(angle_list)
+    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(cluster, angle_list)
     print(angle_type_dict)
     print(whole_angle_type_list)
 
@@ -523,26 +511,95 @@ def demo1():
                                                             ['class_Al', 'class_Cu', 'class_O_Cu']]))
 
 
-if __name__ == '__main__':
+def func_get_multiple_ff_forces(numb):
     # testing performance on other clusters
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_3.traj', '0')
+    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_%s.traj' % numb, '0')
 
     bond_list, shortened_bond_list = get_bonds(cluster, mult=2)
-    bond_type_dict, whole_bond_type_list = get_bond_or_angle_types(bond_list)
+    bond_type_dict, whole_bond_type_list = get_bond_or_angle_types(cluster, bond_list)
     bond_index_dict = get_index_dict(bond_type_dict, whole_bond_type_list, bond_list)
-    show_key_value_pair(bond_type_dict, bond_index_dict)
+    # show_key_value_pair(bond_type_dict, bond_index_dict)
     # print('Number of unique bond types:', len(bond_type_dict))
 
     angle_list, shortened_angle_list = get_angles(cluster, mult=2)
-    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(angle_list)
+    angle_type_dict, whole_angle_type_list = get_bond_or_angle_types(cluster, angle_list)
     angle_index_dict = get_index_dict(angle_type_dict, whole_angle_type_list, angle_list)
     # show_key_value_pair(angle_type_dict, angle_index_dict)
     # print('Number of unique angle types:', len(angle_type_dict))
 
-    print(shorten_index_list_by_atom_types(bond_type_dict, bond_index_dict,
-                                           include_bond_type=[['class_Al', 'class_Cu'], ['class_O_Cu', 'class_Cu'],
-                                                              ['class_O_EF', 'class_Cu']]))
+    shortened_bond_list = shorten_index_list_by_atom_types(bond_type_dict, bond_index_dict,
+                                                           include_bond_type=[['class_Al', 'class_Cu'],
+                                                                              ['class_O_Cu', 'class_Cu'],
+                                                                              ['class_O_EF', 'class_Cu']])
 
-    print(shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict,
-                                           include_bond_type=[['class_Cu', 'class_O_EF', 'class_Cu']]))
+    shortened_angle_list = shorten_index_list_by_atom_types(angle_type_dict, angle_index_dict,
+                                                            include_bond_type=[['class_Cu', 'class_O_EF', 'class_Cu']])
+
+    # write bond_type and bond_index into a single dictionary; can use tuples as dictionary key, not lists
+    type_index_dict = {}
+    for key, value in bond_type_dict.items():
+        type_index_dict[tuple(value)] = bond_index_dict[key]
+    # print(type_index_dict)
+
+    initial_param_dict = {('class_Al', 'class_Cu'): [1, 1, 0.1], ('class_O_Cu', 'class_Cu'): [1.1, 2, 0.1],
+                          ('class_O_EF', 'class_Cu'): [1.2, 4, 0.2]}
+
+    ff_forces = get_FF_forces(numb, shortened_bond_list, type_index_dict, initial_param_dict)[11]  # forces on O
+    return ff_forces, shortened_bond_list, type_index_dict
+
+
+if __name__ == '__main__':
+    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    DFT_f_on_O = []
+    for atoms in traj:
+        DFT_f_on_O.append(get_DFT_forces_single(traj[0], 288))
+    print(DFT_f_on_O)
+
+    FF_f_on_O, bond_dict, type_index_dict = [], {}, {}
+    for numb in range(len(traj)):
+        val0, val1, val2 = func_get_multiple_ff_forces(numb)
+        FF_f_on_O.append(val0)
+        bond_dict[numb] = val1
+        type_index_dict[numb] = val2
+    print(FF_f_on_O)
+    print(bond_dict)
+    print(type_index_dict)
+
+    def get_residue(param):
+        predicted_f = []
+        initial_param_dict = {('class_Al', 'class_Cu'): param[0], ('class_O_Cu', 'class_Cu'): param[1],
+                              ('class_O_EF', 'class_Cu'): param[2]}
+        for numb in range(len(traj)):
+            predicted_f.append(get_FF_forces(numb, bond_dict.get(numb), type_index_dict.get(numb), initial_param_dict)[11])
+        residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(DFT_f_on_O), -1)
+        return np.mean(residue ** 2)
+
+    def get_fitting_parameters(initial_param_dict):
+        initial_param = np.array(list(initial_param_dict.values())).reshape(-1)
+        res = minimize(get_residue, initial_param, method='nelder-mead')  # bounds=(0, np.inf)
+        print(res.success)
+        return res.x
+
+
+    initial_param_dict = {('class_Al', 'class_Cu'): [1, 1, 0.1], ('class_O_Cu', 'class_Cu'): [1.1, 2, 0.1],
+                          ('class_O_EF', 'class_Cu'): [1.2, 4, 0.2]}
+    print(get_fitting_parameters(initial_param_dict))  # todo: fix bug
+    # print(get_residue([[1, 1, 0.1], [1.1, 2, 0.1], [1.2, 4, 0.2]]))
+
+    """
+    #todo: fix problems in get_FF_forces
+    # separate the section below into a different function, save each of the original system into a dict
+    # when fitting params, copy the system and add forces
+
+    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
+    atoms = list(pdb.topology.atoms())
+
+    for index in shortened_bond_list:
+        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
+    bonds = list(pdb.topology.bonds())
+
+    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    system = FF.createSystem(pdb.topology)
+    """
     
