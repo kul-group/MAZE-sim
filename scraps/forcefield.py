@@ -488,7 +488,8 @@ def demo():
 if __name__ == '__main__':
     # save openMM properties of each configuration into dict
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
-    included_bond_type, included_angle_type = [['Al', 'Cu'], ['O-Cu', 'Cu'], ['O-EF', 'Cu']], [['Cu', 'O-EF', 'Cu']]
+    # included_bond_type, included_angle_type = [['Al', 'Cu'], ['O-Cu', 'Cu'], ['O-EF', 'Cu']], [['Cu', 'O-EF', 'Cu']]
+    included_bond_type, included_angle_type = [['O-Cu', 'Cu'], ['O-EF', 'Cu']], [['Cu', 'O-EF', 'Cu']]
 
     info_dict = {}
     for numb in range(len(traj)):
@@ -498,7 +499,8 @@ if __name__ == '__main__':
     print(info_dict)
 
     # get force field forces
-    initial_param_dict = {('Al', 'Cu'): [1.0, 1.0, 0.1], ('O-Cu', 'Cu'): [1.1, 2.0, 0.1], ('O-EF', 'Cu'): [1.2, 4.0, 0.2]}
+    # initial_param_dict = {('Al', 'Cu'): [1.0, 1.0, 0.1], ('O-Cu', 'Cu'): [1.1, 2.0, 0.1], ('O-EF', 'Cu'): [1.2, 4.0, 0.2]}
+    initial_param_dict = {('O-Cu', 'Cu'): [20, 2, 0.4], ('O-EF', 'Cu'): [22, 2, 0.3]}
     ff_f_on_O = []
     for config_tag, info_list in info_dict.items():
         ff_forces = get_FF_forces(info_list[0], info_list[1], info_list[2], info_list[3], initial_param_dict)[11]
@@ -510,27 +512,29 @@ if __name__ == '__main__':
         DFT_f_on_O.append(get_DFT_forces_single(traj[0], atom_index=288))
     print(DFT_f_on_O)
 
+
     def get_residue(param):
         # todo: rewrite into class, self.included_bond_type and self.info_dict are better
 
-        param_dict = {tuple(included_bond_type[0]): param[0], tuple(included_bond_type[1]): param[1],
-                      tuple(included_bond_type[2]): param[2]}
+        # param_dict = {tuple(included_bond_type[0]): list(param[0:3]), tuple(included_bond_type[1]): list(param[3:6]),
+        #               tuple(included_bond_type[2]): list(param[6:9])}
 
+        param_dict = {tuple(included_bond_type[0]): list(param[0:3]), tuple(included_bond_type[1]): list(param[3:6])}
         predicted_f = []
         for config_tag, info_list in info_dict.items():
             ff_forces = get_FF_forces(info_list[0], info_list[1], info_list[2], info_list[3], param_dict)[11]
             predicted_f.append(ff_forces)
-
+        print(predicted_f)
         residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(DFT_f_on_O), -1)
-
+        print(np.mean(residue ** 2))
         return np.mean(residue ** 2)
 
     def get_fitting_parameters(initial_param_dict):
         initial_param = np.array(list(initial_param_dict.values())).reshape(-1)
-        res = minimize(get_residue, initial_param, method='nelder-mead')  # bounds=(0, np.inf)
+        res = minimize(get_residue, initial_param, method='CG', tol=1e-3)  # bounds=(0, np.inf)
         print(res.success)
         return res.x
 
-    print(get_fitting_parameters(initial_param_dict))  # todo: fix bug
+    print(get_fitting_parameters(initial_param_dict))  
     # print(get_residue([[1, 1, 0.1], [1.1, 2, 0.1], [1.2, 4, 0.2]]))
     
