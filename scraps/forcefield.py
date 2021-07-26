@@ -26,6 +26,10 @@ import matplotlib.pyplot as plt
 
 def get_capped_cluster(atoms, file_name):
     """ #TODO: check whether capping is necessary
+    Inconsistent capping (remove all caps for now, does not need this cluster to be physical)
+    Possible fix: change mult in neighbor list
+    #TODO: figure out whether recentering atom is needed, or, check MIC during force matching
+
     Extract smaller cluster containing the extra-framework atoms and then cap all the O.
     Save cluster in both .traj file and .pdb format.
     :param :
@@ -42,7 +46,7 @@ def get_capped_cluster(atoms, file_name):
 
 
 def label_pdb(file_name):
-    """
+    """ #todo: improve flexibility in file saving, save all into a folder for further access
     Relabeling the Atom name in proteindatabank file. (required step for openMM)
     The same atom type connecting to different neighboring types are treated differently due to differences in their
     chemical environments, and is therefore named separately.
@@ -287,11 +291,12 @@ def shorten_index_list_by_types(type_index_dict, exclude_atom_type=None, exclude
 
 
 def set_up_openMM_system(numb, shortened_bond_list):
+    # todo: need to change pdb input directory once label_pdb function is updated
     """ Feed pdb topology file and xml force field file into openMM, generate a system for the MD simulation/force
     calculation.
     :return pdb:
     :return system:
-    """
+    """  
     pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
     atoms = list(pdb.topology.atoms())
 
@@ -307,7 +312,7 @@ def set_up_openMM_system(numb, shortened_bond_list):
 
 def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_param_dict, angle_list=None,
                                angle_type_index_dict=None, angle_param_dict=None):
-    """ #todo: make this function for flexible for addition/manipulation
+    """ #todo: add argument allowing this custom function to be fed in as an input (more flexible used-designed ff)
     :param bond_list: list to be included into force field
     :param angle_list:
     :param bond_type_index_dict: {(type): [index], ...}
@@ -374,7 +379,7 @@ def some_random_stuff():
 
 # section below deals with multiple input structures for force field training
 def prep_topologies():
-    """
+    """ # todo: need fix after label_pdb function being updated, feed in traj as an input
     Save clusters into .traj as well, for later comparison and trouble shooting
     """
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
@@ -399,6 +404,7 @@ def get_DFT_forces_single(atoms, atom_index):
 def get_required_objects_for_ff(numb, included_bond_type, included_angle_type):
     """ To reduce computational cost, objects such as pdb, system, shortened_bond_list, bond_type_index_dict are kept
     fixed for each configuration during the optimization (only run once).
+    # todo: add docstring specifying TypeHints for each output 
     """
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_%s.traj' % numb, '0')
 
@@ -448,6 +454,8 @@ def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict):
 
 
 def make_parity_plot(ff_forces, dft_forces, atom_name):
+    """ plot FF forces vs. DFT forces
+    """
     plt.figure()
     fig, ax = plt.subplots()
     plt.plot(dft_forces, ff_forces, 'o')
@@ -458,12 +466,16 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
     ax.set_aspect('equal')
     ax.set_xlim(lims)
     ax.set_ylim(lims)
-    plt.title('Force fitting on %s' %atom_name, fontsize=18)
+    plt.title('Force fitting on %s' % atom_name, fontsize=18)
     plt.show()
 
 
 def reformat_inputs(bond_param_dict, angle_param_dict):
     """ reformat input dict into lists
+    :return bond_type: List[List[str]] eg. ['Cu', 'O']
+    :return angle_type: List[List[str]] eg. ['Cu', 'O', 'Cu']
+    :return param_list: List[float], extend all parameters into a single list, since scipy.optimize.minimize can only 
+    take an 1D array as initial guess parameter
     """
     bond_type, angle_type, param_list = [], [], []
     for types, indices in bond_param_dict.items():
@@ -478,7 +490,8 @@ def reformat_inputs(bond_param_dict, angle_param_dict):
 
 
 def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-    # optimize force field parameters by minimizing this function
+    """optimize force field parameters by minimizing this function
+    """
     predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict)
     print(predicted_f)
     residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
@@ -487,10 +500,11 @@ def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_di
 
 
 def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-    # initial_param = np.array(list(initial_param_dict.values())).reshape(-1)
-    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.13},
+    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi, 
+    # todo: need a smart way to save all bounds
+    """
+    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
                    args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
-    # res = least_squares(get_residue, initial_param)  # bounds=(0, np.inf)
     print(res.success)
     return res
 
@@ -564,11 +578,11 @@ def demo():
 
 
 if __name__ == '__main__':
-
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
 
-    ini_bond_param_dict = {('Al', 'Cu'): [1.2, 4, 0.2], ('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}
-    ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40]}  # angle:radians, k:kJ/mol/radian^2
+    ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
+    ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
+    # angle:radians, k:kJ/mol/radian^2
 
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
     print(included_bond_type, included_angle_type, ini_param)
@@ -587,10 +601,11 @@ if __name__ == '__main__':
         DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]])
     print(DFT_f)
 
-    my_dict = copy.deepcopy(info_dict)  # important
+    my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
     res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict)
-    # print(get_residue(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
 
     print([np.around(float(val), decimals=3) for val in res.x])
     FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict)
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
+    
+    
