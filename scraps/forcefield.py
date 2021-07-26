@@ -477,6 +477,24 @@ def reformat_inputs(bond_param_dict, angle_param_dict):
     return bond_type, angle_type, param_list
 
 
+def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
+    # optimize force field parameters by minimizing this function
+    predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict)
+    print(predicted_f)
+    residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
+    print(np.mean(residue ** 2))
+    return np.mean(residue ** 2)
+
+
+def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
+    # initial_param = np.array(list(initial_param_dict.values())).reshape(-1)
+    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.13},
+                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
+    # res = least_squares(get_residue, initial_param)  # bounds=(0, np.inf)
+    print(res.success)
+    return res
+
+
 def demo():
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
@@ -549,8 +567,7 @@ if __name__ == '__main__':
 
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
 
-    # ini_bond_param_dict = {('Al', 'Cu'): [1.2, 4, 0.2], ('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}
-    ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}
+    ini_bond_param_dict = {('Al', 'Cu'): [1.2, 4, 0.2], ('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40]}  # angle:radians, k:kJ/mol/radian^2
 
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
@@ -565,39 +582,15 @@ if __name__ == '__main__':
                            angle_type_index_dict]
     # print(info_dict)
 
-    """
-    def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-        # optimize force field parameters by minimizing this function
-        predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict)
-        print(predicted_f)
-        residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
-        print(np.mean(residue ** 2))
-        return np.mean(residue ** 2)
-
-
-    def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-        # initial_param = np.array(list(initial_param_dict.values())).reshape(-1)
-        res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.13},
-                       args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
-        # res = least_squares(get_residue, initial_param)  # bounds=(0, np.inf)
-        print(res.success)
-        return res.x
-
-
     DFT_f = []
     for atoms in traj:
         DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]])
     print(DFT_f)
 
     my_dict = copy.deepcopy(info_dict)  # important
-    print(get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
+    res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict)
     # print(get_residue(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
-    """
-    DFT_f = []
-    for atoms in traj:
-        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]])
-    print(DFT_f)
-    param = [9.95058392e+01, 5.25967314e+00, 6.08893341e-02, -4.35270901e+02, 3.98705790e+00, 2.00772732e-01, 1.07538676e-01, 2.84480565e+01]
-    FF_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict)
+
+    print([np.around(float(val), decimals=3) for val in res.x])
+    FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict)
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
-    
