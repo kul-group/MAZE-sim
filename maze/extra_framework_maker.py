@@ -263,6 +263,7 @@ class ExtraFrameworkMaker(object):
         dict_H = {}
         if len(index_Al) == 2:
             all_pairs = []
+            indices = [[index for index in indices[count] if atoms.symbols[index] == 'O'] for count in range(2)]
             for count, value1 in enumerate(indices[0]):
                 all_pairs.extend([value1, value2] for value2 in indices[1])
             assert len(all_pairs) == 16
@@ -273,7 +274,8 @@ class ExtraFrameworkMaker(object):
                 key_tag = 'O' + str(index_pair[0]) + '_O' + str(index_pair[1])
                 dict_H[key_tag] = new_atoms
         else:
-            for count, index in enumerate(indices[0]):
+            indices = [index for index in indices[0] if atoms.symbols[index] == 'O']
+            for count, index in enumerate(indices):
                 new_atoms = self._insert_H(atoms, index)
                 key_tag = 'O' + str(index)
                 dict_H[key_tag] = new_atoms
