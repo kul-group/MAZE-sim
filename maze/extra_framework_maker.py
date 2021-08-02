@@ -142,7 +142,7 @@ class ExtraFrameworkMaker(object):
     def _get_direction_of_insertion(atoms, index1, index2, index3):
         v1 = atoms.get_distance(index1, index2, vector=True, mic=True)
         v2 = atoms.get_distance(index1, index3, vector=True, mic=True)
-        v = (v1 + v2) / np.linalg.norm(v1 + v2)
+        v = np.cross(v1, v2) / np.linalg.norm(np.cross(v1, v2))
         return v
 
     def get_all_Z_TM(self, d_Z_TM, TM_type):
@@ -196,10 +196,7 @@ class ExtraFrameworkMaker(object):
         nl.update(atoms)
         index_Al = [a.index for a in atoms if a.symbol == 'Al']
         indices_neigh, offset_neigh = nl.get_neighbors(index)
-        assert len(indices_neigh) == 2
-        i_neigh_T = [val for val in indices_neigh if val not in index_Al][0]
-        assert atoms[i_neigh_T].symbol == 'Si'
-        assert atoms[index].symbol == 'O'
+        i_neigh_T = [val for val in indices_neigh if val not in index_Al and atoms[val].symbol == 'Si'][0]
         v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
         coord_O = atoms.get_positions()[index]
         new_atoms = atoms + Atoms('H', positions=[coord_O + 0.97 * v])
@@ -362,6 +359,7 @@ class ExtraFrameworkMaker(object):
         return atoms, vec_translate
 
     def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None):
+        # todo: return error if unable to insert
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
         there are more than one TMs in the cluster, the cluster is rotated so that the TM-TM vector is aligned with the
@@ -417,7 +415,8 @@ if __name__ == '__main__':
     atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms)
     view(atoms)
     """
-    # demo code for user-defined rotation direction
+    """
+    # demo code for user-defined rotation direction - index based
     my_zeolite = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/MFI_2Al.traj', '8:9')[0]
     EF_atoms = read('/Users/jiaweiguo/Desktop/tmpo.traj', '0')
     EF_atoms.set_cell(my_zeolite.get_cell())  # important
@@ -426,10 +425,19 @@ if __name__ == '__main__':
     EFzeolite = ExtraFrameworkMaker()
     # print(EFzeolite.get_cluster_radius(EF_atoms))
     try:
-        atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms, [2, 4], 0) # index based - can feed in vectors as well
+        atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms, [2, 4], 0)
+        # index based - can feed in vectors as well, probably unnecessary though
     except:
         atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_zeolite, EF_atoms, [2, 4], 0)
     view(atoms)
+    """
+
+    EFzeolite = ExtraFrameworkMaker()
+    atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/MFI_2Al.traj', '0')
+    # EFzeolite._insert_H(atoms, 80)
+    my_dict = EFzeolite.get_Bronsted_sites(atoms)
+    view(my_dict.get('O2_O0'))
+
 
 
 class ExtraFrameworkAnalyzer(object):
@@ -662,3 +670,12 @@ if __name__ == '__main__':
         print('DFT forces: \n', EF_analyzer.get_forces())
         print('FF forces: \n', EF_analyzer.get_predicted_forces(params))
 """
+
+
+
+
+
+
+
+
+
