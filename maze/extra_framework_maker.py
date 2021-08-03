@@ -454,6 +454,19 @@ class ExtraFrameworkAnalyzer(object):
     @property
     def EF_angles(self):
         return self.get_all_angles()
+    
+    @staticmethod
+    def recentering_atoms(atoms, pos_to_center):
+        """ This function recenters the atoms object by translating the the input position "pos_to_center" to the center
+        of the cell.
+        :param atoms: zeolite backbone with two Al inserted
+        :param pos_to_center: some positions to be centered
+        :return: recentered atoms object, translation vector
+        """
+        vec_translate = np.matmul([0.5, 0.5, 0.5], atoms.get_cell()) - pos_to_center
+        atoms.translate(vec_translate)
+        atoms.wrap()
+        return atoms, vec_translate
 
     """
     def get_extraframework_atoms(self):
