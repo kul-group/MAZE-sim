@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>MAZE Index Mapper &mdash; MAZE 0.1 documentation</title>
@@ -33,6 +32,7 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -166,9 +166,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="maze-index-mapper">
+  <div class="section" id="maze-index-mapper">
 <h1>MAZE Index Mapper<a class="headerlink" href="#maze-index-mapper" title="Permalink to this headline">¶</a></h1>
-<section id="terminology">
+<div class="section" id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
 <p>The following documentation frequently references ASE’s Atoms object, ASE’s Atom object and the individual atoms within ASE’s Atoms objects. Since this can get confusing, clarity the following definitions are provided for clarity:</p>
 <ul class="simple">
@@ -179,8 +179,8 @@
 <li><p>ase.Atom object: Refers to an instance of the class <code class="docutils literal notranslate"><span class="pre">ase.Atom</span></code>.</p></li>
 <li><p>atoms: (lowercase) refers to the atoms represented by an <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> object or a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object.</p></li>
 </ul>
-</section>
-<section id="motivation">
+</div>
+<div class="section" id="motivation">
 <h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
 <p>The class <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code>, inherits from the atomic simulation environment (ase)’s Atoms class. It also adds additional features which make tracking atoms easier.  To understand the MAZE code, it is essential to understand the motivation behind the code’s design decisions.</p>
 <p>One feature of the ase.Atoms class is that an instance of the class stores numpy arrays containing information needed to build Atom objects when the Atom objects are needed. This “on-the-fly” Atom object creation saves memory, but unfortunately, it makes relating different Atoms objects to each other challenging.</p>
@@ -251,8 +251,8 @@
 </ol>
 <p>Steps 1 and 2 are challenging, and the MAZE package presents solution in the form of the <code class="docutils literal notranslate"><span class="pre">Zeolite.make</span></code> method, which reads a <code class="docutils literal notranslate"><span class="pre">cif</span></code> file and keeps track of the unique T sites in a dictionary. Achieving this with the base ASE package is not trivial.</p>
 <p>In the sub-steps of part 3, the problem with “on-the-fly” object creation emerges. Part a,b c are can be completed with the base ASE package. However, part d is not, because there is no way to map the optimized Atoms structure back into its parent Zeolite structure. The MAZE project solves this sub-Atoms mapping problem with the use of a custom Index Mapper.</p>
-</section>
-<section id="the-index-mapper-solution">
+</div>
+<div class="section" id="the-index-mapper-solution">
 <h2>The Index Mapper Solution<a class="headerlink" href="#the-index-mapper-solution" title="Permalink to this headline">¶</a></h2>
 <p>Zeotype simulation workflows frequently involve extracting atoms and adding atoms. This is challenging with ase because unique identities of the atoms are not stored. MAZE solves the identity storage problem by creating an <code class="docutils literal notranslate"><span class="pre">IndexMapper</span></code> object, which is a table that stores the mapping between indices of a parent <code class="docutils literal notranslate"><span class="pre">PerfectZeolite</span></code> object and all <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> objects derived from the parent <code class="docutils literal notranslate"><span class="pre">PerfectZeolite</span></code>. The IndexMapper.main_index can be thought of as a table that looks like this:</p>
 <table class="docutils align-default">
@@ -308,20 +308,20 @@
 <p>To keep this mapping straight, a functional programing-like interface is added for creating and removing atoms from a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object. When atoms are added or removed from the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, a copy of the object being operated on is returned, rather than modifying the original object. Thus, the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> and <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> methods of the <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> class return new <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> objects with the user-specified modifications. These methods also add another column to the main_index corresponding to the newly created <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code>.</p>
 <p>Note that when Python’s garbage collector deletes an <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object, the object is deregistered from the <code class="docutils literal notranslate"><span class="pre">main_index</span></code> table.</p>
 <p>The additional functionality of the MAZE code builds on the <code class="docutils literal notranslate"><span class="pre">add_atoms</span></code> method and the <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method. The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is described in detail in the following section.</p>
-</section>
-<section id="the-delete-atoms-method">
+</div>
+<div class="section" id="the-delete-atoms-method">
 <h2>The <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> Method<a class="headerlink" href="#the-delete-atoms-method" title="Permalink to this headline">¶</a></h2>
 <p>Z
 The delete_atoms method returns a copy of the original <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> with the specified atoms deleted. An example of the delete method is shown below:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; import maze
 &gt;&gt;&gt; from maze import Zeolite
 &gt;&gt;&gt; <span class="nv">my_z</span> <span class="o">=</span> Zeolite.make<span class="o">(</span><span class="s1">&#39;BEA&#39;</span><span class="o">)</span>
-&gt;&gt;&gt; <span class="nv">atom_indices_to_delete</span> <span class="o">=</span> <span class="o">[</span>i <span class="k">for</span> i <span class="k">in</span> range<span class="o">(</span><span class="m">0</span>, <span class="m">50</span><span class="o">)]</span>  <span class="c1"># make a list from 0 to 49</span>
+&gt;&gt;&gt; <span class="nv">atom_indices_to_delete</span> <span class="o">=</span> <span class="o">[</span>i <span class="k">for</span> i in range<span class="o">(</span><span class="m">0</span>, <span class="m">50</span><span class="o">)]</span>  <span class="c1"># make a list from 0 to 49</span>
 &gt;&gt;&gt; <span class="nv">my_new_z</span> <span class="o">=</span> my_z.delete_atoms<span class="o">(</span>atom_indices_to_delete<span class="o">)</span>  <span class="c1"># make a new iz with the first 50 atoms deleted</span>
 &gt;&gt;&gt; print<span class="o">(</span><span class="s1">&#39;my_z has&#39;</span>, len<span class="o">(</span>my_z<span class="o">)</span>, <span class="s1">&#39;atoms in it&#39;</span><span class="o">)</span>
- my_z has <span class="m">192</span> atoms <span class="k">in</span> it
+ my_z has <span class="m">192</span> atoms in it
 &gt;&gt;&gt; print<span class="o">(</span><span class="s1">&#39;my_new_z has&#39;</span>, len<span class="o">(</span>my_new_z<span class="o">)</span>, <span class="s1">&#39;atoms in it&#39;</span><span class="o">)</span>
- my_new_z has <span class="m">142</span> atoms <span class="k">in</span> it
+ my_new_z has <span class="m">142</span> atoms in it
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">my_new_iz</span></code> object has 50 less atoms than the original <code class="docutils literal notranslate"><span class="pre">my_iz</span></code> object. At first, this does not appear any different than using the <code class="docutils literal notranslate"><span class="pre">del</span></code> operator on an ase.Atoms object.</p>
@@ -381,12 +381,12 @@ parent    ImperfectZeotype_1    <span class="nv">ImperfectZeotype_2</span>
 <p>After <code class="docutils literal notranslate"><span class="pre">new_self</span></code> is created its attributes are set to that of its source. It is important that <code class="docutils literal notranslate"><span class="pre">new_self</span></code> share the same <code class="docutils literal notranslate"><span class="pre">index_mapper</span></code> and <code class="docutils literal notranslate"><span class="pre">parent_zeotype</span></code> as its source. The one attribute difference will be its name, which is uniquely set during initialization.</p>
 <p>Now comes the registration. First an <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is created which maps the indices in <code class="docutils literal notranslate"><span class="pre">self</span></code> to those in <code class="docutils literal notranslate"><span class="pre">new_self</span></code>. This mapping is done based on the position of the atoms, which have not changed during the delete operation. Second, this <code class="docutils literal notranslate"><span class="pre">old_to_new_map</span></code> is used in conjunction with the <code class="docutils literal notranslate"><span class="pre">self.index_mapper.register</span></code> method to add another column to the table corresponding to the <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object. After registration, this <code class="docutils literal notranslate"><span class="pre">new_self</span></code> object is finally returned.</p>
 <p>This <code class="docutils literal notranslate"><span class="pre">delete_atoms</span></code> method is used in the initialization of <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> and <code class="docutils literal notranslate"><span class="pre">OpenDefect</span></code> objects.</p>
-</section>
-<section id="conclusion">
+</div>
+<div class="section" id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h2>
 <p>Hopefully this guide on the Index Mapper Design pattern was useful. For more details read through the corresponding source code.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
