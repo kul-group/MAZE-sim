@@ -9,7 +9,7 @@ Verify Installation
 Verify the installation by importing maze and making a simple empty
 Zeolite
 
-.. code:: ipython3
+.. code:: python
 
     import maze
     maze.Zeolite()
@@ -31,6 +31,8 @@ Cif Fetching from the Database of Zeolite Structures
 The `database of zeolite structures <http://www.iza-structure.org/databases/>`_ is a useful resource for zeolite simulation experiments. It contains cif files for all synthesized zeolites, organized by their three letter zeolite code. Downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. To facilitate smoother workflows, a simple python function which downloads cif files from the database was created. An example of using this to download a few different cif files is shown below.
 
 **Note:** Some users have had trouble using the ``cif_download`` function and the ``make`` method. The cause of this issue is typically latency issues with the IZA database's website. If you encounter these issues you can download all of the CIF files in the database by going to this `google drive link <https://drive.google.com/file/d/1-sw5rdKWSUd0a9f1RzbCgjMzCRoUvmJl/view?usp=sharing>`_, downloading the zip folder and extracting the ``data`` folder. Place this data folder in your working directory. You can see your working directory by running the python command ``import os`` followed by ``print(os.getcwd())``.  After placing the ``data`` folder, which contains all of the CIF files from the IZA database, in your working directory, you will be able to run the ``make`` command without accessing the IZA database.
+
+**Note:** The CIF reading capabilities of MAZE rely on those of ASE. Version 3.21.0 of ASE introduced a refactored CIF reader, which is not able to read all of the CIF files on the IZA database, thus most, but not all of the CIF files in the IZA database are readable with MAZE and the most recent version of ASE. This issue can be mitigated by using MAZE with any ASE version < 3.21.0, which is able to read and label the T-sites of all of the CIF files in the IZA database. This issuse might be fixed in future versions of ASE. 
 
 First, we import the MAZE package, the glob package, and the ``download_cif`` function from the ``maze.cif_download`` module.
 
@@ -144,36 +146,36 @@ from a cif file.
 First, we import the MAZE package, the cif_download function and the
 Zeolite object
 
-.. code:: ipython3
+.. code:: python
 
     import maze
     from maze.cif_download import download_cif
 
 Next we import some ase packages to help us view the Zeolites we make.
 
-.. code:: ipython3
+.. code:: python
 
     import matplotlib.pyplot as plt
     from ase.visualize.plot import plot_atoms
 
 First we use the download_cif function to fetch the ``CHA.cif`` file from the IZA database. 
 
-.. code:: ipython3
+.. code:: python
 
     download_cif('CHA', data_dir='data')
 
 Now we can use the static ``make`` method to ``Zeolite`` with labeled
 atoms.
 
-.. code:: ipython3
-
+.. code:: python
+    from maze import Zeolite
     cha_zeolite = Zeolite.make('CHA', data_dir='data')
 
 Our ``Zeolite`` object has been built. We can view it with the ase
 plot_atoms method (or view method). This works flawlessly because the
 ``Zeolite`` class is a subclass of the ``Atoms`` class.
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(cha_zeolite)
 
@@ -187,7 +189,7 @@ plot_atoms method (or view method). This works flawlessly because the
 The atom identity information is stored in two dictionaries. Let’s take
 a look at them:
 
-.. code:: ipython3
+.. code:: python
 
     print(cha_zeolite.site_to_atom_indices)
 
@@ -197,7 +199,7 @@ a look at them:
     {'O1': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 'O2': [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35], 'O3': [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53], 'O4': [54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71], 'T1': [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107]}
 
 
-.. code:: ipython3
+.. code:: python
 
     print(cha_zeolite.atom_indices_to_sites)
 
@@ -220,8 +222,9 @@ directory. It places the downloaded cif file in folder called ``data``
 in the current working directory. Data paths can be specified with the
 ``data_dir`` optional argument.
 
-.. code:: ipython3
+.. code:: python
 
+    from maze import Zeolite
     bea_zeolite = Zeolite.make('BEA')  # Download the BEA cif file and build zeolite
     plot_atoms(bea_zeolite)
 
@@ -247,13 +250,13 @@ types of atoms in a zeolite structure. These methods will work on all
 Let’s import the Zeolite object and make a BEA structure and some tools
 to visualize the structures we create.
 
-.. code:: ipython3
+.. code:: python
 
     from maze import zeolite 
     import matplotlib.pyplot as plt
     from ase.visualize.plot import plot_atoms
 
-.. code:: ipython3
+.. code:: python
 
     bea_zeolite = Zeolite.make('BEA')
     plot_atoms(bea_zeolite)
@@ -269,12 +272,12 @@ to visualize the structures we create.
 To make things more interesting, let us replace the Si-T1 sites in the
 bea Zeolite with Aluminum.
 
-.. code:: ipython3
+.. code:: python
 
     for t1_index in bea_zeolite.site_to_atom_indices['T1']:
         bea_zeolite[t1_index].symbol = 'Al'
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(bea_zeolite)
 
@@ -291,11 +294,11 @@ Making a replacement is that simple! Now we will use the
 ``count_elements`` method to get the count of each atom in the zeolite
 and the idenity of each atom.
 
-.. code:: ipython3
+.. code:: python
 
     atoms_indices, count = bea_zeolite.count_elements()
 
-.. code:: ipython3
+.. code:: python
 
     print(atoms_indices)
 
@@ -305,7 +308,7 @@ and the idenity of each atom.
     {'O': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127], 'Al': [128, 129, 130, 131, 132, 133, 134, 135], 'Si': [136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191]}
 
 
-.. code:: ipython3
+.. code:: python
 
     print(count)
 
@@ -327,7 +330,7 @@ atoms, and then integrate it back into the main ``Zeolite``.
 
 First, we import the zeolite object and the plot_atoms function.
 
-.. code:: ipython3
+.. code:: python
 
     from maze import zeolite 
     import matplotlib.pyplot as plt
@@ -335,7 +338,7 @@ First, we import the zeolite object and the plot_atoms function.
 
 Then we make a bea_zeolite object
 
-.. code:: ipython3
+.. code:: python
 
     bea_zeolite = Zeolite.make('BEA')
     plot_atoms(bea_zeolite)
@@ -366,7 +369,7 @@ simply make your own ClusterMaker object and set the
 Let us call our ``bea_zeolite``\ ’s ``ClusterMaker`` object’s
 ``get_cluster_indices`` fun, to see what indices it will select.
 
-.. code:: ipython3
+.. code:: python
 
     site = 154 
     cluster_indices = bea_zeolite.cluster_maker.get_cluster_indices(bea_zeolite, site)
@@ -385,13 +388,13 @@ defect zeolite.
 We can now make the cluster and open defefect zeolites by using the
 ``get_cluster`` method.
 
-.. code:: ipython3
+.. code:: python
 
     cluster, od = bea_zeolite.get_cluster(154)
 
 The cluster looks like this
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(cluster)
 
@@ -404,7 +407,7 @@ The cluster looks like this
 
 the open defect looks like this
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(od)
 
@@ -416,7 +419,7 @@ the open defect looks like this
 Both the open defect and the cluster are ``Zeolite`` objects, yet they
 have a different ztype attribute
 
-.. code:: ipython3
+.. code:: python
 
     display(type(bea_zeolite))
     display(type(od))
@@ -431,7 +434,7 @@ have a different ztype attribute
     maze.zeolite.Zeolite
 
 
-.. code:: ipython3
+.. code:: python
 
     display(bea_zeolite.ztype)
     display(od.ztype)
@@ -451,11 +454,11 @@ structure. Capping involves adding hydrogens and oxygens to the cluster.
 The built-in ``cap_atoms()`` method returns a new cluster object that
 has hydrogen caps added to it.
 
-.. code:: ipython3
+.. code:: python
 
     capped_cluster = cluster.cap_atoms()
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(capped_cluster)
 
@@ -467,13 +470,13 @@ In a typical zeolite workflow, this cluster would be optimized.
 Configuring an optimizer can be tricky, and so for this tutorial we
 instead replace the oxygen atoms with aluminum atoms.
 
-.. code:: ipython3
+.. code:: python
 
     for atom in capped_cluster:
         if atom.symbol == 'O':
             capped_cluster[atom.index].symbol = 'Al'
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(capped_cluster)
 
@@ -488,7 +491,7 @@ back into the original zeolite.
 To remove caps, we have to find the name of the caps in ``additions``
 dictionary
 
-.. code:: ipython3
+.. code:: python
 
     dict(capped_cluster.additions)
 
@@ -503,7 +506,7 @@ dictionary
 
 or we can just select the last h_caps added using pythons list methods
 
-.. code:: ipython3
+.. code:: python
 
     additon_category = 'h_caps'
     addition_name = capped_cluster.additions[additon_category][-1]
@@ -518,11 +521,11 @@ or we can just select the last h_caps added using pythons list methods
 
 Next we call the remove_addition method
 
-.. code:: ipython3
+.. code:: python
 
     uncapped_cluster = capped_cluster.remove_addition(addition_name, additon_category)
 
-.. code:: ipython3
+.. code:: python
 
     plot_atoms(uncapped_cluster)
 
@@ -534,7 +537,7 @@ Next we call the remove_addition method
 The caps have been removed. We can now integrate the cluster back into
 the original zeolite.
 
-.. code:: ipython3
+.. code:: python
 
     bea_zeolite_with_al = bea_zeolite.integrate(uncapped_cluster)
     plot_atoms(bea_zeolite_with_al)

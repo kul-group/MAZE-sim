@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Adsorbate Class Tutorial &mdash; MAZE 0.1 documentation</title>
@@ -33,6 +32,7 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -171,10 +171,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="adsorbate-class-tutorial">
+  <div class="section" id="adsorbate-class-tutorial">
 <h1>Adsorbate Class Tutorial<a class="headerlink" href="#adsorbate-class-tutorial" title="Permalink to this headline">¶</a></h1>
 <p>The Adsorbate module introduces a class specific to adsorbates which can be added and removed from the host zeolite.</p>
-<section id="creating-an-adsorbate-object">
+<div class="section" id="creating-an-adsorbate-object">
 <h2>Creating an Adsorbate Object<a class="headerlink" href="#creating-an-adsorbate-object" title="Permalink to this headline">¶</a></h2>
 <p>For this example, we will begin with a BEA zeolite with a Sn atom.</p>
 <blockquote>
@@ -186,8 +186,8 @@
 </pre></div>
 </div>
 </div></blockquote>
-</section>
-<section id="positioning-adsorbates">
+</div>
+<div class="section" id="positioning-adsorbates">
 <h2>Positioning Adsorbates<a class="headerlink" href="#positioning-adsorbates" title="Permalink to this headline">¶</a></h2>
 <p>So far, we have created a Zeotype object with a BEA structure as well as an Adsorbate object with an ammonia structure. Now, the ammonia molecule can be added to the BEA framework. The <cite>position_ads()</cite> function can take user-specified host binding site, adsorbate binding location, and adsorbate binding atom to position and orient the adsorbate.</p>
 <blockquote>
@@ -202,8 +202,8 @@
 </div>
 </div></blockquote>
 <p>It is important to note that the automated placement method merely provides a good guess for adsorbate placement. For larger adsorbates, this placement may be incorrect, so these structures should be checked before use.</p>
-</section>
-<section id="adding-and-removing-adsorbates">
+</div>
+<div class="section" id="adding-and-removing-adsorbates">
 <h2>Adding and Removing Adsorbates<a class="headerlink" href="#adding-and-removing-adsorbates" title="Permalink to this headline">¶</a></h2>
 <p>With our adsorbate molecule properly positioned, we can now add it to the zeolite framework using the <cite>integrate_adsorbate()</cite> function.</p>
 <blockquote>
@@ -218,8 +218,8 @@
 </div>
 </div></blockquote>
 <p>Note that multiple adsorbates can be added and removed independently of one another.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

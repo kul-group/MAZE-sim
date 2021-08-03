@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Optimization Tutorial &mdash; MAZE 0.1 documentation</title>
@@ -33,6 +32,7 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -177,13 +177,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="optimization-tutorial">
+  <div class="section" id="optimization-tutorial">
 <h1>Optimization Tutorial<a class="headerlink" href="#optimization-tutorial" title="Permalink to this headline">¶</a></h1>
 <p>This Jupyter notebook goes through the procedure for extracting a
 cluster, capping the extracted cluster, adding an adosrbate to the
 cluster, optimizing the cluster, uncapping the cluster and reintegrating
 the cluster into the starting zeolite. ****</p>
-<section id="import-required-packages">
+<div class="section" id="import-required-packages">
 <h2>Import Required Packages<a class="headerlink" href="#import-required-packages" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">maze</span> <span class="kn">import</span> <span class="n">Zeolite</span>
 </pre></div>
@@ -194,9 +194,9 @@ the cluster into the starting zeolite. ****</p>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
-</section>
+</div>
 <hr class="docutils" />
-<section id="overview">
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>One of the most useful features of the MAZE package is the ability to
 add and remove atoms from a <code class="docutils literal notranslate"><span class="pre">Zeolite</span></code> object. To demonstrate this, we
@@ -283,9 +283,9 @@ object that has hydrogen caps added to it.</p>
 </pre></div>
 </div>
 <img alt="../_images/output_22_1.png" src="../_images/output_22_1.png" />
-</section>
+</div>
 <hr class="docutils" />
-<section id="adding-adsorbates">
+<div class="section" id="adding-adsorbates">
 <h2>Adding Adsorbates<a class="headerlink" href="#adding-adsorbates" title="Permalink to this headline">¶</a></h2>
 <p>Adsorbates are frequently added to Zeolites for adsorption and probing
 experiments. In this section an adsorbate as added to one of the T-sites
@@ -400,14 +400,14 @@ is a good initial guess for the calculations.</p>
 </pre></div>
 </div>
 <img alt="../_images/output_46_1.png" src="../_images/output_46_1.png" />
-</section>
-<section id="optimization">
+</div>
+<div class="section" id="optimization">
 <h2>Optimization<a class="headerlink" href="#optimization" title="Permalink to this headline">¶</a></h2>
 <p>The next stage of this process is optimizing the cluster. Note in the
 current iteration, we do not optimize the cluster and adsorbate
 together, but in future work this might take place.</p>
-</section>
-<section id="freezing-atom-caps">
+</div>
+<div class="section" id="freezing-atom-caps">
 <h2>Freezing Atom Caps<a class="headerlink" href="#freezing-atom-caps" title="Permalink to this headline">¶</a></h2>
 <p>To perform an optimization, we need to freeze the hydrogen atoms. ASE
 has built in functions for this purpose, but we need to know the indices
@@ -2428,8 +2428,8 @@ this get_index function to find the hydrogen caps in the
 <img alt="../_images/output_63_0.png" src="../_images/output_63_0.png" />
 <p>You should now notice that the hydrogen atoms have <code class="docutils literal notranslate"><span class="pre">X</span></code>’s on them
 indicating that they have been fixed/frozen.</p>
-</section>
-<section id="saving-zeolites">
+</div>
+<div class="section" id="saving-zeolites">
 <h2>Saving Zeolites<a class="headerlink" href="#saving-zeolites" title="Permalink to this headline">¶</a></h2>
 <p>Now let us optimize the cluster! There are two ways to perform this
 optimization. The first is with an inbuilt calculator. The second is by
@@ -2520,8 +2520,8 @@ of the pre and post optimization zeolites.</p>
 <p>The optimization is complete and a new <code class="docutils literal notranslate"><span class="pre">opt_from_vasp.traj</span></code> file has
 been created. VASP (sometimes) sorts the atom indices during
 optimization. The information is also contained in the vasprun.xml file.</p>
-</section>
-<section id="loading-zeolites">
+</div>
+<div class="section" id="loading-zeolites">
 <h2>Loading Zeolites<a class="headerlink" href="#loading-zeolites" title="Permalink to this headline">¶</a></h2>
 <p>Reading an optimized function back into memory can be achieved by using
 the <code class="docutils literal notranslate"><span class="pre">read_vasp</span></code> function. This function takes an optimized structure
@@ -2548,8 +2548,8 @@ and matches it to the unoptimized structure.</p>
 </pre></div>
 </div>
 <img alt="../_images/output_81_1.png" src="../_images/output_81_1.png" />
-</section>
-<section id="removing-caps">
+</div>
+<div class="section" id="removing-caps">
 <h2>Removing Caps<a class="headerlink" href="#removing-caps" title="Permalink to this headline">¶</a></h2>
 <p>The optimized zeolite has been loaded! It’s caps can now be removed and
 it can be reintegrated back into the original zeolite.</p>
@@ -2578,8 +2578,8 @@ dictionary.</p>
 </pre></div>
 </div>
 <img alt="../_images/output_89_1.png" src="../_images/output_89_1.png" />
-</section>
-<section id="integrating-cluster">
+</div>
+<div class="section" id="integrating-cluster">
 <h2>Integrating Cluster<a class="headerlink" href="#integrating-cluster" title="Permalink to this headline">¶</a></h2>
 <p>The caps have been removed. We can now integrate the cluster back into
 the original zeolite.</p>
@@ -2596,8 +2596,8 @@ with fewew bugs, this style of programming also allows for method
 chaining.</p>
 <p>This demo showed the power of the MAZE code to extract and add clusters
 to zeotypes. This is one of the most useful features in the MAZE code.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

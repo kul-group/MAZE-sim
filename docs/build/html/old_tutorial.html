@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Tutorials &mdash; MAZE 0.1 documentation</title>
@@ -33,6 +32,7 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -157,10 +157,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="tutorials">
+  <div class="section" id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
 <p>These tutorials showcase the capabilities of the MAZE code, along with comments describing how to use the functions shown in the demos.</p>
-<section id="cif-fetching-from-the-database-of-zeolite-structures">
+<div class="section" id="cif-fetching-from-the-database-of-zeolite-structures">
 <h2>Cif Fetching from the Database of Zeolite Structures<a class="headerlink" href="#cif-fetching-from-the-database-of-zeolite-structures" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference external" href="http://www.iza-structure.org/databases/">database of zeolite structures</a> is a useful resource for zeolite simulation experiments. It contains cif files for all synthesized zeolites, organized by their three letter zeolite code. Downloading them from the website is easy when working on a local machine, but challenging when working on a remote machine. To facilitate smoother workflows, a simple python function which downloads cif files from the database was created. An example of using this to download a few different cif files is shown below.</p>
 <p>First, we import the MAZE package, the glob package, and the <code class="docutils literal notranslate"><span class="pre">download_cif</span></code> function from the <code class="docutils literal notranslate"><span class="pre">maze.cif_download</span></code> module.</p>
@@ -196,8 +196,8 @@
 <span class="go">files in my_other_data dir [&#39;my_other_data/off.cif&#39;]</span>
 </pre></div>
 </div>
-</section>
-<section id="building-a-zeotype-from-a-cif-file">
+</div>
+<div class="section" id="building-a-zeotype-from-a-cif-file">
 <h2>Building a Zeotype from a cif File<a class="headerlink" href="#building-a-zeotype-from-a-cif-file" title="Permalink to this headline">¶</a></h2>
 <p>A cif file contains the crystallographic information that defines a zeolite structure. A downloaded cif from the iza-sc database of zeolite strucutres looks like this:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>data_cha
@@ -274,8 +274,8 @@ _atom_site_fract_z
 </pre></div>
 </div>
 <p>Depending on the situation, one dictionary may be more useful than the other.</p>
-</section>
-<section id="identifying-atom-types-in-a-zeolite-structure">
+</div>
+<div class="section" id="identifying-atom-types-in-a-zeolite-structure">
 <h2>Identifying Atom Types in a Zeolite Structure<a class="headerlink" href="#identifying-atom-types-in-a-zeolite-structure" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> class includes methods for identifying the different types of atoms in a zeolite structure. These methods will work on all <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> objects, even those where the <code class="docutils literal notranslate"><span class="pre">atom_indices_to_site</span></code> and <code class="docutils literal notranslate"><span class="pre">site_to_atom_indices</span></code> are not set.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">maze.zeotypes</span> <span class="kn">import</span> <span class="n">Zeotype</span>
@@ -301,8 +301,8 @@ _atom_site_fract_z
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span>atom type count {&#39;O&#39;: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], &#39;Si&#39;: [64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95]}
 </pre></div>
 </div>
-</section>
-<section id="extracting-adding-and-capping-clusters">
+</div>
+<div class="section" id="extracting-adding-and-capping-clusters">
 <h2>Extracting, Adding and Capping Clusters<a class="headerlink" href="#extracting-adding-and-capping-clusters" title="Permalink to this headline">¶</a></h2>
 <p>One of the most useful features of the MAZE package is the ability to add and remove atoms from a <code class="docutils literal notranslate"><span class="pre">Zeotype</span></code> object. To demonstrate this, we will extract a cluster from an <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code> object, change some of the atoms, and then integrate it back into the main <code class="docutils literal notranslate"><span class="pre">ImperfectZeotype</span></code>.</p>
 <p>First, we load in the MAZE package and set the path of our cif file to the variable <code class="docutils literal notranslate"><span class="pre">cif_dir</span></code>.</p>
@@ -371,8 +371,8 @@ _atom_site_fract_z
 </div>
 <img alt="_images/iz.png" src="_images/iz.png" />
 <p>This demo showed the power of the MAZE code to extract and add clusters to zeotypes. This is one of the most useful features in the MAZE code.</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
