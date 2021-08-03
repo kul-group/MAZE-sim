@@ -24,7 +24,7 @@ from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
 
 
-def get_capped_cluster(atoms, folder_path, file_name):
+def get_capped_cluster(atoms, folder_path, file_name, save_traj):
     """ #TODO: check whether capping is necessary
     Inconsistent capping (remove all caps for now, does not need this cluster to be physical)
     Possible fix: change mult in neighbor list
@@ -35,6 +35,7 @@ def get_capped_cluster(atoms, folder_path, file_name):
     :param atoms:
     :param folder_path:
     :param file_name:
+    :param save_traj: if True, save clusters into .traj as well, for later comparison and trouble shooting
     :return:
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
@@ -43,19 +44,24 @@ def get_capped_cluster(atoms, folder_path, file_name):
     EFMaker.recentering_atoms(cluster, cluster_cop)
     # cluster = Zeolite(cluster).cap_atoms()
 
-    write(folder_path + '/%s.traj' % file_name, cluster)
     proteindatabank.write_proteindatabank(folder_path + '/%s.pdb' % file_name, cluster)
+    if save_traj is True:
+        write(folder_path + '/%s.traj' % file_name, cluster)
+
     return cluster
 
 
-def label_pdb(file_name):
-    """ #todo: improve flexibility in file saving, save all into a folder for further access
+def label_pdb(folder_path, file_name, del_unlabeled_pdb):
+    """ 
     Relabeling the Atom name in proteindatabank file. (required step for openMM)
     The same atom type connecting to different neighboring types are treated differently due to differences in their
     chemical environments, and is therefore named separately.
+    :param folder_path:
+    :param file_name:
+    :param del_unlabeled_pdb:
     """
-    filein = open('/Users/jiaweiguo/Box/openMM_test/%s.pdb' % file_name, 'r')
-    fileout = open('/Users/jiaweiguo/Box/openMM_test/%s_labeled.pdb' % file_name, 'w')
+    filein = open(folder_path + '/%s.pdb' % file_name, 'r')
+    fileout = open(folder_path + '/%s_labeled.pdb' % file_name, 'w')
 
     name_list = []
     for line in filein.readlines():
@@ -70,6 +76,8 @@ def label_pdb(file_name):
 
     filein.close()
     fileout.close()
+    if del_unlabeled_pdb is True:
+        os.remove(folder_path + '/%s.pdb' % file_name)
 
 
 def get_bonds(cluster, mult=1, excluded_index=None, excluded_pair=None):
@@ -381,25 +389,28 @@ def some_random_stuff():
 
 # section below deals with multiple input structures for force field training
 
-def prep_topologies(folder_path, sample_zeolite):
-    """ # todo: need fix after label_pdb function being updated, feed in traj as an input
-    Save clusters into .traj as well, for later comparison and trouble shooting
-    :param :
-    :param :
+def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False, del_unlabeled_pdb=False):
     """
-
-    output_dir = os.path.join(folder_path, sample_zeolite)
+    :param folder_path:
+    :param sample_zeolite:
+    :param traj_name:
+    :param save_traj:
+    """
+    if traj_name is not None:
+        traj = read(folder_path + '/%s.traj' % traj_name, ':')
+        output_dir = os.path.join(folder_path, traj_name)
+    else:
+        traj = read(folder_path + '/%s.traj' % sample_zeolite, ':')
+        output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    traj = read(folder_path + '/%s.traj' % sample_zeolite, ':')
     cluster_traj = []
     for count, atoms in enumerate(traj):
-        cluster_traj.append(get_capped_cluster(atoms, folder_path + '/' + sample_zeolite,
-                                               'cluster_' + str(count)))
+        cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj))
     # view(cluster_traj)
 
     for val in range(len(traj)):
-        label_pdb('cluster_%s' % str(val))
+        label_pdb(output_dir,  'cluster_%s' % str(val), del_unlabeled_pdb)
 
 
 def get_DFT_forces_single(atoms, atom_index):
@@ -520,6 +531,12 @@ def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict,
 
 
 def demo():
+    folder_path = '/Users/jiaweiguo/Box/openMM_FF'
+    sample_zeolite = 'MFI'
+    traj_name = 'MFI_minE_O_less'
+    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+    
+    
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
     print(shortened_bond_list == bond_list)
