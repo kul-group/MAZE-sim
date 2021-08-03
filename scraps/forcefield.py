@@ -24,24 +24,27 @@ from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
 
 
-def get_capped_cluster(atoms, file_name):
+def get_capped_cluster(atoms, folder_path, file_name):
     """ #TODO: check whether capping is necessary
     Inconsistent capping (remove all caps for now, does not need this cluster to be physical)
     Possible fix: change mult in neighbor list
-    #TODO: figure out whether recentering atom is needed, or, check MIC during force matching
 
-    Extract smaller cluster containing the extra-framework atoms and then cap all the O.
+    Extract smaller cluster containing the extra-framework atoms and cap all the O. Then the capped cluster is moved
+    to the center of the cell to avoid boundary issue.
     Save cluster in both .traj file and .pdb format.
-    :param :
-    :param :
+    :param atoms:
+    :param folder_path:
+    :param file_name:
     :return:
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
     cluster = atoms[[index for index in EFMaker.get_extraframework_cluster()]]
+    cluster_cop = np.sum(cluster.positions, 0) / len(cluster)
+    EFMaker.recentering_atoms(cluster, cluster_cop)
     # cluster = Zeolite(cluster).cap_atoms()
 
-    write('/Users/jiaweiguo/Box/openMM_test/%s.traj' % file_name, cluster)
-    proteindatabank.write_proteindatabank('/Users/jiaweiguo/Box/openMM_test/%s.pdb' % file_name, cluster)
+    write(folder_path + '/%s.traj' % file_name, cluster)
+    proteindatabank.write_proteindatabank(folder_path + '/%s.pdb' % file_name, cluster)
     return cluster
 
 
@@ -376,16 +379,23 @@ def some_random_stuff():
     simulation.step(10000)
     """
 
-
 # section below deals with multiple input structures for force field training
-def prep_topologies():
+
+def prep_topologies(folder_path, sample_zeolite):
     """ # todo: need fix after label_pdb function being updated, feed in traj as an input
     Save clusters into .traj as well, for later comparison and trouble shooting
+    :param :
+    :param :
     """
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+
+    output_dir = os.path.join(folder_path, sample_zeolite)
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    traj = read(folder_path + '/%s.traj' % sample_zeolite, ':')
     cluster_traj = []
     for count, atoms in enumerate(traj):
-        cluster_traj.append(get_capped_cluster(atoms, 'cluster_' + str(count)))
+        cluster_traj.append(get_capped_cluster(atoms, folder_path + '/' + sample_zeolite,
+                                               'cluster_' + str(count)))
     # view(cluster_traj)
 
     for val in range(len(traj)):
