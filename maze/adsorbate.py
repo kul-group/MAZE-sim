@@ -302,8 +302,6 @@ class Adsorbate(Atoms):
         Check that an adsorbate in the zeolite is not too close to atoms of the framework
         '''
 
-        # assert self.adsorbate is not None
-
         bool = True
         for ind in ads_indicies:
             pos = self.get_positions(ind)
