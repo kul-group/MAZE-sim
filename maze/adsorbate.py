@@ -301,7 +301,6 @@ class Adsorbate(Atoms):
         '''
         Check that an adsorbate in the zeolite is not too close to atoms of the framework
         '''
-
         bool = True
         for atom in self:
             pos = self.get_positions(atom.index)
