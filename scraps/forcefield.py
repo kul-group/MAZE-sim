@@ -52,7 +52,7 @@ def get_capped_cluster(atoms, folder_path, file_name, save_traj):
 
 
 def label_pdb(folder_path, file_name, del_unlabeled_pdb):
-    """ 
+    """
     Relabeling the Atom name in proteindatabank file. (required step for openMM)
     The same atom type connecting to different neighboring types are treated differently due to differences in their
     chemical environments, and is therefore named separately.
@@ -301,22 +301,24 @@ def shorten_index_list_by_types(type_index_dict, exclude_atom_type=None, exclude
     return shortened_list
 
 
-def set_up_openMM_system(numb, shortened_bond_list):
-    # todo: need to change pdb input directory once label_pdb function is updated
+def set_up_openMM_system(folder_path, cluster_tag_number, shortened_bond_list):
     """ Feed pdb topology file and xml force field file into openMM, generate a system for the MD simulation/force
     calculation.
+    :param folder_path:
+    :param cluster_tag_number:
+    :param shortened_bond_list:
     :return pdb:
     :return system:
-    """  
-    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
+    """
+    pdb = PDBFile(folder_path + '/cluster_%s_labeled.pdb' % cluster_tag_number)
     atoms = list(pdb.topology.atoms())
 
     for index in shortened_bond_list:
         pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
     bonds = list(pdb.topology.bonds())
 
-    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
+    write_xml(atoms, bonds, folder_path + '/forcefield.xml')
+    FF = ForceField(folder_path + '/forcefield.xml')
     system = FF.createSystem(pdb.topology)
     return pdb, system
 
@@ -387,14 +389,17 @@ def some_random_stuff():
     simulation.step(10000)
     """
 
+
 # section below deals with multiple input structures for force field training
 
-def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False, del_unlabeled_pdb=False):
+def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False, del_unlabeled_pdb=False,
+                    show_all=False):
     """
     :param folder_path:
     :param sample_zeolite:
     :param traj_name:
     :param save_traj:
+    :param show_all:
     """
     if traj_name is not None:
         traj = read(folder_path + '/%s.traj' % traj_name, ':')
@@ -407,7 +412,9 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
     cluster_traj = []
     for count, atoms in enumerate(traj):
         cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj))
-    # view(cluster_traj)
+
+    if show_all is True:
+        view(cluster_traj)
 
     for val in range(len(traj)):
         label_pdb(output_dir,  'cluster_%s' % str(val), del_unlabeled_pdb)
@@ -422,32 +429,28 @@ def get_DFT_forces_single(atoms, atom_index):
     return f_vec
 
 
-def get_required_objects_for_ff(numb, included_bond_type, included_angle_type):
+def get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_type, included_angle_type,
+                                print_numb_unique_bonds=False, print_numb_unique_angles=False):
     """ To reduce computational cost, objects such as pdb, system, shortened_bond_list, bond_type_index_dict are kept
     fixed for each configuration during the optimization (only run once).
-    # todo: add docstring specifying TypeHints for each output 
     """
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_%s.traj' % numb, '0')
+    cluster = read(folder_path + '/cluster_%s.traj' % cluster_tag_number, '0')
 
     bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
     bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-    # print('Number of unique bond types:', len(bond_type_dict))
+    if print_numb_unique_bonds is True:
+        print('Number of unique bond types:', len(bond_type_dict))
 
     angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
     angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-    # print('Number of unique angle types:', len(angle_type_dict))
+    if print_numb_unique_angles is True:
+        print('Number of unique angle types:', len(angle_type_dict))
 
     bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
-    # pretty_print(bond_type_index_dict)
-
     angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
-    # pretty_print(angle_type_index_dict)
-
     shortened_bond_list = shorten_index_list_by_types(bond_type_index_dict, include_property_type=included_bond_type)
     shortened_angle_list = shorten_index_list_by_types(angle_type_index_dict, include_property_type=included_angle_type)
-    # print(shortened_bond_list)
-
-    pdb, system = set_up_openMM_system(numb, shortened_bond_list)
+    pdb, system = set_up_openMM_system(folder_path, cluster_tag_number, shortened_bond_list)
 
     return pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict
 
@@ -495,7 +498,7 @@ def reformat_inputs(bond_param_dict, angle_param_dict):
     """ reformat input dict into lists
     :return bond_type: List[List[str]] eg. ['Cu', 'O']
     :return angle_type: List[List[str]] eg. ['Cu', 'O', 'Cu']
-    :return param_list: List[float], extend all parameters into a single list, since scipy.optimize.minimize can only 
+    :return param_list: List[float], extend all parameters into a single list, since scipy.optimize.minimize can only
     take an 1D array as initial guess parameter
     """
     bond_type, angle_type, param_list = [], [], []
@@ -521,7 +524,7 @@ def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_di
 
 
 def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi, 
+    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi,
     # todo: need a smart way to save all bounds
     """
     res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
@@ -531,12 +534,6 @@ def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict,
 
 
 def demo():
-    folder_path = '/Users/jiaweiguo/Box/openMM_FF'
-    sample_zeolite = 'MFI'
-    traj_name = 'MFI_minE_O_less'
-    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
-    
-    
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
     bond_list, shortened_bond_list = get_bonds(cluster)
     print(shortened_bond_list == bond_list)
@@ -605,8 +602,13 @@ def demo():
 
 
 if __name__ == '__main__':
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    folder_path = '/Users/jiaweiguo/Box/openMM_FF'
+    sample_zeolite = 'MFI'
+    traj_name = 'MFI_minE_O_less'
+    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
 
+    """
+    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
     # angle:radians, k:kJ/mol/radian^2
@@ -635,4 +637,6 @@ if __name__ == '__main__':
     FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict)
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
     
-    
+    # pretty_print(angle_type_index_dict)
+    """
+ 
