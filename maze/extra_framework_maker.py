@@ -454,7 +454,7 @@ class ExtraFrameworkAnalyzer(object):
     @property
     def EF_angles(self):
         return self.get_all_angles()
-    
+
     @staticmethod
     def recentering_atoms(atoms, pos_to_center):
         """ This function recenters the atoms object by translating the the input position "pos_to_center" to the center
@@ -511,6 +511,35 @@ class ExtraFrameworkAnalyzer(object):
         self.o_between_T_Cu = o_between_T_Cu
         # self.dict_EF_atoms['OZ'] = self.o_between_T_Cu   
     """
+
+    def get_extraframework_cluster(self, predefined_centering_o=None):
+        """
+        extract extra-framework cluster including Cu-O-Cu, 2 Al, and 8 O around the Als (13 atoms total)
+        :param predefined_centering_o: get the mode of all possible centering O index by training a bunch of
+        configurations for the same zeolite, to remove bias.
+        """
+        index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
+        index_Al = [a.index for a in self.atoms if a.symbol == 'Al']
+
+        Al_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_Al[0])[0],
+                                        self.atoms.neighbor_list.get_neighbors(index_Al[1])[0]))
+        Al_neigh_list = [x for x in Al_neigh_list if self.atoms[x].symbol == 'O']
+
+        if predefined_centering_o is not None:
+            centering_o = copy.copy(predefined_centering_o)
+        else:
+            TM_neigh_list = np.concatenate((self.atoms.neighbor_list.get_neighbors(index_EF_TM[0])[0],
+                                            self.atoms.neighbor_list.get_neighbors(index_EF_TM[1])[0]))
+            centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1 and x not in Al_neigh_list][0]]
+
+        assert len(index_EF_TM) == 2
+        assert len(index_Al) == 2
+        assert len(centering_o) == 1
+        assert len(Al_neigh_list) == 8
+
+        return Al_neigh_list + index_Al + index_EF_TM + centering_o
+
+    """
     def get_extraframework_cluster(self):
         # extraframework atoms, 2 Al and surrounding 8 O
         index_EF_TM = [a.index for a in self.atoms if a.symbol in self.TM_list]
@@ -531,6 +560,7 @@ class ExtraFrameworkAnalyzer(object):
         self.EF_indices.extend([value for value in index_EF_TM])
 
         return np.unique(list(Al_neigh_list) + centering_o + index_Al + index_EF_TM)
+    """
 
     def get_O_index_between_atoms(self, index_1, index_2, scale=3.0, O_count=2):
         # find the closest O in between two atoms since nl of ASE is so annoying
@@ -668,7 +698,6 @@ class ExtraFrameworkAnalyzer(object):
         return dict_EF_predicted_forces
 
 
-"""
 if __name__ == '__main__':
     traj = read('/Users/jiaweiguo/Box/ECH289_Project/MFI.traj', '4:5')
     params = [[2.01e-06, 0.431, 4.82, -0.704, -0.285, 2.96],
@@ -682,11 +711,6 @@ if __name__ == '__main__':
         # print(EF_analyzer.get_angle_force_dir())
         print('DFT forces: \n', EF_analyzer.get_forces())
         print('FF forces: \n', EF_analyzer.get_predicted_forces(params))
-"""
-
-
-
-
 
 
 
