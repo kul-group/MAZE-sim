@@ -26,6 +26,23 @@ from statistics import mode
 import pickle
 
 
+def get_EF_atom_indices(atoms):
+    """
+
+    """
+    TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
+    index_EF_TM = [a.index for a in atoms if a.symbol in TM_list]
+    index_Al = [a.index for a in atoms if a.symbol == 'Al']
+    nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+    nl.update(atoms)
+    Al_neigh_list = np.concatenate((nl.get_neighbors(index_Al[0])[0], nl.get_neighbors(index_Al[1])[0]))
+    Al_neigh_list = [x for x in Al_neigh_list if atoms[x].symbol == 'O']
+
+    TM_neigh_list = np.concatenate((nl.get_neighbors(index_EF_TM[0])[0], nl.get_neighbors(index_EF_TM[1])[0]))
+    centering_o = [[x for x in TM_neigh_list if list(TM_neigh_list).count(x) > 1 and x not in Al_neigh_list][0]]
+    return index_EF_TM + centering_o
+
+
 def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
     """ #TODO: check whether capping is necessary
     Inconsistent capping (remove all caps for now, does not need this cluster to be physical)
@@ -43,15 +60,17 @@ def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
     cluster = atoms[[index for index in EFMaker.get_extraframework_cluster(EF_O_index)]]
-    cluster_cop = np.sum(cluster.positions, 0) / len(cluster)
-    EFMaker.recentering_atoms(cluster, cluster_cop)
+
+    centering_pos = cluster.get_positions()[get_EF_atom_indices(cluster)[-1]]
+    recentered_cluster = EFMaker.recentering_atoms(cluster, centering_pos)[0]
+    # FIXME: recentering doesn't work well for very small unit cells. eg. SOD
     # cluster = Zeolite(cluster).cap_atoms()
 
-    proteindatabank.write_proteindatabank(folder_path + '/%s.pdb' % file_name, cluster)
+    proteindatabank.write_proteindatabank(folder_path + '/%s.pdb' % file_name, recentered_cluster)
     if save_traj is True:
-        write(folder_path + '/%s.traj' % file_name, cluster)
+        write(folder_path + '/%s.traj' % file_name, recentered_cluster)
 
-    return cluster
+    return cluster, EFMaker.get_extraframework_cluster(EF_O_index)
 
 
 def label_pdb(folder_path, file_name, del_unlabeled_pdb):
@@ -184,12 +203,10 @@ def check_atom_types(cluster, index):
     class_Al = [atom.index for atom in cluster if atom.symbol == 'Al']
     class_Cu = [atom.index for atom in cluster if atom.symbol == 'Cu']
     class_H = [atom.index for atom in cluster if atom.symbol == 'H']
-    class_O_EF = [10]   # todo: hardcoded index, need fix
+    class_O_EF = [get_EF_atom_indices(cluster)[-1]]
     class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
                   all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
     class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF + class_O_Cu]
-    # print(class_O_Cu)
-    # print(class_O_H)
 
     if index in class_Al:
         return 'Al'
@@ -400,6 +417,7 @@ def get_EF_O_index(traj):
     get the mode of EF_O, and use that to extract the EF cluster for the force field training
     all EF atoms should have the same indices regardless of there is binds on the zeolite, as long as the zeolite
     framework is the same - (all EF atoms, aka. Cu-O-Cu insertion follows the same procedures)
+    :param traj: traj of configurations containing all atoms, including both the zeolite backbone and EF atoms
     """
     EF_O_index_list = []
     for atoms in traj:
@@ -429,15 +447,17 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
         output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    cluster_traj, EF_O_index = [], get_EF_O_index(traj)
+    cluster_traj, EF_O_index, EF_atoms_index = [], get_EF_O_index(traj), []
     for count, atoms in enumerate(traj):
-        cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj, [EF_O_index]))
+        cluster, EF_atoms_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj, [EF_O_index])
+        cluster_traj.append(cluster)
 
     if show_all is True:
         view(cluster_traj)
-
     for val in range(len(traj)):
-        label_pdb(output_dir,  'cluster_%s' % str(val), del_unlabeled_pdb)
+        label_pdb(output_dir, 'cluster_%s' % str(val), del_unlabeled_pdb)
+
+    return EF_atoms_index
 
 
 def get_DFT_forces_single(atoms, atom_index):
@@ -491,7 +511,7 @@ def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict):
     my_dict = copy.deepcopy(info_dict)
     for config_tag, info_list in my_dict.items():
         ff_forces = get_openMM_forces(info_list[0], info_list[1], info_list[2], info_list[3], bond_param_dict,
-                                      info_list[4], info_list[5], angle_param_dict)[10:13]
+                                      info_list[4], info_list[5], angle_param_dict)[10:13]  # fixme: EF_index hardcoded
         predicted_f.append([force_list for force_list in ff_forces])
 
     return predicted_f
@@ -624,11 +644,17 @@ def demo():
 if __name__ == '__main__':
     """
     # topologies prep
-    zeo_list = ['MWW', 'CHA', 'AEI', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'RHO', 'SOD']
-    for zeolite in zeo_list:
+    EF_index_dict = {}
+    zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
+    for zeolite in zeo_list[0:3]:
         folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
-        prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+        EF_index_dict[zeolite] = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+
+    # write all EF-cluster index into dict for later extraction of the DFT forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(EF_index_dict, f)
     """
+
     # input parameters prep
     ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
@@ -638,35 +664,39 @@ if __name__ == '__main__':
     print(included_bond_type, included_angle_type, ini_param)
 
     # save openMM properties of each configuration into dict
-    zeolite = 'SOD'
+    zeolite = 'CHA'
     folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
     traj = read(folder_path + '/%s.traj' % traj_name, ':')
-    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
-
     """
+    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
     for cluster_tag_number in range(len(traj)):
         pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict = \
             get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type)
         info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list,
                                          angle_type_index_dict]
-    print(info_dict)
 
     with open(output_path+'/info_dict.pickle', 'wb') as f:
         pickle.dump(info_dict, f)
     """
 
-    with open(output_path+'/info_dict.pickle', 'rb') as f:
-        loaded_obj = pickle.load(f)
-    print('loaded_obj is', loaded_obj)
+    # todo: need automated index extraction
 
+    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'rb') as f:
+        EF_index_dict = pickle.load(f)
 
-    """
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     DFT_f = []
     for atoms in traj:
-        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]]) # need automated index extraction
-    print(DFT_f)
+        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
+    print(np.array(DFT_f).shape)
 
+    with open(os.path.join(folder_path, traj_name)+'/info_dict.pickle', 'rb') as f:
+        info_dict = pickle.load(f)
+
+
+    my_dict = copy.deepcopy(info_dict)
+    print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict)) # note: index issue in function
+
+    """
     my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
     res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict)
 
