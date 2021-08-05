@@ -358,7 +358,8 @@ class ExtraFrameworkMaker(object):
         atoms.wrap()
         return atoms, vec_translate
 
-    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False):
+    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
+                                   max_cutoff=9):
         # todo: return error if unable to insert
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
@@ -369,6 +370,7 @@ class ExtraFrameworkMaker(object):
         :param ref_list:
         :param ref_index:
         :param skip_rotation: set this to be True for very small EF cluster, such as single metal atoms
+        :param max_cutoff: use smaller cutoff for small EF-cluster
         :return:
         """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
@@ -384,7 +386,7 @@ class ExtraFrameworkMaker(object):
             EF_atoms_radius = 1.5
 
         max_count, closest_distance = 500, 1.5 + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
-        for d_thres in np.arange(1, 9, 0.5):
+        for d_thres in np.arange(1, max_cutoff, 0.5):
             count = 0
             while count < max_count:
                 EF_atoms = copy.deepcopy(EF_atoms_ini)
@@ -410,7 +412,7 @@ class ExtraFrameworkMaker(object):
                     return atoms
                 else:
                     count += 1
-
+                    
 
 if __name__ == '__main__':
     """
