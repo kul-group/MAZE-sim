@@ -22,9 +22,10 @@ from contextlib import closing
 from collections import OrderedDict
 from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
+from statistics import mode
 
 
-def get_capped_cluster(atoms, folder_path, file_name, save_traj):
+def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
     """ #TODO: check whether capping is necessary
     Inconsistent capping (remove all caps for now, does not need this cluster to be physical)
     Possible fix: change mult in neighbor list
@@ -36,10 +37,11 @@ def get_capped_cluster(atoms, folder_path, file_name, save_traj):
     :param folder_path:
     :param file_name:
     :param save_traj: if True, save clusters into .traj as well, for later comparison and trouble shooting
+    :param EF_O_index: if not none, will use this value, else, will find the index using Extraframework code
     :return:
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
-    cluster = atoms[[index for index in EFMaker.get_extraframework_cluster()]]
+    cluster = atoms[[index for index in EFMaker.get_extraframework_cluster(EF_O_index)]]
     cluster_cop = np.sum(cluster.positions, 0) / len(cluster)
     EFMaker.recentering_atoms(cluster, cluster_cop)
     # cluster = Zeolite(cluster).cap_atoms()
@@ -181,7 +183,7 @@ def check_atom_types(cluster, index):
     class_Al = [atom.index for atom in cluster if atom.symbol == 'Al']
     class_Cu = [atom.index for atom in cluster if atom.symbol == 'Cu']
     class_H = [atom.index for atom in cluster if atom.symbol == 'H']
-    class_O_EF = [10]
+    class_O_EF = [10]   # todo: hardcoded index, need fix
     class_O_Cu = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF and
                   all(val not in class_H for val in nl.get_neighbors(atom.index)[0])]
     class_O_H = [atom.index for atom in cluster if atom.symbol == 'O' and atom.index not in class_O_EF + class_O_Cu]
@@ -409,9 +411,18 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
         output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
+    EF_O_index_list = []
+    for atoms in traj:
+        try:
+            EFAnalyzer = ExtraFrameworkAnalyzer(atoms)
+            EF_O_index_list.append(EFAnalyzer.get_extraframework_cluster()[-1])
+        except:
+            ...
+    EF_O_index = mode(tuple(EF_O_index_list))
+
     cluster_traj = []
     for count, atoms in enumerate(traj):
-        cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj))
+        cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj, [EF_O_index]))
 
     if show_all is True:
         view(cluster_traj)
@@ -602,10 +613,10 @@ def demo():
 
 
 if __name__ == '__main__':
-    folder_path = '/Users/jiaweiguo/Box/openMM_FF'
-    sample_zeolite = 'MFI'
-    traj_name = 'MFI_minE_O_less'
-    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+    zeo_list = ['MWW', 'CHA', 'AEI', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'RHO', 'SOD']
+    for zeolite in zeo_list:
+        folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
+        prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
 
     """
     traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
@@ -615,14 +626,16 @@ if __name__ == '__main__':
 
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
     print(included_bond_type, included_angle_type, ini_param)
+    """
 
+    """
     # save openMM properties of each configuration into dict
     info_dict = {}
-    for numb in range(len(traj)):
+    for cluster_tag_number in range(len(traj)):
         pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict = \
-            get_required_objects_for_ff(numb, included_bond_type, included_angle_type)
-        info_dict[numb] = [pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list,
-                           angle_type_index_dict]
+            get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_type, included_angle_type)
+        info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list,
+                                         angle_type_index_dict]
     # print(info_dict)
 
     DFT_f = []
@@ -639,4 +652,5 @@ if __name__ == '__main__':
     
     # pretty_print(angle_type_index_dict)
     """
- 
+    
+    
