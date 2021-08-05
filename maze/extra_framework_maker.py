@@ -358,7 +358,7 @@ class ExtraFrameworkMaker(object):
         atoms.wrap()
         return atoms, vec_translate
 
-    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None):
+    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False):
         # todo: return error if unable to insert
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
@@ -366,6 +366,9 @@ class ExtraFrameworkMaker(object):
         Al-Al vector. Last, insert the cluster into "my_zeolite".
         :param atoms: zeolite backbone with 2 Al atoms close to each other
         :param EF_atoms: the extra-framework cluster to be inserted in between the Al pair
+        :param ref_list:
+        :param ref_index:
+        :param skip_rotation: set this to be True for very small EF cluster, such as single metal atoms
         :return:
         """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
@@ -373,9 +376,12 @@ class ExtraFrameworkMaker(object):
         atoms, vec_translate = self.recentering_atoms(atoms, mid_Al)
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
+        if skip_rotation is False:
+            EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
         EF_atoms_ini = copy.deepcopy(EF_atoms)
         EF_atoms_radius = self.get_cluster_radius(EF_atoms)
+        if EF_atoms_radius == 0:  # true for single atom EF-cluster
+            EF_atoms_radius = 1.5
 
         max_count, closest_distance = 500, 1.5 + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
         for d_thres in np.arange(1, 9, 0.5):
@@ -388,9 +394,11 @@ class ExtraFrameworkMaker(object):
 
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 EF_atoms.translate(trial_pos - EF_atoms_cop)
-                EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
-                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
 
+                if skip_rotation is False:
+                    EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
+
+                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
                 distances = np.linalg.norm(distances, axis=1)
 
