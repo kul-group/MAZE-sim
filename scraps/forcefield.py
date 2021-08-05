@@ -23,6 +23,7 @@ from collections import OrderedDict
 from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
 from statistics import mode
+import pickle
 
 
 def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
@@ -392,7 +393,23 @@ def some_random_stuff():
     """
 
 
-# section below deals with multiple input structures for force field training
+# NOTE: section below deals with multiple input structures for force field training
+
+def get_EF_O_index(traj):
+    """
+    get the mode of EF_O, and use that to extract the EF cluster for the force field training
+    all EF atoms should have the same indices regardless of there is binds on the zeolite, as long as the zeolite
+    framework is the same - (all EF atoms, aka. Cu-O-Cu insertion follows the same procedures)
+    """
+    EF_O_index_list = []
+    for atoms in traj:
+        try:
+            EFAnalyzer = ExtraFrameworkAnalyzer(atoms)
+            EF_O_index_list.append(EFAnalyzer.get_extraframework_cluster()[-1])
+        except:
+            ...
+    return mode(tuple(EF_O_index_list))
+
 
 def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False, del_unlabeled_pdb=False,
                     show_all=False):
@@ -401,6 +418,7 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
     :param sample_zeolite:
     :param traj_name:
     :param save_traj:
+    :param del_unlabeled_pdb:
     :param show_all:
     """
     if traj_name is not None:
@@ -411,16 +429,7 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
         output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    EF_O_index_list = []
-    for atoms in traj:
-        try:
-            EFAnalyzer = ExtraFrameworkAnalyzer(atoms)
-            EF_O_index_list.append(EFAnalyzer.get_extraframework_cluster()[-1])
-        except:
-            ...
-    EF_O_index = mode(tuple(EF_O_index_list))
-
-    cluster_traj = []
+    cluster_traj, EF_O_index = [], get_EF_O_index(traj)
     for count, atoms in enumerate(traj):
         cluster_traj.append(get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj, [EF_O_index]))
 
@@ -445,7 +454,7 @@ def get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_t
     """ To reduce computational cost, objects such as pdb, system, shortened_bond_list, bond_type_index_dict are kept
     fixed for each configuration during the optimization (only run once).
     """
-    cluster = read(folder_path + '/cluster_%s.traj' % cluster_tag_number, '0')
+    cluster = read(folder_path + '/cluster_%s_labeled.pdb' % cluster_tag_number, '0')
 
     bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
     bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
@@ -613,34 +622,49 @@ def demo():
 
 
 if __name__ == '__main__':
+    """
+    # topologies prep
     zeo_list = ['MWW', 'CHA', 'AEI', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'RHO', 'SOD']
     for zeolite in zeo_list:
         folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
         prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
-
     """
-    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
+    # input parameters prep
     ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
     # angle:radians, k:kJ/mol/radian^2
 
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
     print(included_bond_type, included_angle_type, ini_param)
-    """
+
+    # save openMM properties of each configuration into dict
+    zeolite = 'SOD'
+    folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
+    traj = read(folder_path + '/%s.traj' % traj_name, ':')
+    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
 
     """
-    # save openMM properties of each configuration into dict
-    info_dict = {}
     for cluster_tag_number in range(len(traj)):
         pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict = \
-            get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_type, included_angle_type)
+            get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type)
         info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list,
                                          angle_type_index_dict]
-    # print(info_dict)
+    print(info_dict)
 
+    with open(output_path+'/info_dict.pickle', 'wb') as f:
+        pickle.dump(info_dict, f)
+    """
+
+    with open(output_path+'/info_dict.pickle', 'rb') as f:
+        loaded_obj = pickle.load(f)
+    print('loaded_obj is', loaded_obj)
+
+
+    """
+    traj = read('/Users/jiaweiguo/Box/MFI_minE_O_less.traj', ':')
     DFT_f = []
     for atoms in traj:
-        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]])
+        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in [288, 289, 290]]) # need automated index extraction
     print(DFT_f)
 
     my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
@@ -652,5 +676,4 @@ if __name__ == '__main__':
     
     # pretty_print(angle_type_index_dict)
     """
-    
     
