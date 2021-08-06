@@ -297,4 +297,18 @@ class Adsorbate(Atoms):
         new_self.translate(pos - self.get_positions()[donor_ind])
         return new_self
 
+    def check_position(self, cutoff=1.0):
+        '''
+        Check that an adsorbate in the zeolite is not too close to atoms of the framework
+        '''
+        bool = True
+        for pos in self.get_positions():
+            min_dist = self.min_distance(pos)
+            if min_dist < cutoff:
+                bool = False
+                break
+        return bool
+
+
+
 
