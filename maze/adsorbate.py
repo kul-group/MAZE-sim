@@ -302,11 +302,10 @@ class Adsorbate(Atoms):
         Check that an adsorbate in the zeolite is not too close to atoms of the framework
         '''
         bool = True
-        for atom in self:
-            pos = self.get_positions(atom.index)
+        for pos in self.get_positions():
             min_dist = self.min_distance(pos)
             if min_dist < cutoff:
-                bool=False
+                bool = False
                 break
         return bool
 
