@@ -41,11 +41,20 @@ for file in filepaths:
     output_dir1 = os.path.join(output_dir0, file)
     Path(output_dir1).mkdir(parents=True, exist_ok=True)
     
-    Al_index = [atom.index for atom in atoms if atom.symbol == 'Al']
     TM_index = [atom.index for atom in atoms if atom.symbol == TM_type]
     TM_pos = atoms.get_positions()[TM_index]
     
+    vec_translate = np.matmul([0.5, 0.5, 0.5], atoms.get_cell()) - TM_pos
+    atoms.translate(vec_translate)
+    atoms.wrap()
+    
+    Al_index = [atom.index for atom in atoms if atom.symbol == 'Al']
+    TM_index = [atom.index for atom in atoms if atom.symbol == TM_type]
+    TM_pos = atoms.get_positions()[TM_index]
+        
     vec = np.random.normal(size=(3,))
+    vec = vec / np.linalg.norm(vec)
+
     oh_pos = [TM_pos[0] + vec * 2, TM_pos[0] + vec * 3]
     oh_atoms = Atoms('OH', positions=oh_pos)
     
@@ -55,9 +64,9 @@ for file in filepaths:
     
     while min(distances) < tol:
         vec = np.random.normal(size=(3,))
+        vec = vec / np.linalg.norm(vec)
         oh_pos = [TM_pos[0] + vec * 2, TM_pos[0] + vec * 3]
-        oh_cop = np.sum(oh_atoms.positions, 0)/len(oh_atoms)
-        
+        oh_cop = np.sum(oh_atoms.positions, 0)/len(oh_atoms)   
     
         oh_atoms.translate(oh_pos - oh_cop)
         oh_cop = np.sum(oh_atoms.positions, 0)/len(oh_atoms)
@@ -65,13 +74,9 @@ for file in filepaths:
         distances = mic(oh_cop - oh_atoms.positions, atoms.cell)
         distances = np.linalg.norm(distances, axis=1)
 
-    atoms = atoms + Atoms('OH', positions=oh_pos)
-
-    write(output_dir1 + '/starting.traj', atoms)
-
+    new_atoms = atoms + Atoms('OH', positions=oh_pos)
+    new_atoms.translate(-1 * vec_translate)
+    new_atoms.wrap()
     
-    
-    
-    
-    
-    
+    #write(output_dir1 + '/starting.traj', atoms)
+    break
