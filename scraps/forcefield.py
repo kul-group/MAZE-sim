@@ -362,7 +362,12 @@ def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_par
     for bond in bond_list:
         for my_type, my_index in bond_type_index_dict.items():
             if any(list(val) in my_index for val in list(permutations(bond))):
-                force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))
+                try:
+                    force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))
+                except:
+                    my_type = tuple(reversed(my_type))
+                    force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))  
+                    # note: consider updating the info_dict to make it order insensitive
     system.addForce(force)
 
     force = HarmonicAngleForce()  # Harmonic angle
@@ -386,7 +391,6 @@ def get_openMM_forces(pdb, system, bond_list, bond_type_index_dict, bond_param_d
     """
     system = custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_param_dict, angle_list,
                                         angle_type_index_dict, angle_param_dict)
-
     integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
     simulation = Simulation(pdb.topology, system, integrator)
     simulation.context.setPositions(pdb.positions)
@@ -512,6 +516,7 @@ def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict):
     for config_tag, info_list in my_dict.items():
         ff_forces = get_openMM_forces(info_list[0], info_list[1], info_list[2], info_list[3], bond_param_dict,
                                       info_list[4], info_list[5], angle_param_dict)[10:13]  # fixme: EF_index hardcoded
+        print(ff_forces)
         predicted_f.append([force_list for force_list in ff_forces])
 
     return predicted_f
@@ -677,7 +682,7 @@ if __name__ == '__main__':
 
     with open(output_path+'/info_dict.pickle', 'wb') as f:
         pickle.dump(info_dict, f)
-    """
+    
 
     # todo: need automated index extraction
 
@@ -688,13 +693,12 @@ if __name__ == '__main__':
     for atoms in traj:
         DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
     print(np.array(DFT_f).shape)
-
+    """
     with open(os.path.join(folder_path, traj_name)+'/info_dict.pickle', 'rb') as f:
         info_dict = pickle.load(f)
 
-
     my_dict = copy.deepcopy(info_dict)
-    print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict)) # note: index issue in function
+    print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict))  # note: index issue in function
 
     """
     my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
@@ -706,4 +710,3 @@ if __name__ == '__main__':
     
     # pretty_print(angle_type_index_dict)
     """
-    
