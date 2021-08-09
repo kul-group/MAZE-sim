@@ -28,7 +28,9 @@ import pickle
 
 def get_EF_atom_indices(atoms):
     """
-
+    for index tracking, to ensure we are comparing the DFT and FF forces on the same EF atoms after before and after
+    scooping out the smaller cluster.
+    alse used for recentering the cluster based on the EF-O atom
     """
     TM_list = ['Pt', 'Cu', 'Co', 'Pd', 'Fe', 'Cr', 'Rh', 'Ru']
     index_EF_TM = [a.index for a in atoms if a.symbol in TM_list]
@@ -56,12 +58,14 @@ def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
     :param file_name:
     :param save_traj: if True, save clusters into .traj as well, for later comparison and trouble shooting
     :param EF_O_index: if not none, will use this value, else, will find the index using Extraframework code
-    :return:
+    :return: 1. EF-cluster including 13 atoms, index of the EF atoms in original zeolite, index of the EF atoms in
+    the current cluster (the later two output index lists share the ordering)
     """
     EFMaker = ExtraFrameworkAnalyzer(atoms)
     cluster = atoms[[index for index in EFMaker.get_extraframework_cluster(EF_O_index)]]
 
-    centering_pos = cluster.get_positions()[get_EF_atom_indices(cluster)[-1]]
+    cluster_EF_index = get_EF_atom_indices(cluster)
+    centering_pos = cluster.get_positions()[cluster_EF_index[-1]]
     recentered_cluster = EFMaker.recentering_atoms(cluster, centering_pos)[0]
     # FIXME: recentering doesn't work well for very small unit cells. eg. SOD
     # cluster = Zeolite(cluster).cap_atoms()
@@ -70,7 +74,7 @@ def get_capped_cluster(atoms, folder_path, file_name, save_traj, EF_O_index):
     if save_traj is True:
         write(folder_path + '/%s.traj' % file_name, recentered_cluster)
 
-    return cluster, EFMaker.get_extraframework_cluster(EF_O_index)
+    return cluster, EFMaker.get_extraframework_cluster(EF_O_index), cluster_EF_index
 
 
 def label_pdb(folder_path, file_name, del_unlabeled_pdb):
@@ -366,7 +370,7 @@ def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_par
                     force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))
                 except:
                     my_type = tuple(reversed(my_type))
-                    force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))  
+                    force.addBond(int(bond[0]), int(bond[1]), bond_param_dict.get(my_type))
                     # note: consider updating the info_dict to make it order insensitive
     system.addForce(force)
 
@@ -451,9 +455,10 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
         output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    cluster_traj, EF_O_index, EF_atoms_index = [], get_EF_O_index(traj), []
+    cluster_traj, EF_O_index, EF_atoms_index, cluster_EF_index = [], get_EF_O_index(traj), [], []
     for count, atoms in enumerate(traj):
-        cluster, EF_atoms_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count), save_traj, [EF_O_index])
+        cluster, EF_atoms_index, cluster_EF_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count),
+                                                                       save_traj, [EF_O_index])
         cluster_traj.append(cluster)
 
     if show_all is True:
@@ -461,16 +466,26 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
     for val in range(len(traj)):
         label_pdb(output_dir, 'cluster_%s' % str(val), del_unlabeled_pdb)
 
-    return EF_atoms_index
+    return EF_atoms_index, cluster_EF_index
 
 
-def get_DFT_forces_single(atoms, atom_index):
+def reformat_inputs(bond_param_dict, angle_param_dict):
+    """ reformat input dict into lists
+    :return bond_type: List[List[str]] eg. ['Cu', 'O']
+    :return angle_type: List[List[str]] eg. ['Cu', 'O', 'Cu']
+    :return param_list: List[float], extend all parameters into a single list, since scipy.optimize.minimize can only
+    take an 1D array as initial guess parameter
     """
-    reference DFT forces on single atoms
-    """
-    f_vec = atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
-    f_mag = np.linalg.norm(f_vec)
-    return f_vec
+    bond_type, angle_type, param_list = [], [], []
+    for types, indices in bond_param_dict.items():
+        bond_type.append(list(types))
+        param_list.extend([val for val in np.array(indices)])
+
+    for types, indices in angle_param_dict.items():
+        angle_type.append(list(types))
+        param_list.extend([val for val in np.array(indices)])
+
+    return bond_type, angle_type, param_list
 
 
 def get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_type, included_angle_type,
@@ -499,7 +514,7 @@ def get_required_objects_for_ff(folder_path, cluster_tag_number, included_bond_t
     return pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict
 
 
-def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict):
+def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict, EF_index):
     """ openMM forces for multiple configuration based on the same set of parameters
     """
     bond_param_dict, angle_param_dict, number_of_bond_param = {}, {}, 0
@@ -515,11 +530,38 @@ def get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict):
     my_dict = copy.deepcopy(info_dict)
     for config_tag, info_list in my_dict.items():
         ff_forces = get_openMM_forces(info_list[0], info_list[1], info_list[2], info_list[3], bond_param_dict,
-                                      info_list[4], info_list[5], angle_param_dict)[10:13]  # fixme: EF_index hardcoded
-        print(ff_forces)
+                                      info_list[4], info_list[5], angle_param_dict)[EF_index]  # fixme: EF_index hardcoded
         predicted_f.append([force_list for force_list in ff_forces])
 
     return predicted_f
+
+
+def get_DFT_forces_single(atoms, atom_index):
+    """
+    reference DFT forces on single atoms
+    """
+    f_vec = atoms.calc.results['forces'][atom_index]  # self.atoms.get_forces()[atom_index]
+    f_mag = np.linalg.norm(f_vec)
+    return f_vec
+
+
+def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index):
+    """optimize force field parameters by minimizing this function
+    """
+    predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict, EF_index)
+    residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
+    print(np.mean(residue ** 2))
+    return np.mean(residue ** 2)
+
+
+def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index):
+    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi,
+    # todo: need a smart way to save all bounds
+    """
+    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
+                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index))
+    print(res.success)
+    return res
 
 
 def make_parity_plot(ff_forces, dft_forces, atom_name):
@@ -537,46 +579,7 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
     ax.set_ylim(lims)
     plt.title('Force fitting on %s' % atom_name, fontsize=18)
     plt.show()
-
-
-def reformat_inputs(bond_param_dict, angle_param_dict):
-    """ reformat input dict into lists
-    :return bond_type: List[List[str]] eg. ['Cu', 'O']
-    :return angle_type: List[List[str]] eg. ['Cu', 'O', 'Cu']
-    :return param_list: List[float], extend all parameters into a single list, since scipy.optimize.minimize can only
-    take an 1D array as initial guess parameter
-    """
-    bond_type, angle_type, param_list = [], [], []
-    for types, indices in bond_param_dict.items():
-        bond_type.append(list(types))
-        param_list.extend([val for val in np.array(indices)])
-
-    for types, indices in angle_param_dict.items():
-        angle_type.append(list(types))
-        param_list.extend([val for val in np.array(indices)])
-
-    return bond_type, angle_type, param_list
-
-
-def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-    """optimize force field parameters by minimizing this function
-    """
-    predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict)
-    print(predicted_f)
-    residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
-    print(np.mean(residue ** 2))
-    return np.mean(residue ** 2)
-
-
-def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict):
-    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi,
-    # todo: need a smart way to save all bounds
-    """
-    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
-                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict))
-    print(res.success)
-    return res
-
+    
 
 def demo():
     cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
