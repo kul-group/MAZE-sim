@@ -581,86 +581,24 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
     plt.show()
     
 
-def demo():
-    cluster = read('/Users/jiaweiguo/Box/openMM_test/cluster_0.traj', '0')
-    bond_list, shortened_bond_list = get_bonds(cluster)
-    print(shortened_bond_list == bond_list)
-
-    bond_list, shortened_bond_list = get_bonds(cluster, excluded_index=[2, 3, 8, 9],
-                                               excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
-    # for simplicity, excluding all O-H and Al-O bonds
-    print(shortened_bond_list)
-
-    angle_list, shortened_angle_list = get_angles(cluster)
-    print(shortened_angle_list == angle_list)
-
-    angle_list, shortened_angle_list = get_angles(cluster, excluded_index=[13, 14, 15, 16],
-                                                  excluded_pair=[[11, 12], [0, 4], [0, 6], [1, 5], [1, 7]])
-    # for simplicity, excluding all angular terms involving O-H and Al-O bonds
-    print(shortened_angle_list)
-
-    # bond_list = [[0, 11], [1, 12], [4, 11], [5, 12], [6, 11], [7, 12], [10, 11], [10, 12]]  # for reference
-
-    # load labeled pdb file and build openMM atoms topology
-    # pdb file contains only contain basic information such as atom name, symbol, positions, etc
-    # can add bonds in pdb file through "CONECT" but unnecessary, can simply use topology.addBond
-    numb = 0
-    pdb = PDBFile('/Users/jiaweiguo/Box/openMM_test/cluster_%s_labeled.pdb' % numb)
-    atoms = list(pdb.topology.atoms())
-    print([atom.name for atom in atoms])
-
-    for index in shortened_bond_list:
-        pdb.topology.addBond(atoms[index[0]], atoms[index[1]])
-    bonds = list(pdb.topology.bonds())
-    print([[bond[0].name, bond[1].name] for bond in bonds])
-    print([[bond[0].index, bond[1].index] for bond in bonds])
-
-    # force field xml file need a bit attention, but majority of works are one-time-thing (???? maybe not)
-    # all pdb files converted from ase.traj are automatically named as MOL for residual name (need to define in the xml
-    # file)
-    # simplest xml file only need atoms type in residual section, bonds and angles can be added later
-
-    write_xml(atoms, bonds, '/Users/jiaweiguo/Box/openMM_test/template_test.xml')  # on-the-fly generation of ff xml
-    FF = ForceField('/Users/jiaweiguo/Box/openMM_test/template_test.xml')
-    system = FF.createSystem(pdb.topology)
-
-    # example of customized force function
-    force = CustomBondForce("D*(1-exp(-alpha*(r-r0)))^2")  # Morse bond
-    force.addPerBondParameter("D")
-    force.addPerBondParameter("alpha")
-    force.addPerBondParameter("r0")
-
-    # adding bonds in force field, not the same as adding bonds in topology (both are necessary for defining the system)
-    for index in shortened_bond_list:
-        force.addBond(int(index[0]), int(index[1]), [1.0, 1.0, 2.0])  # need to specify int(), get error otherwise
-    # print(force.getNumBonds())
-    system.addForce(force)
-
-    # print(get_forces(pdb, system))
-    print(get_forces(pdb, system)[10])
-
-    force = HarmonicAngleForce()  # Harmonic angle
-    for index in shortened_angle_list:
-        force.addAngle(int(index[0]), int(index[1]), int(index[2]), 2.3, 100)
-    # print(force.getNumAngles())
-    system.addForce(force)
-
-    # print(get_forces(pdb, system))
-    print(get_forces(pdb, system)[10])  # predicted forces on O
-
-
-if __name__ == '__main__':
+def temp_func():
     """
     # topologies prep
-    EF_index_dict = {}
+    EF_index_dict, cluster_EF_index_dict = {}, {}
     zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
     for zeolite in zeo_list[0:3]:
         folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
-        EF_index_dict[zeolite] = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+        EF_index, cluster_EF_index = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+        EF_index_dict[zeolite] = EF_index
+        cluster_EF_index_dict[zeolite] = cluster_EF_index
 
-    # write all EF-cluster index into dict for later extraction of the DFT forces
+    # write all original EF-atom indices into dict for later extraction of the DFT forces
     with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'wb') as f:
         pickle.dump(EF_index_dict, f)
+
+    # write all EF-atom indeices in smaller cluster into dict for later extraction of the FF forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/cluster_EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(cluster_EF_index_dict, f)
     """
 
     # input parameters prep
@@ -675,6 +613,7 @@ if __name__ == '__main__':
     zeolite = 'CHA'
     folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
     traj = read(folder_path + '/%s.traj' % traj_name, ':')
+
     """
     info_dict, output_path = {}, os.path.join(folder_path, traj_name)
     for cluster_tag_number in range(len(traj)):
@@ -685,31 +624,80 @@ if __name__ == '__main__':
 
     with open(output_path+'/info_dict.pickle', 'wb') as f:
         pickle.dump(info_dict, f)
-    
+    """
 
-    # todo: need automated index extraction
-
-    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'rb') as f:
+    with open(folder_path + '/EF_index_dict.pickle', 'rb') as f:
         EF_index_dict = pickle.load(f)
 
     DFT_f = []
     for atoms in traj:
         DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
     print(np.array(DFT_f).shape)
-    """
-    with open(os.path.join(folder_path, traj_name)+'/info_dict.pickle', 'rb') as f:
+
+    with open(os.path.join(folder_path, traj_name) + '/info_dict.pickle', 'rb') as f:
         info_dict = pickle.load(f)
 
-    my_dict = copy.deepcopy(info_dict)
-    print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict))  # note: index issue in function
+    with open(folder_path + '/cluster_EF_index_dict.pickle', 'rb') as f:
+        cluster_EF_index_dict = pickle.load(f)
 
-    """
+    # my_dict = copy.deepcopy(info_dict)
+    # print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict, cluster_EF_index_dict.get(zeolite)))
+
     my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
-    res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict)
+    res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+                                 cluster_EF_index_dict.get(zeolite))
 
     print([np.around(float(val), decimals=3) for val in res.x])
-    FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict)
+    FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict,
+                         cluster_EF_index_dict.get(zeolite))
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
-    
+
     # pretty_print(angle_type_index_dict)
-    """
+
+
+if __name__ == '__main__':
+    # topologies prep
+    EF_index_dict, cluster_EF_index_dict = {}, {}
+    zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
+    for zeolite in zeo_list:
+        folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
+        EF_index, cluster_EF_index = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+        EF_index_dict[zeolite] = EF_index
+        cluster_EF_index_dict[zeolite] = cluster_EF_index
+
+    # write all original EF-atom indices into dict for later extraction of the DFT forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(EF_index_dict, f)
+
+    # write all EF-atom indeices in smaller cluster into dict for later extraction of the FF forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/cluster_EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(cluster_EF_index_dict, f)
+
+    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'rb') as f:
+        EF_index_dict = pickle.load(f)
+
+    all_traj = []
+    zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
+    for zeolite in zeo_list:
+        DFT_f = []
+        traj = read('/Users/jiaweiguo/Box/openMM_FF/%s_all.traj' % zeolite, ":")
+        for atoms in traj:
+            DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
+        round_num, f_lim, included_list, config_tag_list = 1, 4, [[], [], []], []
+        for count, force_list in enumerate(DFT_f):
+            for force_vec in force_list:
+                if all([np.round(force_vec[index], round_num) not in included_list[index] for index in range(3)]) and \
+                        all([abs(force_vec[index]) < f_lim for index in range(3)]):
+                    [included_list[index].append(np.round(force_vec[index], round_num)) for index in range(3)]
+                    config_tag_list.append(count)
+
+        print(zeolite, len(list(np.unique(config_tag_list))))
+        [all_traj.append(traj[index]) for index in list(np.unique(config_tag_list))]
+
+    write('/Users/jiaweiguo/Box/openMM_FF/reduced_all.traj', all_traj)
+
+    # plt.scatter(DFT_f, DFT_f)
+    # plt.show()
+
+
+
