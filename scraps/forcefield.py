@@ -24,6 +24,7 @@ from scipy.optimize import least_squares, minimize
 import matplotlib.pyplot as plt
 from statistics import mode
 import pickle
+import time
 
 
 def get_EF_atom_indices(atoms):
@@ -455,11 +456,12 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
         output_dir = os.path.join(folder_path, sample_zeolite)
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    cluster_traj, EF_O_index, EF_atoms_index, cluster_EF_index = [], get_EF_O_index(traj), [], []
+    cluster_traj, EF_O_index, EF_atoms_index, cluster_EF_index = [], get_EF_O_index(traj[0:100]), [], []
     for count, atoms in enumerate(traj):
         cluster, EF_atoms_index, cluster_EF_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count),
                                                                        save_traj, [EF_O_index])
         cluster_traj.append(cluster)
+        print(sample_zeolite, count)
 
     if show_all is True:
         view(cluster_traj)
@@ -579,7 +581,7 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
     ax.set_ylim(lims)
     plt.title('Force fitting on %s' % atom_name, fontsize=18)
     plt.show()
-    
+
 
 def temp_func():
     """
@@ -655,7 +657,7 @@ def temp_func():
     # pretty_print(angle_type_index_dict)
 
 
-if __name__ == '__main__':
+def initial_traj_trimming():
     # topologies prep
     EF_index_dict, cluster_EF_index_dict = {}, {}
     zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
@@ -675,6 +677,8 @@ if __name__ == '__main__':
 
     with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'rb') as f:
         EF_index_dict = pickle.load(f)
+
+    # fixme: pdb relabeling scripts failed for 'MWW'
 
     all_traj = []
     zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
@@ -700,4 +704,30 @@ if __name__ == '__main__':
     # plt.show()
 
 
+if __name__ == '__main__':
+    # construct the bond_type_index_dict and angle_type_index_dict beforehand, all cluster will share one, expand if 
+    # run into new types
+    
+    
+    
+    
+    """
+    tic = time.perf_counter()
+    zeolite = 'CHA'
+    folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_md'
+    ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
+    ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
+    included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
 
+    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
+    files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
+    for cluster_tag_number in range(5):  # len(files)
+        pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list, angle_type_index_dict = \
+            get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type)
+        info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, bond_type_index_dict, shortened_angle_list,
+                                         angle_type_index_dict]
+        # print(cluster_tag_number)
+    toc = time.perf_counter()
+    print(f"Program terminated in {toc - tic:0.4f} seconds")
+    """
+    
