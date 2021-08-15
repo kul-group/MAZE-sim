@@ -178,7 +178,11 @@ def write_xml(atoms, bonds, save_as):
     xml_section = etree.SubElement(root, "AtomTypes")
     for atom in atoms:
         element_type = ''.join(filter(lambda x: not x.isdigit(), atom.name))
-        atomic_mass = atomic_masses[atomic_numbers[element_type]]
+        # properties = {'name': atom.name, 'class': atom.name, 'element': element_type, 'mass': str(atomic_mass)}
+        if element_type == 'Cu' or atom.name == 'O9':
+            atomic_mass = atomic_masses[atomic_numbers[element_type]]
+        else:
+            atomic_mass = 0.0
         properties = {'name': atom.name, 'class': atom.name, 'element': element_type, 'mass': str(atomic_mass)}
         etree.SubElement(xml_section, 'Type', **properties)
 
@@ -591,13 +595,12 @@ def func():
                             ('Al', 'Cu', 'O-EF'): [2.3, 10]}
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
 
+    # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
     cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
     bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
     bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-
     angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
     angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-
     bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
     angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
 
@@ -640,21 +643,7 @@ def func():
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
 
 
-def some_random_stuff():
-    """
-    # example from the OpenMM doc
-    integrator = LangevinMiddleIntegrator(300 * kelvin, 1 / picosecond, 0.004 * picoseconds)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-    simulation.minimizeEnergy()
-    print(simulation.context.getState(getForces=True).getForces(asNumpy=True))
-    simulation.reporters.append(PDBReporter('output.pdb', 1000))
-    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
-    simulation.step(10000)
-    """
-    
-
-if __name__ == '__main__':
+def optimizer():
     tic = time.perf_counter()
     """
     # initial and optimized structure prep
@@ -678,7 +667,7 @@ if __name__ == '__main__':
     ini_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_ini.traj', ':')
     opt_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', ':')
     folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test', zeolite, zeolite + '_ini'
-    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+    # prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
 
     # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
     cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
@@ -689,9 +678,10 @@ if __name__ == '__main__':
     bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
     angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
 
-    bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.3], ('O-EF', 'Cu'): [1.2, 4, 0.2], ('Al', 'Cu'): [1.2, 4, 0.4]}
-    angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 10], ('O-Cu', 'Cu', 'O-EF'): [2.3, 10],
-                            ('Al', 'Cu', 'O-EF'): [2.3, 10]}
+    bond_param_dict = {('O-Cu', 'Cu'): [60.097, 2.267, 0.228], ('O-EF', 'Cu'): [4405.247, 4.163, 0.177],
+                       ('Al', 'Cu'): [-2.656, 4.608, 0.413]}
+    angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.458, 16.552], ('O-Cu', 'Cu', 'O-EF'): [3.266, 4.136],
+                            ('Al', 'Cu', 'O-EF'): [1.925, 1.673]}
     included_bond_type, included_angle_type, trained_param = reformat_inputs(bond_param_dict, angle_param_dict)
     """
     info_dict, output_path = {}, os.path.join(folder_path, traj_name)
@@ -710,24 +700,47 @@ if __name__ == '__main__':
 
     # train on single configuration first
     pdb, system, shortened_bond_list, shortened_angle_list = \
-        get_required_objects_for_ff(os.path.join(folder_path, traj_name), 0, included_bond_type, included_angle_type,
+        get_required_objects_for_ff(os.path.join(folder_path, traj_name), 1, included_bond_type, included_angle_type,
                                     bond_type_index_dict, angle_type_index_dict)
 
     system = custom_openMM_force_object(system, shortened_bond_list, bond_type_index_dict, bond_param_dict, shortened_angle_list,
                                             angle_type_index_dict, angle_param_dict)
 
-    integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
+    integrator = LangevinMiddleIntegrator(0 * kelvin, 1 / picosecond, 0.002 * picoseconds)  # randomly picked
     simulation = Simulation(pdb.topology, system, integrator)
     simulation.context.setPositions(pdb.positions)
-    state = simulation.context.getState(getForces=True)
-    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
+
+    if pdb.topology.getPeriodicBoxVectors() is not None:
+        simulation.context.setPeriodicBoxVectors(*pdb.topology.getPeriodicBoxVectors())
+        print(pdb.topology.getPeriodicBoxVectors())
 
     simulation.minimizeEnergy()
-    simulation.reporters.append(PDBReporter('output.pdb', 1000))
-    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
-    simulation.step(10000)
-
+    state = simulation.context.getState(getForces=True, enforcePeriodicBox=True, getPositions=True)
+    state.getPositions()
+    simulation.reporters.append(PDBReporter('/Users/jiaweiguo/Desktop/output.pdb', 100))
+    simulation.reporters.append(StateDataReporter(stdout, 100, step=True, potentialEnergy=True, temperature=True))
+    simulation.step(1000)
 
     toc = time.perf_counter()
     print(f"Program terminated in {toc - tic:0.4f} seconds")
+
+
+if __name__ == '__main__':
+    optimizer()
+    """
+    tic = time.perf_counter()
+    dft_opt_atoms = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', '1')
+    cell_dim = dft_opt_atoms.get_cell()
+    ff_opt_atoms = proteindatabank.read_proteindatabank('/Users/jiaweiguo/Desktop/output.pdb', index=-1)
+    print(ff_opt_atoms.get_cell())
+    ff_opt_atoms.set_cell(cell_dim)
+
+    print(ff_opt_atoms.get_cell())
+    ff_pos = [ff_opt_atoms.get_positions()[index] for index in [10, 11, 12]]
+    print(ff_pos)
+    dft_pos = [dft_opt_atoms.get_positions()[index] for index in [109, 110, 72]]
+    print(dft_pos)
+    toc = time.perf_counter()
+    print(f"Program terminated in {toc - tic:0.4f} seconds")
+    """
     
