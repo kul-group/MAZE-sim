@@ -405,20 +405,6 @@ def get_openMM_forces(pdb, system, bond_list, bond_type_index_dict, bond_param_d
     return forces
 
 
-def some_random_stuff():
-    """
-    # example from the OpenMM doc
-    integrator = LangevinMiddleIntegrator(300 * kelvin, 1 / picosecond, 0.004 * picoseconds)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-    simulation.minimizeEnergy()
-    print(simulation.context.getState(getForces=True).getForces(asNumpy=True))
-    simulation.reporters.append(PDBReporter('output.pdb', 1000))
-    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
-    simulation.step(10000)
-    """
-
-
 # NOTE: section below deals with multiple input structures for force field training
 
 def get_EF_O_index(traj):
@@ -458,15 +444,17 @@ def prep_topologies(folder_path, sample_zeolite, traj_name=None, save_traj=False
 
     cluster_traj, EF_O_index, EF_atoms_index, cluster_EF_index = [], get_EF_O_index(traj[0:100]), [], []
     for count, atoms in enumerate(traj):
-        cluster, EF_atoms_index, cluster_EF_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count),
-                                                                       save_traj, [EF_O_index])
-        cluster_traj.append(cluster)
-        print(sample_zeolite, count)
+        try:
+            cluster, EF_atoms_index, cluster_EF_index = get_capped_cluster(atoms, output_dir, 'cluster_' + str(count),
+                                                                           save_traj, [EF_O_index])
+            label_pdb(output_dir, 'cluster_%s' % str(count), del_unlabeled_pdb)
+            cluster_traj.append(cluster)
+            print(sample_zeolite, count)
+        except:
+            print(sample_zeolite, count, 'failed!')
 
     if show_all is True:
         view(cluster_traj)
-    for val in range(len(traj)):
-        label_pdb(output_dir, 'cluster_%s' % str(val), del_unlabeled_pdb)
 
     return EF_atoms_index, cluster_EF_index
 
@@ -535,21 +523,25 @@ def get_DFT_forces_single(atoms, atom_index):
     return f_vec
 
 
-def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index):
+def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+                bond_type_index_dict, angle_type_index_dict, EF_index):
     """optimize force field parameters by minimizing this function
     """
-    predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict, EF_index)
+    predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
+                                angle_type_index_dict, EF_index)
     residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
     print(np.mean(residue ** 2))
     return np.mean(residue ** 2)
 
 
-def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index):
+def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+                           bond_type_index_dict, angle_type_index_dict, EF_index):
     """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi,
     # todo: need a smart way to save all bounds
     """
     res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
-                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, EF_index))
+                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
+                         angle_type_index_dict, EF_index))
     print(res.success)
     return res
 
@@ -571,31 +563,31 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
     plt.show()
 
 
-if __name__ == '__main__':
-    # construct the bond_type_index_dict and angle_type_index_dict beforehand, all cluster will share one, expand if
-    # run into new types
-    tic = time.perf_counter()
+def func():
+    # topologies prep
+    EF_index_dict, cluster_EF_index_dict = {}, {}
+    zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
+    for zeolite in zeo_list:
+        folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
+        EF_index, cluster_EF_index = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+        EF_index_dict[zeolite] = EF_index
+        cluster_EF_index_dict[zeolite] = cluster_EF_index
+
+    # write all original EF-atom indices into dict for later extraction of the DFT forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(EF_index_dict, f)
+
+    # write all EF-atom indeices in smaller cluster into dict for later extraction of the FF forces
+    with open('/Users/jiaweiguo/Box/openMM_FF/cluster_EF_index_dict.pickle', 'wb') as f:
+        pickle.dump(cluster_EF_index_dict, f)
+
+    # force matching using CHA MD data
     zeolite = 'CHA'
     folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_md'
-    ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.2], ('O-EF', 'Cu'): [1.2, 4, 0.2]}  # ('Al', 'Cu'): [1.2, 4, 0.2],
-    ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 40], ('Cu', 'O-Cu', 'Cu'): [2.3, 40]}
+    ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.3], ('O-EF', 'Cu'): [1.2, 4, 0.2], ('Al', 'Cu'): [1.2, 4, 0.4]}
+    ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 10], ('O-Cu', 'Cu', 'O-EF'): [2.3, 10],
+                            ('Al', 'Cu', 'O-EF'): [2.3, 10]}
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
-
-    """
-    for cluster_tag_number in range(5):
-        cluster = read(os.path.join(folder_path, traj_name) + '/cluster_%s_labeled.pdb' % cluster_tag_number, '0')
-
-        bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
-        bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-
-        angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
-        angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-
-        bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
-        angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
-        print(bond_type_index_dict)
-        print(angle_type_index_dict)
-    """
 
     cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
     bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
@@ -607,25 +599,66 @@ if __name__ == '__main__':
     bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
     angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
 
+    numb_skip = 80
     info_dict, output_path = {}, os.path.join(folder_path, traj_name)
     files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
-    for cluster_tag_number in range(30):  # len(files)
+    for cluster_tag_number in np.arange(0, len(files), numb_skip):
+        cluster_tag_number = int(cluster_tag_number)
         pdb, system, shortened_bond_list, shortened_angle_list = \
             get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type,
                                         bond_type_index_dict, angle_type_index_dict)
         info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, shortened_angle_list]
-        # print(cluster_tag_number)
-    toc = time.perf_counter()
-    print(f"Program terminated in {toc - tic:0.4f} seconds")
-    #with open(os.path.join(folder_path, traj_name) + '/info_dict.pickle', 'rb') as f:
-        #info_dict = pickle.load(f)
+        print(cluster_tag_number)
+
+    with open(output_path + '/info_dict_%s.pickle' % numb_skip, 'wb') as f:
+        pickle.dump(info_dict, f)
+
+    with open(folder_path + '/EF_index_dict.pickle', 'rb') as f:
+        EF_index_dict = pickle.load(f)
+
+    traj = read(folder_path + '/%s.traj' % traj_name, '0::%s' % numb_skip)
+    DFT_f = []
+    for atoms in traj:
+        DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
+    print(np.array(DFT_f).shape)
+
+    with open(os.path.join(folder_path, traj_name) + '/info_dict_%s.pickle' % numb_skip, 'rb') as f:
+        info_dict = pickle.load(f)
 
     with open(folder_path + '/cluster_EF_index_dict.pickle', 'rb') as f:
         cluster_EF_index_dict = pickle.load(f)
 
-    my_dict = copy.deepcopy(info_dict)
-    print(get_FF_forces(ini_param, my_dict, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
-                  angle_type_index_dict, cluster_EF_index_dict.get(zeolite)))
+    my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
+    res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+                                 bond_type_index_dict, angle_type_index_dict, cluster_EF_index_dict.get(zeolite))
+
+    print([np.around(float(val), decimals=3) for val in res.x])
+    FF_f = get_FF_forces(res.x, info_dict, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
+                         angle_type_index_dict, cluster_EF_index_dict.get(zeolite))
+    make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
+
+
+def some_random_stuff():
+    """
+    # example from the OpenMM doc
+    integrator = LangevinMiddleIntegrator(300 * kelvin, 1 / picosecond, 0.004 * picoseconds)
+    simulation = Simulation(pdb.topology, system, integrator)
+    simulation.context.setPositions(pdb.positions)
+    simulation.minimizeEnergy()
+    print(simulation.context.getState(getForces=True).getForces(asNumpy=True))
+    simulation.reporters.append(PDBReporter('output.pdb', 1000))
+    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
+    simulation.step(10000)
+    """
+    
+    
+if __name__ == '__main__':
+    # construct the bond_type_index_dict and angle_type_index_dict beforehand, all cluster will share one, expand if
+    # run into new types
+    tic = time.perf_counter()
+
+
 
     toc = time.perf_counter()
     print(f"Program terminated in {toc - tic:0.4f} seconds")
+    
