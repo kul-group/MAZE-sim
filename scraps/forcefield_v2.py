@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 from statistics import mode
 import pickle
 import time
+from ase.data import atomic_masses, atomic_numbers
 
 
 def get_EF_atom_indices(atoms):
@@ -174,10 +175,12 @@ def write_xml(atoms, bonds, save_as):
     # on-the-fly generation of force field xml file, matching atoms and bonds with pdb file
     root = etree.Element('ForceField')
 
+    #atomic_number_dict = {'O':'Cu':}
     xml_section = etree.SubElement(root, "AtomTypes")
     for atom in atoms:
-        properties = {'name': atom.name, 'class': atom.name, 'element': ''.join(filter(lambda x: not x.isdigit(),
-                                                                                       atom.name)), 'mass': '0.0'}
+        element_type = ''.join(filter(lambda x: not x.isdigit(), atom.name))
+        atomic_mass = atomic_masses[atomic_numbers[element_type]]
+        properties = {'name': atom.name, 'class': atom.name, 'element': element_type, 'mass': str(atomic_mass)}
         etree.SubElement(xml_section, 'Type', **properties)
 
     xml_section = etree.SubElement(root, 'Residues')
@@ -651,12 +654,79 @@ def some_random_stuff():
     simulation.step(10000)
     """
     
-    
-if __name__ == '__main__':
-    # construct the bond_type_index_dict and angle_type_index_dict beforehand, all cluster will share one, expand if
-    # run into new types
-    tic = time.perf_counter()
 
+if __name__ == '__main__':
+    tic = time.perf_counter()
+    """
+    # initial and optimized structure prep
+    zeolite = 'CHA'
+    folder = '/Users/jiaweiguo/Box/02_2Cu_zeo/01_%s' % zeolite
+    filepaths = [dirs for dirs in os.listdir(folder) if 'T' in dirs]
+    ini_traj, opt_traj = [], []
+    for file in filepaths:
+        ini_traj.append(read(os.path.join(folder, file) + '/2Cu.traj', '0'))
+        try:
+            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/opt_from_vasp.traj', '0'))
+        except:
+            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/vasprun.xml', '-1'))
+            print(zeolite, file)
+    output_dir = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test'
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    write(output_dir + '/CHA_ini.traj', ini_traj)
+    write(output_dir + '/CHA_opt.traj', opt_traj)
+    """
+    zeolite = 'CHA'
+    ini_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_ini.traj', ':')
+    opt_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', ':')
+    folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test', zeolite, zeolite + '_ini'
+    prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
+
+    # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
+    cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
+    bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
+    bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
+    angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
+    angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
+    bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
+    angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
+
+    bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.3], ('O-EF', 'Cu'): [1.2, 4, 0.2], ('Al', 'Cu'): [1.2, 4, 0.4]}
+    angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 10], ('O-Cu', 'Cu', 'O-EF'): [2.3, 10],
+                            ('Al', 'Cu', 'O-EF'): [2.3, 10]}
+    included_bond_type, included_angle_type, trained_param = reformat_inputs(bond_param_dict, angle_param_dict)
+    """
+    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
+    files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
+    for cluster_tag_number in np.arange(len(files)):
+        cluster_tag_number = int(cluster_tag_number)
+        pdb, system, shortened_bond_list, shortened_angle_list = \
+            get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type,
+                                        bond_type_index_dict, angle_type_index_dict)
+        info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, shortened_angle_list]
+        print(cluster_tag_number)
+
+    with open(output_path + '/info_dict.pickle', 'wb') as f:
+        pickle.dump(info_dict, f)
+    """
+
+    # train on single configuration first
+    pdb, system, shortened_bond_list, shortened_angle_list = \
+        get_required_objects_for_ff(os.path.join(folder_path, traj_name), 0, included_bond_type, included_angle_type,
+                                    bond_type_index_dict, angle_type_index_dict)
+
+    system = custom_openMM_force_object(system, shortened_bond_list, bond_type_index_dict, bond_param_dict, shortened_angle_list,
+                                            angle_type_index_dict, angle_param_dict)
+
+    integrator = LangevinMiddleIntegrator(3 * kelvin, 1 / picosecond, 0.4 * picoseconds)  # randomly picked
+    simulation = Simulation(pdb.topology, system, integrator)
+    simulation.context.setPositions(pdb.positions)
+    state = simulation.context.getState(getForces=True)
+    forces = np.array(state.getForces(asNumpy=True)) * 1.0364e-2 * 0.1  # convert forces from kJ/nm mol to eV/A
+
+    simulation.minimizeEnergy()
+    simulation.reporters.append(PDBReporter('output.pdb', 1000))
+    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
+    simulation.step(10000)
 
 
     toc = time.perf_counter()
