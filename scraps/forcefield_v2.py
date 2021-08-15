@@ -175,7 +175,6 @@ def write_xml(atoms, bonds, save_as):
     # on-the-fly generation of force field xml file, matching atoms and bonds with pdb file
     root = etree.Element('ForceField')
 
-    #atomic_number_dict = {'O':'Cu':}
     xml_section = etree.SubElement(root, "AtomTypes")
     for atom in atoms:
         element_type = ''.join(filter(lambda x: not x.isdigit(), atom.name))
