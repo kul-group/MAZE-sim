@@ -369,6 +369,7 @@ def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_par
     force.addPerBondParameter("D")
     force.addPerBondParameter("alpha")
     force.addPerBondParameter("r0")
+    force.setUsesPeriodicBoundaryConditions(periodic=True)
 
     for bond in bond_list:
         for my_type, my_index in bond_type_index_dict.items():
@@ -382,6 +383,8 @@ def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_par
     system.addForce(force)
 
     force = HarmonicAngleForce()  # Harmonic angle
+    force.setUsesPeriodicBoundaryConditions(periodic=True)  # adding periodic conditions
+
     for angle in angle_list:
         for my_type, my_index in angle_type_index_dict.items():
             if any(list(val) in my_index for val in list(permutations(angle))):
@@ -389,6 +392,7 @@ def custom_openMM_force_object(system, bond_list, bond_type_index_dict, bond_par
                 force.addAngle(int(angle[0]), int(angle[1]), int(angle[2]), *angle_param_dict.get(type_tag[0]))
     system.addForce(force)
 
+    # assert(system.usesPeriodicBoundaryConditions() == True)
     return system
 
 
