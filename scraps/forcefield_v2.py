@@ -533,25 +533,30 @@ def get_DFT_forces_single(atoms, atom_index):
     return f_vec
 
 
-def get_residue(param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+def get_residue(param, info_dict, DFT_f, weights, ini_bond_param_dict, ini_angle_param_dict,
                 bond_type_index_dict, angle_type_index_dict, EF_index):
-    """optimize force field parameters by minimizing this function
+    """
+    optimize force field parameters by minimizing this loss function (MSE), weighted by DFT electronic energies
+    k (Boltzmann's constant) = 8.617e-5 eV/K
+    T = 298 K
     """
     predicted_f = get_FF_forces(param, info_dict, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
                                 angle_type_index_dict, EF_index)
     residue = np.reshape(np.array(np.reshape(predicted_f, [-1, 3])) - np.array(np.reshape(DFT_f, [-1, 3])), -1)
-    print(np.mean(residue ** 2))
-    return np.mean(residue ** 2)
+    weighted_residue = residue * weights  # 39 number of atoms
+    print(np.mean(weighted_residue ** 2))
+    return np.mean(weighted_residue ** 2)
 
 
-def get_fitting_parameters(initial_param, info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+def get_fitting_parameters(initial_param, info_dict, DFT_f, weights, ini_bond_param_dict, ini_angle_param_dict,
                            bond_type_index_dict, angle_type_index_dict, EF_index):
-    """ # todo: consider adding constrains on the parameters, eg. Harmonic angle below np.pi,
-    # todo: need a smart way to save all bounds
-    """
-    res = minimize(get_residue, initial_param, method='Powell', options={'ftol': 0.01, 'maxiter': 1000},
-                   args=(info_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict, bond_type_index_dict,
-                         angle_type_index_dict, EF_index))
+    # todo: more flexible bond reformating and feeding
+    bounds = ((-np.Inf, np.Inf), (-np.Inf, np.Inf), (0, np.Inf), (-np.Inf, np.Inf), (-np.Inf, np.Inf),
+              (0, np.Inf), (-np.Inf, np.Inf), (-np.Inf, np.Inf), (0, np.Inf), (0, np.pi),
+              (-np.Inf, np.Inf), (0, np.pi), (-np.Inf, np.Inf), (0, np.pi), (-np.Inf, np.Inf))
+    res = minimize(get_residue, initial_param, method='Powell', bounds=bounds, options={'ftol': 0.01, 'maxiter': 1000},
+                   args=(info_dict, DFT_f, weights, ini_bond_param_dict, ini_angle_param_dict,
+                         bond_type_index_dict, angle_type_index_dict, EF_index))
     print(res.success)
     return res
 
@@ -574,36 +579,19 @@ def make_parity_plot(ff_forces, dft_forces, atom_name):
 
 
 def func():
-    """
-    # topologies prep
-    EF_index_dict, cluster_EF_index_dict = {}, {}
-    zeo_list = ['CHA', 'AEI', 'RHO', 'MWW', 'BEA', 'LTA', 'MAZ', 'MFI', 'MOR', 'SOD']
-    for zeolite in zeo_list:
-        folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_minE'
-        EF_index, cluster_EF_index = prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
-        EF_index_dict[zeolite] = EF_index
-        cluster_EF_index_dict[zeolite] = cluster_EF_index
-
-    # write all original EF-atom indices into dict for later extraction of the DFT forces
-    with open('/Users/jiaweiguo/Box/openMM_FF/EF_index_dict.pickle', 'wb') as f:
-        pickle.dump(EF_index_dict, f)
-
-    # write all EF-atom indeices in smaller cluster into dict for later extraction of the FF forces
-    with open('/Users/jiaweiguo/Box/openMM_FF/cluster_EF_index_dict.pickle', 'wb') as f:
-        pickle.dump(cluster_EF_index_dict, f)
-    """
-    # force matching using CHA MD data
-    zeolite = 'CHA'
+    tic = time.perf_counter()
+    zeolite = 'SOD'
     folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF', zeolite, zeolite + '_md'
+    # prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
     """
     ini_bond_param_dict = {('O-Cu', 'Cu'): [1.2, 4, 0.3], ('O-EF', 'Cu'): [1.2, 4, 0.2], ('Al', 'Cu'): [1.2, 4, 0.4]}
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.3, 10], ('O-Cu', 'Cu', 'O-EF'): [2.3, 10],
                             ('Al', 'Cu', 'O-EF'): [2.3, 10]}
     """
     ini_bond_param_dict = {('O-Cu', 'Cu'): [60.097, 2.267, 0.228], ('O-EF', 'Cu'): [4405.247, 4.163, 0.177],
-                       ('Al', 'Cu'): [-2.656, 4.608, 0.413]}
+                           ('Al', 'Cu'): [-2.656, 4.608, 0.413]}
     ini_angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.458, 16.552], ('O-Cu', 'Cu', 'O-EF'): [3.266, 4.136],
-                        ('Al', 'Cu', 'O-EF'): [1.925, 1.673]}
+                            ('Al', 'Cu', 'O-EF'): [1.925, 1.673]}
     included_bond_type, included_angle_type, ini_param = reformat_inputs(ini_bond_param_dict, ini_angle_param_dict)
 
     # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
@@ -615,7 +603,7 @@ def func():
     bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
     angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
 
-    numb_skip = 60
+    numb_skip = 2000
     info_dict, output_path = {}, os.path.join(folder_path, traj_name)
     files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
     for cluster_tag_number in np.arange(0, len(files), numb_skip):
@@ -638,6 +626,11 @@ def func():
         DFT_f.append([get_DFT_forces_single(atoms, atom_index=val) for val in EF_index_dict.get(zeolite)[-3:]])
     print(np.array(DFT_f).shape)
 
+    ref_E = read(folder_path + '/%s.traj' % traj_name, '-1').calc.results['energy']
+    DFT_E = []
+    for atoms in traj:
+        DFT_E.append(atoms.calc.results['energy'])
+
     with open(os.path.join(folder_path, traj_name) + '/info_dict_%s.pickle' % numb_skip, 'rb') as f:
         info_dict = pickle.load(f)
 
@@ -645,7 +638,10 @@ def func():
         cluster_EF_index_dict = pickle.load(f)
 
     my_dict = copy.deepcopy(info_dict)  # important, need to keep openMM "systems" fixed
-    res = get_fitting_parameters(ini_param, my_dict, DFT_f, ini_bond_param_dict, ini_angle_param_dict,
+    weights = []
+    for value in np.exp(-(np.array(DFT_E) - ref_E) / len(traj[0]) / (8.617e-5 * 298)):
+        weights.extend([value, value, value, value, value, value, value, value, value])
+    res = get_fitting_parameters(ini_param, my_dict, DFT_f, np.array(weights), ini_bond_param_dict, ini_angle_param_dict,
                                  bond_type_index_dict, angle_type_index_dict, cluster_EF_index_dict.get(zeolite))
 
     print([np.around(float(val), decimals=3) for val in res.x])
@@ -654,215 +650,27 @@ def func():
     make_parity_plot(np.array(np.reshape(FF_f, [-1, 3])), np.array(np.reshape(DFT_f, [-1, 3])), 'Cu-O-Cu')
 
     force_dict = {'FF': np.array(np.reshape(FF_f, [-1, 3])), 'DFT': np.array(np.reshape(DFT_f, [-1, 3]))}
-    with open(output_path + '/forces.pickle', 'wb') as f:
+    with open(output_path + '/forces_%s.pickle' % numb_skip, 'wb') as f:
         pickle.dump(force_dict, f)
 
-
-def optimizer():
-    tic = time.perf_counter()
-    """
-    # initial and optimized structure prep
-    zeolite = 'CHA'
-    folder = '/Users/jiaweiguo/Box/02_2Cu_zeo/01_%s' % zeolite
-    filepaths = [dirs for dirs in os.listdir(folder) if 'T' in dirs]
-    ini_traj, opt_traj = [], []
-    for file in filepaths:
-        ini_traj.append(read(os.path.join(folder, file) + '/2Cu.traj', '0'))
-        try:
-            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/opt_from_vasp.traj', '0'))
-        except:
-            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/vasprun.xml', '-1'))
-            print(zeolite, file)
-    output_dir = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test'
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    write(output_dir + '/CHA_ini.traj', ini_traj)
-    write(output_dir + '/CHA_opt.traj', opt_traj)
-    """
-    zeolite = 'CHA'
-    ini_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_ini.traj', ':')
-    opt_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', ':')
-    folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test', zeolite, zeolite + '_ini'
-    # prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
-
-    # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
-    cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
-    bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
-    bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-    angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
-    angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-    bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
-    angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
-
-    bond_param_dict = {('O-Cu', 'Cu'): [60.097, 2.267, 0.228], ('O-EF', 'Cu'): [4405.247, 4.163, 0.177],
-                       ('Al', 'Cu'): [-2.656, 4.608, 0.413]}
-    angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.458, 16.552], ('O-Cu', 'Cu', 'O-EF'): [3.266, 4.136],
-                            ('Al', 'Cu', 'O-EF'): [1.925, 1.673]}
-    included_bond_type, included_angle_type, trained_param = reformat_inputs(bond_param_dict, angle_param_dict)
-    """
-    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
-    files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
-    for cluster_tag_number in np.arange(len(files)):
-        cluster_tag_number = int(cluster_tag_number)
-        pdb, system, shortened_bond_list, shortened_angle_list = \
-            get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type,
-                                        bond_type_index_dict, angle_type_index_dict)
-        info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, shortened_angle_list]
-        print(cluster_tag_number)
-
-    with open(output_path + '/info_dict.pickle', 'wb') as f:
-        pickle.dump(info_dict, f)
-    """
-
-    # train on single configuration first
-    pdb, system, shortened_bond_list, shortened_angle_list = \
-        get_required_objects_for_ff(os.path.join(folder_path, traj_name), 1, included_bond_type, included_angle_type,
-                                    bond_type_index_dict, angle_type_index_dict)
-
-    system = custom_openMM_force_object(system, shortened_bond_list, bond_type_index_dict, bond_param_dict, shortened_angle_list,
-                                            angle_type_index_dict, angle_param_dict)
-
-    integrator = LangevinMiddleIntegrator(0 * kelvin, 1 / picosecond, 0.002 * picoseconds)  # randomly picked
-    #pdb.topology.setUnitCellDimensions(Vec3(L, L, L) * units.nanometer)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-
-    if pdb.topology.getPeriodicBoxVectors() is not None:
-        simulation.context.setPeriodicBoxVectors(*pdb.topology.getPeriodicBoxVectors())
-        print(pdb.topology.getPeriodicBoxVectors())
-
-    # simulation.minimizeEnergy()
-    state = simulation.context.getState(getForces=True, enforcePeriodicBox=True, getPositions=True)
-    simulation.reporters.append(PDBReporter('/Users/jiaweiguo/Desktop/output.pdb', 1000, enforcePeriodicBox=True))
-    simulation.reporters.append(StateDataReporter(stdout, 100, step=True, potentialEnergy=True, temperature=True))
-    simulation.step(50001)
-
-    state = simulation.context.getState(getForces=True, enforcePeriodicBox=True, getPositions=True)
-
-    final_pos = [np.array(state.getPositions(asNumpy=True)[index]) for index in [10, 11, 12]]
-    print((final_pos[1] - final_pos[2]) * 10)
-    toc = time.perf_counter()
-    print(f"Program terminated in {toc - tic:0.4f} seconds")
-
-
-def temp_func():
-    tic = time.perf_counter()
-    """
-    # initial and optimized structure prep
-    zeolite = 'CHA'
-    folder = '/Users/jiaweiguo/Box/02_2Cu_zeo/01_%s' % zeolite
-    filepaths = [dirs for dirs in os.listdir(folder) if 'T' in dirs]
-    ini_traj, opt_traj = [], []
-    for file in filepaths:
-        ini_traj.append(read(os.path.join(folder, file) + '/2Cu.traj', '0'))
-        try:
-            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/opt_from_vasp.traj', '0'))
-        except:
-            opt_traj.append(read(os.path.join(folder, file) + '/opt_400/vasprun.xml', '-1'))
-            print(zeolite, file)
-    output_dir = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test'
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    write(output_dir + '/CHA_ini.traj', ini_traj)
-    write(output_dir + '/CHA_opt.traj', opt_traj)
-    """
-    zeolite = 'CHA'
-    ini_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_ini.traj', ':')
-    opt_traj = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', ':')
-    folder_path, sample_zeolite, traj_name = '/Users/jiaweiguo/Box/openMM_FF/ff_opt_test', zeolite, zeolite + '_ini'
-    # prep_topologies(folder_path, sample_zeolite, traj_name, del_unlabeled_pdb=True)
-
-    # set up type_index_dict using a single set of data #fixme: randomly pick several initial clusters to built dict
-    cluster = read(os.path.join(folder_path, traj_name) + '/cluster_0_labeled.pdb', '0')
-    bond_index_list, shortened_bond_index_list = get_bonds(cluster, mult=2)
-    bond_type_dict, whole_bond_type_list = get_property_types(cluster, bond_index_list)
-    angle_index_list, shortened_angle_index_list = get_angles(cluster, mult=2)
-    angle_type_dict, whole_angle_type_list = get_property_types(cluster, angle_index_list)
-    bond_type_index_dict = get_type_index_pair(bond_type_dict, whole_bond_type_list, bond_index_list)
-    angle_type_index_dict = get_type_index_pair(angle_type_dict, whole_angle_type_list, angle_index_list)
-
-    bond_param_dict = {('O-Cu', 'Cu'): [60.097, 2.267, 0.228], ('O-EF', 'Cu'): [4405.247, 4.163, 0.177],
-                       ('Al', 'Cu'): [-2.656, 4.608, 0.413]}
-    angle_param_dict = {('Cu', 'O-EF', 'Cu'): [2.458, 16.552], ('O-Cu', 'Cu', 'O-EF'): [3.266, 4.136],
-                        ('Al', 'Cu', 'O-EF'): [1.925, 1.673]}
-    included_bond_type, included_angle_type, trained_param = reformat_inputs(bond_param_dict, angle_param_dict)
-    """
-    info_dict, output_path = {}, os.path.join(folder_path, traj_name)
-    files = [files for files in os.listdir(os.path.join(folder_path, traj_name)) if '.pdb' in files]
-    for cluster_tag_number in np.arange(len(files)):
-        cluster_tag_number = int(cluster_tag_number)
-        pdb, system, shortened_bond_list, shortened_angle_list = \
-            get_required_objects_for_ff(output_path, cluster_tag_number, included_bond_type, included_angle_type,
-                                        bond_type_index_dict, angle_type_index_dict)
-        info_dict[cluster_tag_number] = [pdb, system, shortened_bond_list, shortened_angle_list]
-        print(cluster_tag_number)
-
-    with open(output_path + '/info_dict.pickle', 'wb') as f:
-        pickle.dump(info_dict, f)
-    """
-
-    # train on single configuration first
-    pdb, system, shortened_bond_list, shortened_angle_list = \
-        get_required_objects_for_ff(os.path.join(folder_path, traj_name), 10, included_bond_type, included_angle_type,
-                                    bond_type_index_dict, angle_type_index_dict)
-
-    system = custom_openMM_force_object(system, shortened_bond_list, bond_type_index_dict, bond_param_dict,
-                                        shortened_angle_list,
-                                        angle_type_index_dict, angle_param_dict)
-
-    integrator = LangevinMiddleIntegrator(0 * kelvin, 1 / picosecond, 0.001 * picoseconds)  # randomly picked
-    # pdb.topology.setUnitCellDimensions(Vec3(L, L, L) * units.nanometer)
-    simulation = Simulation(pdb.topology, system, integrator)
-    simulation.context.setPositions(pdb.positions)
-
-    if pdb.topology.getPeriodicBoxVectors() is not None:
-        simulation.context.setPeriodicBoxVectors(*pdb.topology.getPeriodicBoxVectors())
-        print(pdb.topology.getPeriodicBoxVectors())
-
-    simulation.minimizeEnergy()
-    simulation.reporters.append(PDBReporter('/Users/jiaweiguo/Desktop/output.pdb', 100, enforcePeriodicBox=True))
-    simulation.reporters.append(StateDataReporter(stdout, 1000, step=True, potentialEnergy=True, temperature=True))
-    simulation.step(10000)
-
-    state = simulation.context.getState(getForces=True, enforcePeriodicBox=True, getPositions=True)
-    final_pos = [np.array(state.getPositions(asNumpy=True)[index]) for index in [10, 11, 12]]
-    print((final_pos[1] - final_pos[2]) * 10)
-
-    positions = simulation.context.getState(getPositions=True).getPositions()
-    PDBFile.writeFile(simulation.topology, positions, open('/Users/jiaweiguo/Desktop/final.pdb', 'w'))
-    print('Done')
-    """
-    dft_opt_atoms = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', '1')
-    cell_dim = dft_opt_atoms.get_cell()
-    ff_opt_atoms = proteindatabank.read_proteindatabank('/Users/jiaweiguo/Desktop/output.pdb', index=-1)
-    print(ff_opt_atoms.get_cell())
-    ff_opt_atoms.set_cell(cell_dim)
-    print(ff_opt_atoms.get_cell())
-    ff_pos = [ff_opt_atoms.get_positions()[index] for index in [10, 11, 12]]
-    print(ff_pos)
-    """
-    ini_atoms = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_ini.traj', '10')
-    ini_pos = [ini_atoms.get_positions()[index] for index in [109, 110, 72]]
-    print(ini_pos[1] - ini_pos[2])
-
-    dft_opt_atoms = read('/Users/jiaweiguo/Box/openMM_FF/ff_opt_test/CHA_opt.traj', '10')
-    dft_pos = [dft_opt_atoms.get_positions()[index] for index in [109, 110, 72]]
-    print(dft_pos[1] - dft_pos[2])
     toc = time.perf_counter()
     print(f"Program terminated in {toc - tic:0.4f} seconds")
 
 
 if __name__ == '__main__':
     # func()
-    with open('/Users/jiaweiguo/Box/openMM_FF/CHA_md/forces.pickle', 'rb') as f:
-        forces_dict = pickle.load(f)
-    ff_forces = np.array([np.linalg.norm(x) for x in forces_dict.get('FF')])
-    dft_forces = np.array([np.linalg.norm(x) for x in forces_dict.get('DFT')])
-    AE = abs(dft_forces - ff_forces)
-    plt.figure(figsize=(6, 5))
-    plt.plot(dft_forces, AE, 'o')
-    y_fit = np.polyval(np.polyfit(dft_forces, AE, 1), dft_forces)
-    plt.plot(dft_forces, y_fit, '-')
-    plt.xlabel('dft forces in magnitude (eV/A)', fontsize=18)
-    plt.ylabel('absolute error (eV/A)', fontsize=18)
+    
+    """ weighting factor for the loss function
+    zeolite = 'SOD'
+    folder_path, traj_name, numb_skip = '/Users/jiaweiguo/Box/openMM_FF', zeolite + '_md', 2000
+    traj = read(folder_path + '/%s.traj' % traj_name, '0::%s' % numb_skip)
+    ref_E = read(folder_path + '/%s.traj' % traj_name, '-1').calc.results['energy']
+    DFT_E = []
+    for atoms in traj:
+        DFT_E.append(atoms.calc.results['energy'])
+    weight = np.exp(-(np.array(DFT_E) - ref_E) / len(traj[0]) / (8.617e-5 * 298))
+    plt.plot(DFT_E, weight, 'o')
+    plt.xlabel('DFT electronic energies (eV)', fontsize=16)
+    plt.ylabel('Boltzmann weighting', fontsize=16)
     plt.show()
-
-
+    """
