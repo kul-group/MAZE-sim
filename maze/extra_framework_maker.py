@@ -74,12 +74,9 @@ class ExtraFrameworkMaker(object):
         self.get_t_sites()
         for site_name, t_site in self.t_site_indices.items():
             traj_t_sites = []
-            for index in t_site:
-                pos = self.EFzeolite.get_positions()[index]
-                new_zeo = self.EFzeolite.delete_atoms([index])
-                new_zeo = new_zeo.add_atoms(Atoms('Al', positions=[pos]), 'Al')
-                # new_zeo = self.EFzeolite
-                # new_zeo[index].symbol = 'Al'
+            for count, index in enumerate(t_site):
+                new_zeo = copy.copy(self.EFzeolite)
+                new_zeo[index].symbol = 'Al'
                 new_ztype = new_zeo.ztype + site_name + '->Al'
                 new_zeo = Zeolite(new_zeo, ztype=new_ztype)
                 self.traj_1Al.append(new_zeo)
