@@ -68,7 +68,8 @@ class ExtraFrameworkMaker(object):
                 self.t_site_indices_count[site_name] = len(value)
 
     def replace_1Al(self):
-        """ This function takes in a perfect zeolite and replace one Si atom with an Al for every T site
+        """ This function takes in a perfect zeolite and replace one Si atom with an Al for every T site. The atomic
+        index of the T-site before and after Al replacement are kept fixed, while only the atom type is changing.
         :return: a dictionary of trajectories for each T site tags
         """
         self.get_t_sites()
@@ -84,56 +85,47 @@ class ExtraFrameworkMaker(object):
             self.dict_1Al_replaced[site_name] = traj_t_sites
 
     def get_T_site_from_atom_index(self, index):
+        """ This function returns the corresponding T-site tags for given atomic index.
+        """
         return [k for k, v in self.t_site_indices.items() if index in v]
 
     def replace_2Al_unique_pairs(self, cutoff_radius=9):
         """ This function makes the 2 Al replacement for all possible pairs (not limited to unique T-site pairs since
         even though the binding energies might be the same, the geometric properties, such as, Al-Al distance, are
-        different). Replacement obeys the Lowenstein's rule, and Al pairs with distance greater than the "cutoff_radius"
+        different). Replacement obeys the Lowenstein's rule, and Al pairs with distance greater than the"cutoff_radius"
         are ignored.
         :param cutoff_radius: replace the second Si site within some cutoff radius (9 Angstrom by default) around the
         first replacement site which is done using function "replace_1Al".
         :return:
         """
         done_indices = []
+        for site_name, traj_1Al in self.dict_1Al_replaced.items():
 
-        for zeolite in self.traj_1Al:
-            atoms = Zeolite(zeolite)  # already have neighbor_list
-            ini_atoms = copy.copy(atoms)
-            index_Al = [a.index for a in atoms if a.symbol == 'Al']
-
-            if len(index_Al) != 1:
-                print('Error: No more than 1 Al in the structure.')
-                atoms[index_Al[len(index_Al) - 1]].symbol = 'Si'
-                index_Al = [a.index for a in atoms if a.symbol == 'Al']
-
+            index_Al = [a.index for a in traj_1Al[0] if a.symbol == 'Al'][0]
             neighboring_Si = []
-            neigh_o_indices, offsets = atoms.neighbor_list.get_neighbors(index_Al[0])
+            neigh_o_indices, offsets = traj_1Al[0].neighbor_list.get_neighbors(index_Al)
             for each_neigh_o_index in neigh_o_indices:
-                neigh_si_indices, offsets = atoms.neighbor_list.get_neighbors(each_neigh_o_index)
-                for each_neigh_si_index in neigh_si_indices:
-                    if each_neigh_si_index != index_Al[0]:
-                        neighboring_Si.append(each_neigh_si_index)
+                neigh_si_indices, offsets = traj_1Al[0].neighbor_list.get_neighbors(each_neigh_o_index)
+                [neighboring_Si.append(each_neigh_si_index) for each_neigh_si_index in neigh_si_indices
+                 if each_neigh_si_index != index_Al]
 
-            if len(neighboring_Si) != 4:
-                continue
-            else:
-                Si_index = [a.index for a in atoms if a.symbol in ['Si']]
-                for index in Si_index:
-                    if index not in neighboring_Si and [index, index_Al] not in done_indices:
-                        # first condition is the Lowenstein's rule
+            for zeolite in traj_1Al:
+                atoms = Zeolite(zeolite)
+                ini_atoms = copy.copy(atoms)
+
+                for index in [a.index for a in atoms if a.symbol == 'Si']:
+                    sorted_pair = list(np.sort([index, index_Al]))
+                    if index not in neighboring_Si and sorted_pair not in done_indices:
                         if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
                             T_site_name = ini_atoms.atom_indices_to_sites[index]
-                            self.T_site_pair.append([self.get_T_site_from_atom_index(index_Al[0])[0], T_site_name])
-                            self.T_index_pair.append([index_Al[0], index])
-                            z_type_current = atoms.ztype
+                            self.T_site_pair.append([self.get_T_site_from_atom_index(index_Al)[0], T_site_name])
+                            self.T_index_pair.append([index_Al, index])
                             new_z_type = atoms.ztype + 'AND' + T_site_name + '->Al'
                             atoms = Zeolite(ini_atoms, ztype=new_z_type)
                             atoms[index].symbol = 'Al'
                             self.traj_2Al.append(atoms)
                             self.count_all_Al_pairs += 1
-                            done_indices.append([index_Al, index])
-                            done_indices.append([index, index_Al])
+                            done_indices.append(sorted_pair)
 
     @staticmethod
     def _get_direction_of_insertion(atoms, index1, index2, index3):
