@@ -12,6 +12,8 @@ import copy
 import shutil
 from glob import glob
 from ase.constraints import FixAtoms
+from ase import Atoms
+import numpy as np
 
 
 def save_zeolites(sample_zeolite: str):
@@ -185,21 +187,19 @@ def save_all_Al_zeo(sample_zeolite):
     print(EFzeolite.t_site_indices)
     print(EFzeolite.t_site_indices_count)
     print('Number of unique Al pairs: ', len(EFzeolite.traj_2Al))
-
+    """
     output_dir = '/Users/jiaweiguo/Box/01_1Al_zeo/01_%s' % sample_zeolite
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-
     for site_name, atoms_1Al in EFzeolite.dict_1Al_replaced.items():
         output_dir1 = os.path.join(output_dir, site_name)
         Path(output_dir1).mkdir(parents=True, exist_ok=True)
         my_path = os.path.join(output_dir1, site_name)
         write(my_path + '.traj', atoms_1Al[0])  # only save one structure for each unique T
-
+    """
     output_dir = '/Users/jiaweiguo/Box/01_2Al_zeo/01_%s' % sample_zeolite
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
-
     for site_name, atoms_2Al in EFzeolite.dict_2Al_replaced.items():
         output_dir2 = os.path.join(output_dir, site_name)
         Path(output_dir2).mkdir(parents=True, exist_ok=True)
@@ -246,6 +246,7 @@ def save_all_Z_TM(sample_zeolite):
             os.chdir(original_dir)
 
 
+"""
 def save_all_CuOCu(sample_zeolite):
     original_dir = '/Users/jiaweiguo/Box/01_2Al_zeo'
     for dir_name in os.listdir(original_dir):
@@ -253,7 +254,7 @@ def save_all_CuOCu(sample_zeolite):
             working_dir = original_dir + '/' + dir_name
             os.chdir(working_dir)
             for sub_dir_name in os.listdir(working_dir):
-                if 'T' in sub_dir_name:
+                if 'T8_T8_215_214' in sub_dir_name:
                     sub_working_dir = working_dir + '/' + sub_dir_name
                     os.chdir(sub_working_dir)
                     track_list = []
@@ -262,8 +263,8 @@ def save_all_CuOCu(sample_zeolite):
                         break  # only track one layer down the folder
                     if len(track_list) != 0:
                         track_list.sort(reverse=True)
-                        # atoms = read(track_list[0] + "/vasprun.xml", '-1')
-                        atoms = read(track_list[0] + "/opt_from_vasp.traj", '0')
+                        atoms = read(track_list[0] + "/vasprun.xml", '-1')
+                        # atoms = read(track_list[0] + "/opt_from_vasp.traj", '0')
 
                         EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
                         EF_type = 'CuOCu'
@@ -293,6 +294,28 @@ def save_all_CuOCu(sample_zeolite):
                     os.chdir(sub_working_dir)
 
             os.chdir(original_dir)
+"""
+
+def save_all_CuOCu(sample_zeolite):
+    filepath = '/Users/jiaweiguo/Box/01_2Al_zeo/01_%s/' % sample_zeolite
+    files = [files for files in os.listdir(filepath) if 'T' in files]
+    output_dir0 = '/Users/jiaweiguo/Box/02_CuOCu_zeo/01_%s/' % sample_zeolite
+    Path(output_dir0).mkdir(parents=True, exist_ok=True)
+    for file in files:
+        output_dir1 = os.path.join(output_dir0, file)
+        Path(output_dir1).mkdir(parents=True, exist_ok=True)
+        atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
+        EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+        try:
+            EFzeolite = ExtraFrameworkMaker()
+            my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms)
+            write(output_dir1 + '/CuOCu.traj', my_atoms)
+        except:
+            print(sample_zeolite, file)
+
+    # output_dir1 = os.path.join(output_dir0, file)
+    # Path(output_dir1).mkdir(parents=True, exist_ok=True)
+    # write(output_dir1 + '/starting.traj', new_atoms)
 
 
 def make_bare_zeo():
@@ -334,8 +357,10 @@ if __name__ == '__main__':
         save_all_CuOCu(each_zeo)
         print(each_zeo + ' is done!')
     """
-    # save_all_CuOCu('MFI')
+    # save_all_Al_zeo('RHO')
+    save_all_CuOCu('CHA')
 
+    """
     # all 1Al-H structures for Ty
     filepath = '/Users/jiaweiguo/Box/zeolites_opt/'
     files = [files for files in os.listdir(filepath) if '.traj' in files]
@@ -361,4 +386,50 @@ if __name__ == '__main__':
                     write(my_path + '.traj', my_atoms)
             except:
                 print(file)
-                
+    """
+
+    """
+    # Pt-2Al-MFI
+    current_TM = 'Pt'
+    filepath = '/Users/jiaweiguo/Box/01_2Al_zeo/01_MFI/'
+    files = [files for files in os.listdir(filepath) if 'T12_T1_287_197' in files]
+    output_dir0 = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_%s' % current_TM
+    Path(output_dir0).mkdir(parents=True, exist_ok=True)
+    for file in files:
+        atoms = read(os.path.join(filepath, file, 'opt_400/opt_from_vasp.traj'), '0')
+        nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
+        nl.update(atoms)
+        index_Al = [a.index for a in atoms if a.symbol == 'Al']
+        Al_neigh_list = np.concatenate((nl.get_neighbors(index_Al[0])[0], nl.get_neighbors(index_Al[1])[0]))
+        Al_neigh_list = [x for x in Al_neigh_list if atoms[x].symbol == 'O']
+        c = FixAtoms(indices=[atom.index for atom in atoms if atom.symbol != 'Al' and atom.index not in Al_neigh_list])
+        atoms.set_constraint(c)
+        my_atoms = copy.copy(atoms)
+        try:
+            EFzeolite = ExtraFrameworkMaker()
+            EF_atoms = Atoms(current_TM, positions=[[0, 0, 0]])
+            EF_atoms.set_cell(my_atoms.get_cell())
+            new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_atoms, EF_atoms, skip_rotation=True, min_cutoff=0, zeolite_dist_cutoff=1)
+            view(new_atoms)
+        except:
+            EFzeolite = ExtraFrameworkMaker()
+            EF_atoms = Atoms(current_TM, positions=[[0, 0, 0]])
+            EF_atoms.set_cell(my_atoms.get_cell())
+            new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_atoms, EF_atoms, skip_rotation=True, min_cutoff=0, zeolite_dist_cutoff=1)
+
+        view(new_atoms)
+        # output_dir1 = os.path.join(output_dir0, file)
+        # Path(output_dir1).mkdir(parents=True, exist_ok=True)
+        # write(output_dir1 + '/starting.traj', new_atoms)
+    """
+
+    """
+    current_TM = 'Pt'
+    filepath = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_%s' % current_TM
+    files = [files for files in os.listdir(filepath) if 'T' in files]
+    for file in files:
+        try:
+            atoms = read(os.path.join(filepath, file, 'starting.traj'), '0')
+        except:
+            print(file)
+    """
