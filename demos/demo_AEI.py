@@ -114,11 +114,25 @@ if __name__ == '__main__':
     print(EFzeolite.t_site_indices_count)
     print('Number of unique Al pairs: ', len(EFzeolite.traj_2Al))
 
-    output_dir0 = '/Users/jiaweiguo/Desktop/AEI'
-    output_dir1 = os.path.join(output_dir0, '2Al_%s' % file)
+    output_dir0 = '/Users/jiaweiguo/Desktop/AEI_corrected'
+    output_dir1 = os.path.join(output_dir0, '2Al_bare_reduced')
     Path(output_dir1).mkdir(parents=True, exist_ok=True)
     for site_name, atoms in EFzeolite.dict_2Al_replaced.items():
-        atoms = atoms + cluster
+        # atoms = atoms + cluster
         output_filename = sample_zeolite + '_' + '2Al_' + site_name
         my_path = os.path.join(output_dir1, output_filename)
         write(my_path + '.vasp', atoms, format='vasp')
+    """
+    EFzeolite.make_extra_frameworks(replace_1Al=True, replace_2Al=False, print_statement=True)
+    print(EFzeolite.t_site_indices)
+    print(EFzeolite.t_site_indices_count)
+
+    output_dir0 = '/Users/jiaweiguo/Desktop/AEI_corrected'
+    output_dir1 = os.path.join(output_dir0, '1Al_bare')
+    Path(output_dir1).mkdir(parents=True, exist_ok=True)
+    for site_name, atoms in EFzeolite.dict_1Al_replaced.items():
+        Al_index = [atom.index for atom in atoms[0] if atom.symbol == 'Al'][0]
+        output_filename = sample_zeolite + '_' + '1Al_' + site_name + '_' + str(Al_index)
+        my_path = os.path.join(output_dir1, output_filename)
+        write(my_path + '.vasp', atoms[0], format='vasp')
+    """
