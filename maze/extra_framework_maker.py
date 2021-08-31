@@ -99,8 +99,7 @@ class ExtraFrameworkMaker(object):
         :return:
         """
         done_indices = []
-        for site_name, traj_1Al in self.dict_1Al_replaced.items():
-
+        for site_name_1Al, traj_1Al in self.dict_1Al_replaced.items():
             index_Al = [a.index for a in traj_1Al[0] if a.symbol == 'Al'][0]
             neighboring_Si = []
             neigh_o_indices, offsets = traj_1Al[0].neighbor_list.get_neighbors(index_Al)
@@ -112,20 +111,20 @@ class ExtraFrameworkMaker(object):
             for zeolite in traj_1Al:
                 atoms = Zeolite(zeolite)
                 ini_atoms = copy.copy(atoms)
-
                 for index in [a.index for a in atoms if a.symbol == 'Si']:
                     sorted_pair = list(np.sort([index, index_Al]))
                     if index not in neighboring_Si and sorted_pair not in done_indices:
                         if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
-                            T_site_name = ini_atoms.atom_indices_to_sites[index]
-                            self.T_site_pair.append([self.get_T_site_from_atom_index(index_Al)[0], T_site_name])
-                            self.T_index_pair.append([index_Al, index])
-                            new_z_type = atoms.ztype + 'AND' + T_site_name + '->Al'
-                            atoms = Zeolite(ini_atoms, ztype=new_z_type)
-                            atoms[index].symbol = 'Al'
-                            self.traj_2Al.append(atoms)
-                            self.count_all_Al_pairs += 1
-                            done_indices.append(sorted_pair)
+                            site_name_2Al = ini_atoms.atom_indices_to_sites[index]
+                            if int(site_name_2Al[1:]) >= int(site_name_1Al[1:]):
+                                self.T_site_pair.append([site_name_1Al, site_name_2Al])
+                                self.T_index_pair.append([index_Al, index])
+                                new_z_type = atoms.ztype + 'AND' + site_name_2Al + '->Al'
+                                atoms = Zeolite(ini_atoms, ztype=new_z_type)
+                                atoms[index].symbol = 'Al'
+                                self.traj_2Al.append(atoms)
+                                self.count_all_Al_pairs += 1
+                                done_indices.append(sorted_pair)
 
     @staticmethod
     def _get_direction_of_insertion(atoms, index1, index2, index3):
