@@ -43,8 +43,9 @@ class Adsorbate(Atoms):
 
         dummy_atom = Atom('H', position=ads_position)
         dummy_host = self.host_zeotype + dummy_atom
-        min_distance = min(dummy_host.get_distances(-1, [i for i in range(len(self.host_zeotype))], mic=True))
-        return min_distance
+        distances = dummy_host.get_distances(-1, [atom.index for atom in self.host_zeotype], mic=True)
+        distances.sort()
+        return distances[1] # skip the distance of dummy atom to itself, which is always zero
 
     def avg_distance(self, ads_position):
         """average distance from position to all host atoms :param ads_position:
