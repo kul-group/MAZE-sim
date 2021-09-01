@@ -14,6 +14,7 @@ from glob import glob
 from ase.constraints import FixAtoms
 from ase import Atoms
 import numpy as np
+import pickle
 
 
 def save_zeolites(sample_zeolite: str):
@@ -178,33 +179,31 @@ def save_bare_zeo(sample_zeolite):
     write(my_path + '.traj', EFzeolite.EFzeolite)
 
 
-def save_all_Al_zeo(sample_zeolite):
-    EFzeolite = ExtraFrameworkMaker(sample_zeolite, '/Users/jiaweiguo/Box/00_test_zeo/00_%s/new_%s.traj'
-                                    % (sample_zeolite, sample_zeolite))
-
-    # 1Al and 2Al replacement
+def save_all_Al_zeo(sample_zeolite, zeo_dir, output_1Al, output_2Al):
+    EFzeolite = ExtraFrameworkMaker(sample_zeolite, zeo_dir)
     EFzeolite.make_extra_frameworks(replace_1Al=True, replace_2Al=True, print_statement=True)
-    print(EFzeolite.t_site_indices)
-    print(EFzeolite.t_site_indices_count)
-    print('Number of unique Al pairs: ', len(EFzeolite.traj_2Al))
-    """
-    output_dir = '/Users/jiaweiguo/Box/01_1Al_zeo/01_%s' % sample_zeolite
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+    info_dict = {'T_indices': EFzeolite.t_site_indices, 'Atoms_count': len(EFzeolite.EFzeolite),
+                 'Al_pair_count': len(EFzeolite.traj_2Al), 'T_count': len(EFzeolite.t_site_indices)}
+    print('Number of unique Al pairs for %s: ' %sample_zeolite, len(EFzeolite.traj_2Al))
+
+    if not os.path.exists(output_1Al):
+        os.mkdir(output_1Al)
     for site_name, atoms_1Al in EFzeolite.dict_1Al_replaced.items():
-        output_dir1 = os.path.join(output_dir, site_name)
+        output_dir1 = os.path.join(output_1Al, site_name)
         Path(output_dir1).mkdir(parents=True, exist_ok=True)
         my_path = os.path.join(output_dir1, site_name)
-        write(my_path + '.traj', atoms_1Al[0])  # only save one structure for each unique T
-    """
-    output_dir = '/Users/jiaweiguo/Box/01_2Al_zeo/01_%s' % sample_zeolite
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+        write(my_path + '.traj', atoms_1Al[0])
+
+    if not os.path.exists(output_2Al):
+        os.mkdir(output_2Al)
     for site_name, atoms_2Al in EFzeolite.dict_2Al_replaced.items():
-        output_dir2 = os.path.join(output_dir, site_name)
+        output_dir2 = os.path.join(output_2Al, site_name)
         Path(output_dir2).mkdir(parents=True, exist_ok=True)
         my_path = os.path.join(output_dir2, site_name)
         write(my_path + '.traj', atoms_2Al)
+
+    with open(output_2Al + '/info_dict_%s.pickle' % sample_zeolite, 'wb') as f:
+        pickle.dump(info_dict, f)
 
 
 def save_all_Z_TM(sample_zeolite):
@@ -296,10 +295,9 @@ def save_all_CuOCu(sample_zeolite):
             os.chdir(original_dir)
 """
 
-def save_all_CuOCu(sample_zeolite):
-    filepath = '/Users/jiaweiguo/Box/01_2Al_zeo/01_%s/' % sample_zeolite
+
+def save_all_CuOCu(zeolite, filepath, output_dir0):
     files = [files for files in os.listdir(filepath) if 'T' in files]
-    output_dir0 = '/Users/jiaweiguo/Box/02_CuOCu_zeo/01_%s/' % sample_zeolite
     Path(output_dir0).mkdir(parents=True, exist_ok=True)
     for file in files:
         output_dir1 = os.path.join(output_dir0, file)
@@ -311,21 +309,11 @@ def save_all_CuOCu(sample_zeolite):
             my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms)
             write(output_dir1 + '/CuOCu.traj', my_atoms)
         except:
-            print(sample_zeolite, file)
-
-    # output_dir1 = os.path.join(output_dir0, file)
-    # Path(output_dir1).mkdir(parents=True, exist_ok=True)
-    # write(output_dir1 + '/starting.traj', new_atoms)
+            print(zeolite, file, ' failed!')
 
 
-def make_bare_zeo():
-    """
-    zeo = ['CHA', 'SOD', 'LTA', 'FAU', 'MOR', 'MFI', 'MAZ', 'BEA', 'AEI', 'RHO', 'MWW', 'SVY']
-    for each_zeo in zeo:
-        get_all(each_zeo)
-        print(each_zeo + 'is done!')
-    """
-    topo = ['CHA', 'MOR', 'MWW', 'FAU', 'FER', 'MFI', 'BEC', 'MON', 'MSE', 'AFO', 'AHT', 'BOG', 'CFI',
+if __name__ == '__main__':
+    topo = ['BEA', 'CHA', 'MOR', 'MWW', 'FAU', 'FER', 'MFI', 'BEC', 'MON', 'MSE', 'AFO', 'AHT', 'BOG', 'CFI',
             'CGF', 'DON', 'EMT', 'EON', 'EUO', 'GON', 'IWS', 'LTF', 'MTW', 'OBW', 'OSI', 'RHO', 'RSN',
             'SBE', 'SSY', 'TER', 'VFI', 'WEI', 'ABW', 'ACO', 'AET', 'AFI', 'AFN', 'AFR', 'AFT', 'AFY',
             'ANA', 'APC', 'APD', 'AST', 'ASV', 'ATN', 'ATO', 'ATT', 'ATV', 'AWW', 'BCT', 'BIK', 'BOF',
@@ -340,25 +328,28 @@ def make_bare_zeo():
             'ATS', 'AVL', 'AWO', 'BOZ', 'BPH', 'CAS', 'CDO', 'DAC', 'DOH', 'EPI', 'FER', 'UWY', 'TON',
             'TSC', 'UEI', 'UFI', 'UOS', 'UOZ', 'SZR', 'STI', 'SVV', 'SGT', 'SOF', 'SOS', 'SSF', 'SAT',
             'SAF', 'RTE', 'PUN', 'PCR', 'OWE', 'PAR', 'NPT', 'MVY', 'MSO', 'MEI', 'LIT', 'LAU', 'LTJ',
-            'JOZ', 'JRY', 'JSN', 'JST', 'JSW', 'ITW', 'ITV', 'IRR', 'IMF']
-    print(len(topo))
-
-    addition = ['BEA', 'SVY']
-    for each_zeo in addition:
-        save_bare_zeo(each_zeo)
-
-
-if __name__ == '__main__':
+            'JOZ', 'JRY', 'JSN', 'JST', 'JSW', 'ITW', 'ITV', 'IRR', 'IMF', 'BEA', 'SVY']
     """
-    zeo = ['CHA', 'SOD', 'LTA', 'FAU', 'MOR', 'MFI', 'MAZ', 'BEA', 'AEI', 'RHO', 'MWW']
-    for each_zeo in zeo:
-        # save_all_Z_TM(each_zeo)
-        # save_all_Al_zeo(each_zeo)
-        save_all_CuOCu(each_zeo)
-        print(each_zeo + ' is done!')
+    for sample_zeolite in topo:
+        save_bare_zeo(sample_zeolite)
+        print(sample_zeolite + 'is done!')
+        
+    for sample_zeolite in topo:
+        try:
+            zeo_dir = '/Users/jiaweiguo/Box/00_bare_zeo/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
+            output_1Al = '/Users/jiaweiguo/Box/all_zeo_database/1Al/00_%s' % sample_zeolite
+            output_2Al = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s' % sample_zeolite
+            save_all_Al_zeo(sample_zeolite, zeo_dir, output_1Al, output_2Al)
+            print(sample_zeolite + ' is done!')
+        except:
+            print(sample_zeolite + ' is failed!')
     """
-    # save_all_Al_zeo('RHO')
-    save_all_CuOCu('CHA')
+    for sample_zeolite in topo:
+        filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s/' % sample_zeolite
+        output_dir = '/Users/jiaweiguo/Box/all_zeo_database/2Al_CuOCu/01_%s/' % sample_zeolite
+        save_all_CuOCu(sample_zeolite, filepath, output_dir)
+        print(sample_zeolite, ' is done!')
+        break
 
     """
     # all 1Al-H structures for Ty
