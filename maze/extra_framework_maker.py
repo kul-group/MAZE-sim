@@ -160,10 +160,12 @@ class ExtraFrameworkMaker(object):
         return dict_Z_TM
 
     def get_Z_TM(self, atoms, d_Z_TM, TM_type):
+        # todo: improve flexibility to allow Z-TM-H or Z-TM-OH insertions while avoid overlapping
         nl = NeighborList(natural_cutoffs(atoms), bothways=True, self_interaction=False)
         nl.update(atoms)
         index_Al = [a.index for a in atoms if a.symbol == 'Al']
         indices, offsets = nl.get_neighbors(index_Al[0])
+        indices = [val for val in indices if atoms[val].symbol == 'O']
         assert len(indices) == 4
 
         dict_Z_TM = {}
