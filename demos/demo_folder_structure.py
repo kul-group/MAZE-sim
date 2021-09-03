@@ -28,6 +28,7 @@ class SaveExtraFrameworkConfigurations(object):
         Path(output_dir0).mkdir(parents=True, exist_ok=True)
         my_path = os.path.join(output_dir0, sample_zeolite)
         write(my_path + '.traj', EFzeolite.EFzeolite)
+        print(self.sample_zeolite, 'is done!')
 
     def save_all_Al_zeo(self, zeo_dir, output_1Al, output_2Al):
         EFzeolite = ExtraFrameworkMaker(self.sample_zeolite, zeo_dir)
@@ -72,20 +73,19 @@ class SaveExtraFrameworkConfigurations(object):
                     write(my_path + '.traj', my_atoms)
 
     def save_all_ZCu(self, filepath, output_dir):
+        filepath = filepath + '/00_' + self.sample_zeolite
         files = [files for files in os.listdir(filepath) if 'T' in files]
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         for file in files:
-            output_dir1 = os.path.join(output_dir0, file)
-            Path(output_dir1).mkdir(parents=True, exist_ok=True)
             atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
             EFzeolite = ExtraFrameworkMaker()
             dict_ZCu = EFzeolite.get_Z_TM(atoms, 2.6, 'Cu')
 
             for site_name, my_atoms in dict_ZCu.items():
-                output_dir1 = os.path.join(output_dir, sub_dir_name + '_' + site_name)
+                output_dir1 = os.path.join(output_dir, file + '_' + site_name)
                 Path(output_dir1).mkdir(parents=True, exist_ok=True)
                 write(output_dir1 + '/1Cu.traj', my_atoms)
-        print(self.sample_zeolite, ' is done!')
+        print(self.sample_zeolite, 'is done!')
 
     def save_all_CuOCu(self, filepath, output_dir0):
         files = [files for files in os.listdir(filepath) if 'T' in files]
@@ -119,24 +119,32 @@ if __name__ == '__main__':
             'ATS', 'AVL', 'AWO', 'BOZ', 'BPH', 'CAS', 'CDO', 'DAC', 'DOH', 'EPI', 'FER', 'UWY', 'TON',
             'TSC', 'UEI', 'UFI', 'UOS', 'UOZ', 'SZR', 'STI', 'SVV', 'SGT', 'SOF', 'SOS', 'SSF', 'SAT',
             'SAF', 'RTE', 'PUN', 'PCR', 'OWE', 'PAR', 'NPT', 'MVY', 'MSO', 'MEI', 'LIT', 'LAU', 'LTJ',
-            'JOZ', 'JRY', 'JSN', 'JST', 'JSW', 'ITW', 'ITV', 'IRR', 'IMF', 'BEA', 'SVY']
+            'JOZ', 'JRY', 'JSN', 'JST', 'JSW', 'ITW', 'ITV', 'IRR', 'IMF', 'BEA']
     """
-    for sample_zeolite in topo:
-        traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
-        traj_saver.save_bare_zeo(output_dir='/Users/jiaweiguo/Box/00_bare_zeo/')
-        traj_saver.save_all_ZCu(dir_name='/Users/jiaweiguo/Box/01_1Al_zeo'):
-        print(sample_zeolite + 'is done!')
-        
+    failed_zeo = []
     for sample_zeolite in topo:
         try:
-            zeo_dir = '/Users/jiaweiguo/Box/00_bare_zeo/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
+            traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
+            # traj_saver.save_bare_zeo('/Users/jiaweiguo/Box/00_bare_zeo/')
+            input_dir = '/Users/jiaweiguo/Box/all_zeo_database/1Al'
+            output_dir = '/Users/jiaweiguo/Box/all_zeo_database/1Al_Cu/00_%s' % sample_zeolite
+            traj_saver.save_all_ZCu(input_dir, output_dir)
+        except:
+            failed_zeo.append(sample_zeolite)
+    print(failed_zeo)
+    """
+    failed_zeo = []
+    for sample_zeolite in ['MFI', 'EUO', 'CHI']:
+        try:
+            zeo_dir = '/Users/jiaweiguo/Box/all_zeo_database/Silica_unopt/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
             output_1Al = '/Users/jiaweiguo/Box/all_zeo_database/1Al/00_%s' % sample_zeolite
             output_2Al = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s' % sample_zeolite
             traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
             traj_saver.save_all_Al_zeo(zeo_dir, output_1Al, output_2Al)
             print(sample_zeolite + ' is done!')
         except:
-            print(sample_zeolite + ' is failed!')
+            failed_zeo.append(sample_zeolite)
+    print(failed_zeo)
     """
     for sample_zeolite in topo:
         filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s/' % sample_zeolite
@@ -144,4 +152,5 @@ if __name__ == '__main__':
         traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
         traj_saver.save_all_CuOCu(filepath, output_dir)
         print(sample_zeolite, ' is done!')
-        
+        break
+    """
