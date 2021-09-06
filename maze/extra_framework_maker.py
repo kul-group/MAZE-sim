@@ -364,11 +364,28 @@ class ExtraFrameworkMaker(object):
         :param max_cutoff: use smaller cutoff for small EF-cluster
         :return:
         """
+
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+
+        shifting_dirs = [np.zeros(3)]
+        [shifting_dirs.append(value) for dim, value in enumerate(list(atoms.get_cell())) if value[dim] < 2 * 9]
+        # print(shifting_dirs)
+
+        Al1_pos = [atoms.get_positions()[Al_index[0]]]
+        [Al1_pos.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
+
+        mid_Al = []
+        [mid_Al.append(0.5 * (atoms.get_positions()[Al_index[0]] + possible_dir/2 + atoms.get_positions()[Al_index[1]]))
+         for possible_dir in shifting_dirs]
+        print(mid_Al)
+        """
         atoms, vec_translate = self.recentering_atoms(atoms, mid_Al)
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        print(mid_Al)
+        view(atoms)
+        """
+
         if skip_rotation is False:
             EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
         EF_atoms_ini = copy.deepcopy(EF_atoms)
@@ -376,27 +393,23 @@ class ExtraFrameworkMaker(object):
         if EF_atoms_radius == 0:  # true for single atom EF-cluster
             EF_atoms_radius = 1.5
 
-        max_count, closest_distance = 500, 1.5 + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
+        max_count, closest_distance = 500, zeolite_dist_cutoff + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
         for d_thres in np.arange(min_cutoff, max_cutoff, 0.5):
             count = 0
             while count < max_count:
                 EF_atoms = copy.deepcopy(EF_atoms_ini)
-
                 u_dir, step_size = self._get_random_dir(atoms), d_thres * np.random.random_sample()
                 trial_pos = np.array(mid_Al + u_dir * step_size)
 
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 EF_atoms.translate(trial_pos - EF_atoms_cop)
-
                 if skip_rotation is False:
                     EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
-
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
                 distances = np.linalg.norm(distances, axis=1)
 
                 if min(distances) > closest_distance:
-
                     atoms = atoms + EF_atoms
                     atoms.translate(-1 * vec_translate)
                     atoms.wrap()
