@@ -362,12 +362,12 @@ class ExtraFrameworkMaker(object):
         distances = np.linalg.norm(distances, axis=1)
         for dist in distances:
             mic(ref_pos - atoms.positions, atoms.cell)
-            if dist <= np.linalg.norm(mic(ref_pos - Al_pos, atoms.cell)):
+            if dist <= 4:  # np.linalg.norm(mic(ref_pos - Al_pos, atoms.cell))
                 cf_atoms += 1
         return cf_atoms
 
     def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
-                                   min_cutoff=2, max_cutoff=7, zeolite_dist_cutoff=1.5):
+                                   min_cutoff=0, max_cutoff=7, zeolite_dist_cutoff=1.5):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
         there are more than one TMs in the cluster, the cluster is rotated so that the TM-TM vector is aligned with the
@@ -390,23 +390,25 @@ class ExtraFrameworkMaker(object):
 
         Al1_positions, mid_AlAl_positions = [], []
         [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
-        [mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell)) for
-         Al1_position in Al1_positions]
 
+        [mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell, pbc=False))
+         for Al1_position in Al1_positions]
+        print(mid_AlAl_positions)
         if len(mid_AlAl_positions) != 1:
             cf_atoms_count = []
             for count in range(len(mid_AlAl_positions)):
                 cf_atoms_count.append(self.check_occupancy(atoms, mid_AlAl_positions[count], Al1_positions[count]))
+            print(cf_atoms_count)
             sorted_index = np.argsort(cf_atoms_count)
             mid_AlAl = [mid_AlAl_positions[sorted_index[0]]]
         else:
             mid_AlAl = mid_AlAl_positions[0]
-
+        print(mid_AlAl)
         atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
         mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
         if skip_rotation is False:
             EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
-        EF_atoms_ini = copy.deepcopy(EF_atoms)
+        EF_atoms_ini = copy.copy(EF_atoms)
         EF_atoms_radius = self.get_cluster_radius(EF_atoms)
         if EF_atoms_radius == 0:  # true for single atom EF-cluster
             EF_atoms_radius = 1.5
@@ -415,14 +417,15 @@ class ExtraFrameworkMaker(object):
         for d_thres in np.arange(min_cutoff, max_cutoff, 0.5):
             count = 0
             while count < max_count:
-                EF_atoms = copy.deepcopy(EF_atoms_ini)
+                EF_atoms = copy.copy(EF_atoms_ini)
                 u_dir, step_size = self._get_random_dir(atoms), d_thres * np.random.random_sample()
                 trial_pos = np.array(mid_AlAl + u_dir * step_size)
 
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 EF_atoms.translate(trial_pos - EF_atoms_cop)
-                if skip_rotation is False:
+                if skip_rotation is False and np.linalg.norm(u_dir) > 1.5:
                     EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
+                # print(np.linalg.norm(u_dir))
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
                 distances = np.linalg.norm(distances, axis=1)
@@ -436,7 +439,6 @@ class ExtraFrameworkMaker(object):
                     count += 1
 
                     
-
 if __name__ == '__main__':
     """
     my_zeolite = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/MFI_2Al.traj', '8:9')[0]
