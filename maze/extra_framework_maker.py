@@ -348,8 +348,19 @@ class ExtraFrameworkMaker(object):
         atoms.wrap()
         return atoms, vec_translate
 
+    @staticmethod
+    def check_occupancy(atoms, pos_list, Al_pos):
+        cf_atoms = 0
+        distances = mic(pos_list - atoms.positions, atoms.cell)
+        distances = np.linalg.norm(distances, axis=1)
+        for dist in distances:
+            mic(pos_list - atoms.positions, atoms.cell)
+            if dist <= np.linalg.norm(mic(pos_list - Al_pos, atoms.cell)):
+                cf_atoms += 1
+        return cf_atoms
+
     def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
-                                   min_cutoff=2, max_cutoff=9):
+                                   min_cutoff=2, max_cutoff=7, zeolite_dist_cutoff=1.5):
         # todo: return error if unable to insert
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
@@ -360,31 +371,31 @@ class ExtraFrameworkMaker(object):
         :param ref_list:
         :param ref_index:
         :param skip_rotation: set this to be True for very small EF cluster, such as single metal atoms
-        :param min_cutoff: 
+        :param min_cutoff:
         :param max_cutoff: use smaller cutoff for small EF-cluster
+        :param zeolite_dist_cutoff: might need smaller value for very occupied regions of zeolites
         :return:
         """
-
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-
         shifting_dirs = [np.zeros(3)]
         [shifting_dirs.append(value) for dim, value in enumerate(list(atoms.get_cell())) if value[dim] < 2 * 9]
-        # print(shifting_dirs)
 
-        Al1_pos = [atoms.get_positions()[Al_index[0]]]
-        [Al1_pos.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
+        Al1_positions, mid_AlAl_positions = [], []
+        [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
+        [mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell)) for
+         Al1_position in Al1_positions]
 
-        mid_Al = []
-        [mid_Al.append(0.5 * (atoms.get_positions()[Al_index[0]] + possible_dir/2 + atoms.get_positions()[Al_index[1]]))
-         for possible_dir in shifting_dirs]
-        print(mid_Al)
-        """
-        atoms, vec_translate = self.recentering_atoms(atoms, mid_Al)
-        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        mid_Al = atoms.get_positions()[Al_index[0]] + 0.5 * atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
-        print(mid_Al)
-        view(atoms)
-        """
+        if len(mid_AlAl_positions) != 1:
+            cf_atoms_count = []
+            for count in range(len(mid_AlAl_positions)):
+                cf_atoms_count.append(self.check_occupancy(atoms, mid_AlAl_positions[count], Al1_positions[count]))
+            sorted_index = np.argsort(cf_atoms_count)
+            mid_AlAl = [mid_AlAl_positions[sorted_index[0]]]
+        else:
+            mid_AlAl = mid_AlAl_positions[0]
+
+        atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
+        mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
 
         if skip_rotation is False:
             EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
@@ -399,7 +410,7 @@ class ExtraFrameworkMaker(object):
             while count < max_count:
                 EF_atoms = copy.deepcopy(EF_atoms_ini)
                 u_dir, step_size = self._get_random_dir(atoms), d_thres * np.random.random_sample()
-                trial_pos = np.array(mid_Al + u_dir * step_size)
+                trial_pos = np.array(mid_AlAl + u_dir * step_size)
 
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 EF_atoms.translate(trial_pos - EF_atoms_cop)
