@@ -307,7 +307,7 @@ class ExtraFrameworkMaker(object):
         :return:
         """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=True, vector=True)
+        vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=False, vector=True)
 
         if ref_list is not None:
             vec_EF_ref = EF_atoms.get_distance(ref_list[0], ref_list[1], mic=True, vector=True)
@@ -323,6 +323,7 @@ class ExtraFrameworkMaker(object):
          the ExtraFramework oxygen is pointing aways from the Al-Al vector.
         :param EF_atoms: extra-framework atoms
         :param u_dir: direction to move the ExtraFramework atoms away from
+        :param ref_index:
         :return:
         """
         EF_center = EF_atoms.get_center_of_mass()
@@ -354,7 +355,7 @@ class ExtraFrameworkMaker(object):
         radius cutoff determined by the difference between ref_pos and Al_pos.
         :param ref_pos:
         :param Al_pos:
-        :return: 
+        :return:
         """
         cf_atoms = 0
         distances = mic(ref_pos - atoms.positions, atoms.cell)
@@ -384,7 +385,7 @@ class ExtraFrameworkMaker(object):
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         shifting_dirs = [np.zeros(3)]
         [shifting_dirs.append(value) for dim, value in enumerate(list(atoms.get_cell())) if value[dim] < 2 * 9]
-        # consider Al positions outside the unit cell when the cell dimension is smaller than 2*9 with 9A being the 
+        # consider Al positions outside the unit cell when the cell dimension is smaller than 2*9 with 9A being the
         # maximum possible Al-Al distance
 
         Al1_positions, mid_AlAl_positions = [], []
@@ -403,7 +404,6 @@ class ExtraFrameworkMaker(object):
 
         atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
         mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
-
         if skip_rotation is False:
             EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
         EF_atoms_ini = copy.deepcopy(EF_atoms)
@@ -434,6 +434,7 @@ class ExtraFrameworkMaker(object):
                     return atoms
                 else:
                     count += 1
+
                     
 
 if __name__ == '__main__':
