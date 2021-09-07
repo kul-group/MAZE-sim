@@ -349,19 +349,24 @@ class ExtraFrameworkMaker(object):
         return atoms, vec_translate
 
     @staticmethod
-    def check_occupancy(atoms, pos_list, Al_pos):
+    def check_occupancy(atoms, ref_pos, Al_pos):
+        """ This function checks the number of close-framework atoms around some reference position (ref_pos), with an
+        radius cutoff determined by the difference between ref_pos and Al_pos.
+        :param ref_pos:
+        :param Al_pos:
+        :return: 
+        """
         cf_atoms = 0
-        distances = mic(pos_list - atoms.positions, atoms.cell)
+        distances = mic(ref_pos - atoms.positions, atoms.cell)
         distances = np.linalg.norm(distances, axis=1)
         for dist in distances:
-            mic(pos_list - atoms.positions, atoms.cell)
-            if dist <= np.linalg.norm(mic(pos_list - Al_pos, atoms.cell)):
+            mic(ref_pos - atoms.positions, atoms.cell)
+            if dist <= np.linalg.norm(mic(ref_pos - Al_pos, atoms.cell)):
                 cf_atoms += 1
         return cf_atoms
 
     def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
                                    min_cutoff=2, max_cutoff=7, zeolite_dist_cutoff=1.5):
-        # todo: return error if unable to insert
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
         there are more than one TMs in the cluster, the cluster is rotated so that the TM-TM vector is aligned with the
@@ -379,6 +384,8 @@ class ExtraFrameworkMaker(object):
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         shifting_dirs = [np.zeros(3)]
         [shifting_dirs.append(value) for dim, value in enumerate(list(atoms.get_cell())) if value[dim] < 2 * 9]
+        # consider Al positions outside the unit cell when the cell dimension is smaller than 2*9 with 9A being the 
+        # maximum possible Al-Al distance
 
         Al1_positions, mid_AlAl_positions = [], []
         [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
