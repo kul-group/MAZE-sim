@@ -308,7 +308,6 @@ class ExtraFrameworkMaker(object):
         """
         Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         vec_Al = atoms.get_distance(Al_index[0], Al_index[1], mic=False, vector=True)
-
         if ref_list is not None:
             vec_EF_ref = EF_atoms.get_distance(ref_list[0], ref_list[1], mic=True, vector=True)
         else:
@@ -391,19 +390,21 @@ class ExtraFrameworkMaker(object):
         Al1_positions, mid_AlAl_positions = [], []
         [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
 
-        [mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell, pbc=False))
-         for Al1_position in Al1_positions]
-        print(mid_AlAl_positions)
+        for Al1_position in Al1_positions:
+            if abs(np.linalg.norm(Al1_position - atoms.get_positions()[Al_index[1]])) < 9:
+                mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell, pbc=False))
+        #print(mid_AlAl_positions)
+
         if len(mid_AlAl_positions) != 1:
             cf_atoms_count = []
             for count in range(len(mid_AlAl_positions)):
                 cf_atoms_count.append(self.check_occupancy(atoms, mid_AlAl_positions[count], Al1_positions[count]))
-            print(cf_atoms_count)
+            # print(cf_atoms_count)
             sorted_index = np.argsort(cf_atoms_count)
             mid_AlAl = [mid_AlAl_positions[sorted_index[0]]]
         else:
             mid_AlAl = mid_AlAl_positions[0]
-        print(mid_AlAl)
+        # print(mid_AlAl)
         atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
         mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
         if skip_rotation is False:
@@ -423,8 +424,11 @@ class ExtraFrameworkMaker(object):
 
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 EF_atoms.translate(trial_pos - EF_atoms_cop)
-                if skip_rotation is False and np.linalg.norm(u_dir) > 1.5:
+
+                if skip_rotation is False: # and np.linalg.norm(u_dir) > 1
                     EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
+                    EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
+
                 # print(np.linalg.norm(u_dir))
                 EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
                 distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
