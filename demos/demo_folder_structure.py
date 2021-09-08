@@ -95,34 +95,34 @@ class SaveExtraFrameworkConfigurations(object):
             Path(output_dir1).mkdir(parents=True, exist_ok=True)
             atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
             EF_atoms = read('/Users/jiaweiguo/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+            EF_atoms.set_cell(atoms.get_cell())
             try:
                 EFzeolite = ExtraFrameworkMaker()
-                my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms)
+                my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms, max_cutoff=6)
                 write(output_dir1 + '/CuOCu.traj', my_atoms)
             except:
                 print(self.sample_zeolite, file, ' failed!')
 
 
 if __name__ == '__main__':
-    topo = ['CHA', 'MOR', 'MWW', 'FAU', 'FER', 'MFI', 'BEC', 'MON', 'MSE', 'AFO', 'AHT', 'BOG', 'CFI',
-            'CGF', 'DON', 'EMT', 'EON', 'EUO', 'GON', 'IWS', 'LTF', 'MTW', 'OBW', 'OSI', 'RHO', 'RSN',
-            'SBE', 'SSY', 'TER', 'VFI', 'WEI', 'ABW', 'ACO', 'AET', 'AFI', 'AFN', 'AFR', 'AFT', 'AFY',
-            'ANA', 'APC', 'APD', 'AST', 'ASV', 'ATN', 'ATO', 'ATT', 'ATV', 'AWW', 'BCT', 'BIK', 'BOF',
-            'BRE', 'BSV', 'CAN', 'CGS', 'CHI', 'CLO', 'CON', 'CZP', 'DDR', 'DFO', 'DFT', 'EAB', 'EDI',
-            'ERI', 'ESV', 'ETR', 'EZT', 'FAR', 'FRA', 'GIS', 'GIU', 'GME', 'GOO', 'HEU', 'IFR', 'IHW',
-            'ISV', 'ITE', 'ITH', 'ITR', 'IWR', 'IWV', 'JBW', 'KFI', 'LEV', 'LIO', 'LOS', 'LOV', 'LTA',
-            'LTL', 'LTN', 'MAR', 'MAZ', 'MEL', 'MEP', 'MER', 'MFS', 'MOZ', 'MTF', 'MTN', 'NAB', 'NAT',
-            'NES', 'NON', 'NPO', 'NSI', 'OFF', 'OSO', 'PAU', 'PHI', 'PON', 'RRO', 'RTH', 'RUT', 'RWR',
-            'RWY', 'SAO', 'SAS', 'SAV', 'SBN', 'SBS', 'SBT', 'SFE', 'SFF', 'SFG', 'SFH', 'SFN', 'SFO',
-            'SFS', 'SIV', 'SOD', 'STF', 'STW', 'THO', 'TOL', 'USI', 'UTL', 'VET', 'VNI', 'VSV', 'WEN',
-            'YUG', 'ZON', 'IWW', 'STT', 'SVR', 'TUN', 'STO', 'AEI', 'AEL', 'AEN', 'AFG', 'AFS', 'AFX',
-            'ATS', 'AVL', 'AWO', 'BOZ', 'BPH', 'CAS', 'CDO', 'DAC', 'DOH', 'EPI', 'FER', 'UWY', 'TON',
-            'TSC', 'UEI', 'UFI', 'UOS', 'UOZ', 'SZR', 'STI', 'SVV', 'SGT', 'SOF', 'SOS', 'SSF', 'SAT',
-            'SAF', 'RTE', 'PUN', 'PCR', 'OWE', 'PAR', 'NPT', 'MVY', 'MSO', 'MEI', 'LIT', 'LAU', 'LTJ',
-            'JOZ', 'JRY', 'JSN', 'JST', 'JSW', 'ITW', 'ITV', 'IRR', 'IMF', 'BEA']
+    topo = ['CHA', 'MOR', 'MWW', 'FER', 'MFI', 'BEC', 'MON', 'MSE', 'AFO', 'AHT', 'BOG', 'CFI', 'JOZ', 'JRY', 'JSN',
+            'CGF', 'DON', 'EMT', 'EON', 'EUO', 'GON', 'IWS', 'LTF', 'MTW', 'OBW', 'OSI', 'RHO', 'RSN', 'JST', 'JSW',
+            'SBE', 'SSY', 'TER', 'VFI', 'WEI', 'ABW', 'ACO', 'AET', 'AFI', 'AFN', 'AFR', 'AFT', 'AFY', 'ITW', 'IRR',
+            'ANA', 'APC', 'APD', 'AST', 'ASV', 'ATN', 'ATO', 'ATT', 'ATV', 'AWW', 'BCT', 'BIK', 'BOF', 'BEA', 'LTJ',
+            'BRE', 'BSV', 'CAN', 'CGS', 'CHI', 'CON', 'CZP', 'DDR', 'DFO', 'DFT', 'EAB', 'EDI', 'SAF', 'RTE', 'PUN',
+            'ERI', 'ESV', 'ETR', 'EZT', 'FAR', 'FRA', 'GIS', 'GIU', 'GME', 'GOO', 'HEU', 'IFR', 'IHW', 'PCR', 'OWE',
+            'ISV', 'ITE', 'ITH', 'ITR', 'IWR', 'JBW', 'KFI', 'LEV', 'LIO', 'LOS', 'LOV', 'LTA', 'PAR', 'NPT', 'MVY',
+            'LTL', 'MAR', 'MAZ', 'MEL', 'MEP', 'MER', 'MFS', 'MOZ', 'MTF', 'MTN', 'NAB', 'NAT', 'MSO', 'MEI', 'LIT',
+            'NES', 'NON', 'NPO', 'NSI', 'OFF', 'OSO', 'PHI', 'PON', 'RRO', 'RTH', 'RUT', 'RWR', 'LAU', 'UEI', 'UFI',
+            'RWY', 'SAO', 'SAS', 'SAV', 'SBN', 'SBS', 'SFE', 'SFF', 'SFG', 'SFH', 'SFN', 'SFO', 'UOS', 'UOZ', 'SZR',
+            'SFS', 'SIV', 'SOD', 'STF', 'STW', 'THO', 'TOL', 'USI', 'UTL', 'VET', 'VNI', 'VSV', 'WEN', 'STI', 'SVV',
+            'YUG', 'ZON', 'IWW', 'STT', 'SVR', 'STO', 'AEI', 'AEL', 'AEN', 'AFG', 'AFS', 'AFX', 'SGT', 'SOF', 'SOS',
+            'ATS', 'AVL', 'AWO', 'BOZ', 'BPH', 'CAS', 'CDO', 'DAC', 'DOH', 'EPI', 'UWY', 'TON', 'SSF', 'SAT']
+
+    # ['FAU', 'CLO', 'IWV', 'LTN', 'PAU', 'SBT', 'TUN', 'TSC', 'ITV', 'IMF']
     """
     failed_zeo = []
-    for sample_zeolite in topo:
+    for sample_zeolite in ['STO', 'WEN']:
         try:
             traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
             # traj_saver.save_bare_zeo('/Users/jiaweiguo/Box/00_bare_zeo/')
@@ -133,8 +133,9 @@ if __name__ == '__main__':
             failed_zeo.append(sample_zeolite)
     print(failed_zeo)
     """
+    """
     failed_zeo = []
-    for sample_zeolite in ['MFI', 'EUO', 'CHI']:
+    for sample_zeolite in topo:
         try:
             zeo_dir = '/Users/jiaweiguo/Box/all_zeo_database/Silica_unopt/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
             output_1Al = '/Users/jiaweiguo/Box/all_zeo_database/1Al/00_%s' % sample_zeolite
@@ -145,12 +146,64 @@ if __name__ == '__main__':
         except:
             failed_zeo.append(sample_zeolite)
     print(failed_zeo)
-    """
-    for sample_zeolite in topo:
+    
+    for sample_zeolite in ['RRO', 'PUN', 'MTW']:  # 'SFN', 'SFE', 'PON', 'SSY', 'SFF', 'CGF', 'SOF', 'RRO', 'PUN', 'MTW'
         filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s/' % sample_zeolite
-        output_dir = '/Users/jiaweiguo/Box/all_zeo_database/2Al_CuOCu/01_%s/' % sample_zeolite
+        output_dir = '/Users/jiaweiguo/Box/all_zeo_database/2Al_CuOCu/rerun/01_%s/' % sample_zeolite
         traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
         traj_saver.save_all_CuOCu(filepath, output_dir)
         print(sample_zeolite, ' is done!')
-        break
     """
+    traj, finished_file, failed_file = [], [], []
+    sample_zeolite = 'MFI'
+    filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s/' % sample_zeolite
+    output_dir0 = '/Users/jiaweiguo/Box/02_CuOCu_zeo/rerun/01_%s/' % sample_zeolite
+    trouble_list = ['T1_T12_192_281']
+    files = [files for files in os.listdir(filepath) if files in trouble_list]
+    Path(output_dir0).mkdir(parents=True, exist_ok=True)
+    for file in files:
+        output_dir1 = os.path.join(output_dir0, file)
+        Path(output_dir1).mkdir(parents=True, exist_ok=True)
+        atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
+        # view(atoms)
+        # EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
+        EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
+        EF_atoms.set_cell(atoms.get_cell())
+        # EFzeolite = ExtraFrameworkMaker()
+        # my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms, max_cutoff=4)
+        try:
+            EFzeolite = ExtraFrameworkMaker()
+            my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), max_cutoff=4)
+            write(output_dir1 + '/CuOCu.traj', my_atoms)
+            traj.append(my_atoms)
+            finished_file.append(file)
+        except:
+            try:
+                EFzeolite = ExtraFrameworkMaker()
+                my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), max_cutoff=4,
+                                                                zeolite_dist_cutoff=1)
+                write(output_dir1 + '/CuOCu.traj', my_atoms)
+                traj.append(my_atoms)
+                finished_file.append(file)
+            except:
+                try:
+                    EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
+                    EF_atoms.set_cell(atoms.get_cell())
+                    EFzeolite = ExtraFrameworkMaker()
+                    my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), max_cutoff=4)
+                    write(output_dir1 + '/CuOCu.traj', my_atoms)
+                    traj.append(my_atoms)
+                    finished_file.append(file)
+                except:
+                    try:
+                        EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
+                        EF_atoms.set_cell(atoms.get_cell())
+                        EFzeolite = ExtraFrameworkMaker()
+                        my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms),
+                                                                        max_cutoff=4, zeolite_dist_cutoff=1)
+                        write(output_dir1 + '/CuOCu.traj', my_atoms)
+                        traj.append(my_atoms)
+                        finished_file.append(file)
+                    except:
+                        print(file, 'failed!')
+                        failed_file.append(file)
