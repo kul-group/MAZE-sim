@@ -381,20 +381,24 @@ class ExtraFrameworkMaker(object):
         :param zeolite_dist_cutoff: might need smaller value for very occupied regions of zeolites
         :return:
         """
-        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+                Al_index = [a.index for a in atoms if a.symbol in ['Al']]
         shifting_dirs = [np.zeros(3)]
-        [shifting_dirs.append(value) for dim, value in enumerate(list(atoms.get_cell())) if value[dim] < 2 * 9]
+        for dim, value in enumerate(list(atoms.get_cell())):
+            if value[dim] < 2 * 9:
+                shifting_dirs.append(value)
+                shifting_dirs.append(-value)
         # consider Al positions outside the unit cell when the cell dimension is smaller than 2*9 with 9A being the
         # maximum possible Al-Al distance
-
+        # print(shifting_dirs)
         Al1_positions, mid_AlAl_positions = [], []
         [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
+        # print(Al1_positions)
 
         for Al1_position in Al1_positions:
-            if abs(np.linalg.norm(Al1_position - atoms.get_positions()[Al_index[1]])) < 9:
-                mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell, pbc=False))
-        #print(mid_AlAl_positions)
-
+            if abs(np.linalg.norm(Al1_position - atoms.get_positions()[Al_index[1]])) < AlAl_dist_cutoff:
+                mid_AlAl_positions.append(mic(0.5 * (Al1_position + atoms.get_positions()[Al_index[1]]), atoms.cell,
+                                              pbc=False))
+        # print(mid_AlAl_positions)
         if len(mid_AlAl_positions) != 1:
             cf_atoms_count = []
             for count in range(len(mid_AlAl_positions)):
@@ -405,6 +409,7 @@ class ExtraFrameworkMaker(object):
         else:
             mid_AlAl = mid_AlAl_positions[0]
         # print(mid_AlAl)
+        
         atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
         mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
         if skip_rotation is False:
