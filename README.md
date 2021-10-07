@@ -16,7 +16,7 @@ Installation
 The current stable, release of MAZE (0.1.0) can now be installed via `pip` using the command 
 `pip install maze-sim`.
  
-The most recent developer version of the MAZE code is available on Github. To install it follow the following instructions: 
+The most recent developer version of the MAZE code is available on Github. To install it follow the following instructions (note that MAZE does not currently work with Python >= 3.9):
  
 1. Clone this git repository 
     ``` 
