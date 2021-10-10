@@ -381,15 +381,23 @@ class ExtraFrameworkMaker(object):
         :param zeolite_dist_cutoff: might need smaller value for very occupied regions of zeolites
         :return:
         """
-                Al_index = [a.index for a in atoms if a.symbol in ['Al']]
-        shifting_dirs = [np.zeros(3)]
-        for dim, value in enumerate(list(atoms.get_cell())):
-            if value[dim] < 2 * 9:
-                shifting_dirs.append(value)
-                shifting_dirs.append(-value)
-        # consider Al positions outside the unit cell when the cell dimension is smaller than 2*9 with 9A being the
-        # maximum possible Al-Al distance
+        Al_index = [a.index for a in atoms if a.symbol in ['Al']]
+
+        shifting_dirs = []
+        all_coor = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 0, -1], [0, -1, 0], [-1, 0, 0],
+                    [1, 1, 1], [-1, 1, 1], [1, -1, 1], [1, 1, -1], [-1, -1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, -1],
+                    [1, 1, 0], [1, -1, 0], [-1, 1, 0], [-1, -1, 0],
+                    [0, 1, 1], [0, 1, -1], [0, -1, 1], [0, -1, -1],
+                    [1, 0, 1], [1, 0, -1], [-1, 0, 1], [-1, 0, -1]]
+
+        cell_param = list(atoms.get_cell())
+        for possible_coor in all_coor:
+            # print([possible_coor[i] * np.array(cell_param[i]) for i in range(3)])
+            # print([np.sum(possible_coor[i] * np.array(cell_param[i]) for i in range(3))])
+            shifting_dirs.append(np.sum(possible_coor[i] * np.array(cell_param[i]) for i in range(3)))
         # print(shifting_dirs)
+        assert len(all_coor) == len(shifting_dirs)
+
         Al1_positions, mid_AlAl_positions = [], []
         [Al1_positions.append(atoms.get_positions()[Al_index[0]] + possible_dir) for possible_dir in shifting_dirs]
         # print(Al1_positions)
