@@ -114,7 +114,7 @@ class ExtraFrameworkMaker(object):
                 for index in [a.index for a in atoms if a.symbol == 'Si']:
                     sorted_pair = list(np.sort([index, index_Al]))
                     if index not in neighboring_Si and sorted_pair not in done_indices:
-                        if 3.3 < atoms.get_distance(index_Al, index) < cutoff_radius:
+                        if 3.3 < atoms.get_distance(index_Al, index, mic=True) < cutoff_radius:
                             site_name_2Al = ini_atoms.atom_indices_to_sites[index]
                             if int(site_name_2Al[1:]) >= int(site_name_1Al[1:]):
                                 self.T_site_pair.append([site_name_1Al, site_name_2Al])
