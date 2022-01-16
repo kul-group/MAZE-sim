@@ -397,7 +397,7 @@ class ExtraFrameworkMaker(object):
         return mid_AlAl_positions
     
     
-    def _insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
+    def insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
                                    min_cutoff=0, max_cutoff=6, zeolite_dist_cutoff=1.5, AlAl_dist_cutoff=9):
         """ This function takes in a zeolite backbone and an extra-framework cluster with the same cell dimensions as
         the zeolite. First, move the cluster center-of-mass to the reference position (indicated using an S atom). If
@@ -466,7 +466,6 @@ class ExtraFrameworkMaker(object):
                         atoms.translate(-1 * vec_translate)
                         atoms.wrap()
                         atoms_list.append(atoms)
-                        return atoms
                     else:
                         count += 1
         
