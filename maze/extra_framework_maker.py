@@ -380,9 +380,16 @@ class ExtraFrameworkMaker(object):
 
         cell_param = list(atoms.get_cell())
         for possible_coor in all_coor:
+            temp_vec = [possible_coor[i] * np.array(cell_param[i]) for i in range(3)]
+            sum_each_dir = np.zeros(3)
+            for i in range(3):
+                sum_each_dir[i] = np.sum([a[i] for a in temp_vec])
+            shifting_dirs.append(sum_each_dir)
+            """
             # print([possible_coor[i] * np.array(cell_param[i]) for i in range(3)])
             # print([np.sum(possible_coor[i] * np.array(cell_param[i]) for i in range(3))])
             shifting_dirs.append(np.sum(possible_coor[i] * np.array(cell_param[i]) for i in range(3)))
+            """
         # print(shifting_dirs)
         assert len(all_coor) == len(shifting_dirs)
 
@@ -438,6 +445,8 @@ class ExtraFrameworkMaker(object):
                     return atoms
                 else:
                     count += 1
+        
+        return None
 
     def insert_ExtraFrameworkAtoms(self, original_atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
                                    min_cutoff=0, max_cutoff=6, zeolite_dist_cutoff=1.5, AlAl_dist_cutoff=9):
@@ -473,11 +482,12 @@ class ExtraFrameworkMaker(object):
         for mid_AlAl in mid_AlAl_positions:
             atoms = self._insert_ExtraFrameworkAtoms(original_atoms, EF_atoms, mid_AlAl, ref_list, ref_index,
                                                      skip_rotation, min_cutoff, max_cutoff, zeolite_dist_cutoff)
-            atoms_list.append(atoms)
+            if atoms is not None:
+                atoms_list.append(atoms)
 
         if len(atoms_list) != 0:
             return atoms_list
-
+        
                     
 if __name__ == '__main__':
     """
