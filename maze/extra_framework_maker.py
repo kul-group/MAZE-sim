@@ -403,49 +403,51 @@ class ExtraFrameworkMaker(object):
                                               pbc=False))
         return mid_AlAl_positions
 
-    def _insert_ExtraFrameworkAtoms(self, atoms, EF_atoms, mid_AlAl, ref_list=None, ref_index=None, skip_rotation=False,
+    def _insert_ExtraFrameworkAtoms(self, ini_atoms, EF_atoms, mid_AlAl, ref_list=None, ref_index=None, skip_rotation=False,
                                    min_cutoff=0, max_cutoff=6, zeolite_dist_cutoff=1.5):
         """ Hidden function doing the insertion
         """
-        atoms, vec_translate = self.recentering_atoms(atoms, mid_AlAl)
+        atoms, vec_translate = self.recentering_atoms(ini_atoms, mid_AlAl)
         mid_AlAl = np.matmul([0.5, 0.5, 0.5], atoms.cell)
 
         if skip_rotation is False:
             EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
 
-        EF_atoms_ini = copy.copy(EF_atoms)
+        EF_atoms_ini = copy.deepcopy(EF_atoms)
         EF_atoms_radius = self.get_cluster_radius(EF_atoms)
         if EF_atoms_radius == 0:  # true for single atom EF-cluster
             EF_atoms_radius = 1.5
 
-        max_count, closest_distance = 500, zeolite_dist_cutoff + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
+        max_count, closest_distance = 1000, zeolite_dist_cutoff + EF_atoms_radius  # radius of Si atom ~ 1.5 Ang
         for d_thres in np.arange(min_cutoff, max_cutoff, 0.5):
             count = 0
             while count < max_count:
-                EF_atoms = copy.copy(EF_atoms_ini)
+                my_EF_atoms = copy.deepcopy(EF_atoms_ini)
                 u_dir, step_size = self._get_random_dir(atoms), d_thres * np.random.random_sample()
                 trial_pos = np.array(mid_AlAl + u_dir * step_size)
 
-                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
-                EF_atoms.translate(trial_pos - EF_atoms_cop)
+                EF_atoms_cop = np.sum(my_EF_atoms.positions, 0) / len(my_EF_atoms)
+                my_EF_atoms.translate(trial_pos - EF_atoms_cop)
 
                 if skip_rotation is False:
-                    EF_atoms = self.rotate_EF_away_from_Als(EF_atoms, u_dir, ref_index)
-                    EF_atoms = self.rotate_EF_based_on_Als(atoms, EF_atoms, ref_list)
+                    my_EF_atoms = self.rotate_EF_away_from_Als(my_EF_atoms, u_dir, ref_index)
+                    my_EF_atoms = self.rotate_EF_based_on_Als(atoms, my_EF_atoms, ref_list)
 
                 # print(np.linalg.norm(u_dir))
-                EF_atoms_cop = np.sum(EF_atoms.positions, 0) / len(EF_atoms)
+                EF_atoms_cop = np.sum(my_EF_atoms.positions, 0) / len(my_EF_atoms)
                 distances = mic(EF_atoms_cop - atoms.positions, atoms.cell)
                 distances = np.linalg.norm(distances, axis=1)
 
                 if min(distances) > closest_distance:
-                    atoms = atoms + EF_atoms
-                    atoms.translate(-1 * vec_translate)
-                    atoms.wrap()
-                    return atoms
+                    new_atoms = atoms + my_EF_atoms
+                    new_atoms.translate(-1 * vec_translate)
+                    new_atoms.wrap()
+                    return new_atoms
                 else:
                     count += 1
-        
+
+        atoms.translate(-1 * vec_translate)
+        atoms.wrap()
         return None
 
     def insert_ExtraFrameworkAtoms(self, original_atoms, EF_atoms, ref_list=None, ref_index=None, skip_rotation=False,
@@ -465,6 +467,7 @@ class ExtraFrameworkMaker(object):
         :return:
         """
         mid_AlAl_positions = self.get_mid_AlAl(original_atoms, AlAl_dist_cutoff)
+        print(mid_AlAl_positions)
         # save all possible structures into the folder and pick most valid one later
         """
         if len(mid_AlAl_positions) != 1:
@@ -480,13 +483,17 @@ class ExtraFrameworkMaker(object):
         """
         atoms_list = []
         for mid_AlAl in mid_AlAl_positions:
-            atoms = self._insert_ExtraFrameworkAtoms(original_atoms, EF_atoms, mid_AlAl, ref_list, ref_index,
-                                                     skip_rotation, min_cutoff, max_cutoff, zeolite_dist_cutoff)
+            # copy.copy here not enough
+            atoms = self._insert_ExtraFrameworkAtoms(copy.deepcopy(original_atoms), copy.deepcopy(EF_atoms), mid_AlAl,
+                                                     ref_list, ref_index, skip_rotation, min_cutoff, max_cutoff,
+                                                     zeolite_dist_cutoff)
             if atoms is not None:
                 atoms_list.append(atoms)
 
         if len(atoms_list) != 0:
             return atoms_list
+        else:
+            return None
         
                     
 if __name__ == '__main__':
