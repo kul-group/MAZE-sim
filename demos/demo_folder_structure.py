@@ -36,6 +36,7 @@ class SaveExtraFrameworkConfigurations(object):
         info_dict = {'T_indices': EFzeolite.t_site_indices, 'Atoms_count': len(EFzeolite.EFzeolite),
                      'Al_pair_count': len(EFzeolite.traj_2Al), 'T_count': len(EFzeolite.t_site_indices)}
         print('Number of unique Al pairs for %s: ' % self.sample_zeolite, len(EFzeolite.traj_2Al))
+
         """
         print(len(EFzeolite.traj_1Al))
         if not os.path.exists(output_1Al):
@@ -52,7 +53,8 @@ class SaveExtraFrameworkConfigurations(object):
             output_dir2 = os.path.join(output_2Al, site_name)
             Path(output_dir2).mkdir(parents=True, exist_ok=True)
             my_path = os.path.join(output_dir2, site_name)
-            write(my_path + '.traj', atoms_2Al)
+            write(my_path + '.vasp', atoms_2Al, format='vasp')
+            #write(my_path + '.traj', atoms_2Al)
 
         with open(output_2Al + '/info_dict_%s.pickle' % self.sample_zeolite, 'wb') as f:
             pickle.dump(info_dict, f)
@@ -155,66 +157,64 @@ if __name__ == '__main__':
         print(sample_zeolite, ' is done!')
     """
 
-    traj, finished_file, failed_file = [], [], []
-    sample_zeolite = 'AEI'
-    filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al_mic_True/00_%s/' % sample_zeolite
-    output_dir0 = '/Users/jiaweiguo/Box/all_zeo_database/2Al_CuOCu_mic_True/01_%s/' % sample_zeolite
-    files = [files for files in os.listdir(filepath) if 'T' in files]
+    def func(atoms, EF_atoms, output_dir0, file, ref_list=None, ref_index=None, skip_rotation=False, min_cutoff=0,
+             max_cutoff=6, zeolite_dist_cutoff=1.5, AlAl_dist_cutoff=9):
+        EFzeolite = ExtraFrameworkMaker()
+        my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms, ref_list, ref_index, skip_rotation, min_cutoff,
+                                                        max_cutoff, zeolite_dist_cutoff, AlAl_dist_cutoff)
+        count = 1
+        if 1 < len(my_atoms) < 10:
+            for each_atoms in my_atoms:
+                output_dir1 = os.path.join(output_dir0, file + '_%s' % str(count))
+                Path(output_dir1).mkdir(parents=True, exist_ok=True)
+                write(output_dir1 + '/CuOCu.traj', each_atoms)
+                count += 1
+        else:
+            output_dir1 = os.path.join(output_dir0, file)
+            Path(output_dir1).mkdir(parents=True, exist_ok=True)
+            write(output_dir1 + '/CuOCu.traj', my_atoms)
+
+    finished_file, failed_file = [], []
+    sample_zeolite = 'CHA'
+    filepath = '/Users/gjw123/Desktop/2Al_mic_True/00_%s/' % sample_zeolite
+    output_dir0 = '/Users/gjw123/Desktop/2Al_CuOCu_mic_True/rerun_%s/' % sample_zeolite
+    # trouble_list = ['T4_T12_216_280']
+    files = [files for files in os.listdir(filepath) if 'T' in files and 'pickle' not in files]
+    # in trouble_list and 'pickle' not in files]
     Path(output_dir0).mkdir(parents=True, exist_ok=True)
     for file in files:
-        output_dir1 = os.path.join(output_dir0, file)
-        Path(output_dir1).mkdir(parents=True, exist_ok=True)
         atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
         # view(atoms)
-        EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
-        # EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
+        EF_atoms = read('/Users/gjw123/Desktop/MAZE-sim-master/demos/CuOCu_cluster.traj', '0')
         EF_atoms.set_cell(atoms.get_cell())
-        # EFzeolite = ExtraFrameworkMaker()
-        # my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(atoms, EF_atoms, max_cutoff=4, AlAl_dist_cutoff=10)
         try:
-            EFzeolite = ExtraFrameworkMaker()
-            my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms))
-            write(output_dir1 + '/CuOCu.traj', my_atoms)
-            traj.append(my_atoms)
-            finished_file.append(file)
+            func(copy.deepcopy(atoms), copy.deepcopy(EF_atoms), output_dir0, file, max_cutoff=4)
         except:
             try:
-                EFzeolite = ExtraFrameworkMaker()
-                my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms),
-                                                                zeolite_dist_cutoff=1)
-                write(output_dir1 + '/CuOCu.traj', my_atoms)
-                traj.append(my_atoms)
-                finished_file.append(file)
+                func(copy.deepcopy(atoms), copy.deepcopy(EF_atoms), output_dir0, file, max_cutoff=4, zeolite_dist_cutoff=1.2)
             except:
                 try:
-                    EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
+                    EF_atoms = read('/Users/gjw123/Desktop/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
                     EF_atoms.set_cell(atoms.get_cell())
-                    EFzeolite = ExtraFrameworkMaker()
-                    my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms))
-                    write(output_dir1 + '/CuOCu.traj', my_atoms)
-                    traj.append(my_atoms)
-                    finished_file.append(file)
+                    func(copy.deepcopy(atoms), copy.deepcopy(EF_atoms), output_dir0, file, max_cutoff=5)
                 except:
                     try:
-                        EF_atoms = read('/Users/jiaweiguo/Box/MAZE-sim-master/demos/CuOCu_cluster_smaller.traj', '0')
-                        EF_atoms.set_cell(atoms.get_cell())
-                        EFzeolite = ExtraFrameworkMaker()
-                        my_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), zeolite_dist_cutoff=1)
-                        write(output_dir1 + '/CuOCu.traj', my_atoms)
-                        traj.append(my_atoms)
-                        finished_file.append(file)
+                        func(copy.deepcopy(atoms), copy.deepcopy(EF_atoms), output_dir0, file, max_cutoff=5, zeolite_dist_cutoff=1.2)
                     except:
                         print(file, 'failed!')
                         failed_file.append(file)
-
+        finished_file.append(file)
+        print(file, 'is done!')
 
     """
     traj, finished_file, failed_file = [], [], []
     sample_zeolite = 'MFI'
-    filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al/00_%s/' % sample_zeolite
-    output_dir0 = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_Pt/'
-    trouble_list = ['T1_T8_192_252']
-    files = [files for files in os.listdir(filepath) if files in trouble_list]
+    filepath = '/Users/jiaweiguo/Box/all_zeo_database/2Al_mic_True/00_%s/' % sample_zeolite
+    output_dir0 = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_Pt_mic_True/'
+    original_dir = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_Pt'
+    original_files = [files for files in os.listdir(original_dir) if 'T' in files]
+    files = [files for files in os.listdir(filepath) if 'T' in files]
+    # files = [files for files in os.listdir(filepath) if files in ['T5_T9_224_258', 'T8_T11_248_274']]
     Path(output_dir0).mkdir(parents=True, exist_ok=True)
     for file in files:
         output_dir1 = os.path.join(output_dir0, file)
@@ -228,51 +228,100 @@ if __name__ == '__main__':
         Al_neigh_list = [x for x in Al_neigh_list if atoms[x].symbol == 'O']
         c = FixAtoms(indices=[atom.index for atom in atoms if atom.symbol != 'Al' and atom.index not in Al_neigh_list])
         atoms.set_constraint(c)
-        my_atoms = copy.copy(atoms)
+        EF_atoms = Atoms('Pt', positions=[[5, 5, 5]])
+        EF_atoms.set_cell(atoms.get_cell())
         # need to reconsider Al-Al distance cutoff, within a huge ring, won't be stabilized
 
-        output_dir1 = os.path.join(output_dir0, file)
-        Path(output_dir1).mkdir(parents=True, exist_ok=True)
         try:
-            EF_atoms = Atoms('Pt', positions=[[0, 0, 0]])
-            EF_atoms.set_cell(atoms.get_cell())
             EFzeolite = ExtraFrameworkMaker()
-            new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(my_atoms, EF_atoms, skip_rotation=True, max_cutoff=4)
+            new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                             zeolite_dist_cutoff=1, max_cutoff=1)
+            output_dir1 = os.path.join(output_dir0, file)
+            Path(output_dir1).mkdir(parents=True, exist_ok=True)
             write(output_dir1 + '/starting.traj', new_atoms)
             finished_file.append(file)
             traj.append(new_atoms)
         except:
-            failed_file.append(file)
-            print(file, 'failed!')
+            try:
+                EFzeolite = ExtraFrameworkMaker()
+                new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                                 zeolite_dist_cutoff=1, max_cutoff=4)
+                output_dir1 = os.path.join(output_dir0, file)
+                Path(output_dir1).mkdir(parents=True, exist_ok=True)
+                write(output_dir1 + '/starting.traj', new_atoms)
+                finished_file.append(file)
+                traj.append(new_atoms)
+            except:
+                try:
+                    EFzeolite = ExtraFrameworkMaker()
+                    new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                                    zeolite_dist_cutoff=1, max_cutoff=3)
+                    output_dir1 = os.path.join(output_dir0, file)
+                    Path(output_dir1).mkdir(parents=True, exist_ok=True)
+                    write(output_dir1 + '/starting.traj', new_atoms)
+                    traj.append(new_atoms)
+                    finished_file.append(file)
+                except:
+                    failed_file.append(file)
+                    print(file, 'failed!')
     """
 
     """
-    # consider adding a condition controling the distance of EF atoms from the Al, can not exceed certain criteria
-    # or need to remove the occupancy check criteria
-    traj = []
-    filepath = '/Users/jiaweiguo/Box/P1_pair_site/MFI_2Al_Pt/'
-    files = [files for files in os.listdir(filepath) if 'T' in files]
-    for each_file in files:
-        atoms = read(os.path.join(filepath, each_file, 'starting.traj'), '0')
-        traj.append(atoms)
-    view(traj)
+    traj, finished_file, failed_file = [], [], []
+    sample_zeolite = 'MOR'
+    filepath = '/Users/gjw123/Desktop/2Al_mic_True/00_%s/' % sample_zeolite
+    output_dir0 = '/Users/gjw123/Desktop/2Al_Cu_zeo/00_%s/' % sample_zeolite
+    #files = [files for files in os.listdir(filepath) if 'T' in files]
+    files = [files for files in os.listdir(filepath) if files in ['T2_T3_112_128', 'T2_T2_112_119', 'T1_T3_96_128', 'T1_T1_96_103', 'T2_T3_112_132', 'T2_T4_112_136', 'T1_T1_96_105', 'T4_T4_136_143', 'T1_T2_96_116', 'T3_T3_128_135']]
+    Path(output_dir0).mkdir(parents=True, exist_ok=True)
+    for file in files:
+        output_dir1 = os.path.join(output_dir0, file)
+        Path(output_dir1).mkdir(parents=True, exist_ok=True)
+        atoms = read(os.path.join(filepath, file, '%s.traj' % file), '0')
+        # view(atoms)
+        EF_atoms = Atoms('Cu', positions=[[5, 5, 5]])
+        EF_atoms.set_cell(atoms.get_cell())
+        try:
+            EFzeolite = ExtraFrameworkMaker()
+            new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                             zeolite_dist_cutoff=1.5, max_cutoff=4.5)
+            output_dir1 = os.path.join(output_dir0, file)
+            Path(output_dir1).mkdir(parents=True, exist_ok=True)
+            write(output_dir1 + '/starting.traj', new_atoms)
+            finished_file.append(file)
+            traj.append(new_atoms)
+        except:
+            try:
+                EFzeolite = ExtraFrameworkMaker()
+                new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                                 zeolite_dist_cutoff=1.5, max_cutoff=2)
+                output_dir1 = os.path.join(output_dir0, file)
+                Path(output_dir1).mkdir(parents=True, exist_ok=True)
+                write(output_dir1 + '/starting.traj', new_atoms)
+                finished_file.append(file)
+                traj.append(new_atoms)
+            except:
+                try:
+                    EFzeolite = ExtraFrameworkMaker()
+                    new_atoms = EFzeolite.insert_ExtraFrameworkAtoms(copy.copy(atoms), copy.copy(EF_atoms), skip_rotation=True,
+                                                                    zeolite_dist_cutoff=1.5, max_cutoff=3)
+                    output_dir1 = os.path.join(output_dir0, file)
+                    Path(output_dir1).mkdir(parents=True, exist_ok=True)
+                    write(output_dir1 + '/starting.traj', new_atoms)
+                    traj.append(new_atoms)
+                    finished_file.append(file)
+                except:
+                    failed_file.append(file)
+                    print(file, 'failed!')
     """
 
     """
-    sample_zeolite = 'AEI'
+    sample_zeolite = 'CHA'
     zeo_dir = '/Users/jiaweiguo/Box/all_zeo_database/Silica_unopt/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
-    output_1Al = '/Users/jiaweiguo/Box/all_zeo_database/1Al/00_%s' % sample_zeolite
-    output_2Al = '/Users/jiaweiguo/Box/all_zeo_database/2Al_mic_True/00_%s' % sample_zeolite
+    output_1Al = '/Users/jiaweiguo/Desktop/SSZ_13/1Al'
+    output_2Al = '/Users/jiaweiguo/Desktop/SSZ_13/2Al/without_edges'
+    # output_1Al = '/Users/jiaweiguo/Box/all_zeo_database/1Al/00_%s' % sample_zeolite
+    # output_2Al = '/Users/jiaweiguo/Box/all_zeo_database/2Al_mic_True/00_%s' % sample_zeolite
     traj_saver = SaveExtraFrameworkConfigurations(sample_zeolite)
     traj_saver.save_all_Al_zeo(zeo_dir, output_1Al, output_2Al)
-    """
-
-    """
-    zeo_dir = '/Users/jiaweiguo/Box/all_zeo_database/Silica_unopt/00_%s/%s.traj' % (sample_zeolite, sample_zeolite)
-    EFzeolite = ExtraFrameworkMaker(sample_zeolite, zeo_dir)
-    EFzeolite.make_extra_frameworks(replace_1Al=True, replace_2Al=True, print_statement=True)
-    info_dict = {'T_indices': EFzeolite.t_site_indices, 'Atoms_count': len(EFzeolite.EFzeolite),
-                 'Al_pair_count': len(EFzeolite.traj_2Al), 'T_count': len(EFzeolite.t_site_indices)}
-    print('Number of unique Al pairs for %s: ' % sample_zeolite, len(EFzeolite.traj_2Al))
-    write('/Users/jiaweiguo/Box/zeo_dimer_formation_analysis/benchmarking_mic/mic_True.traj', EFzeolite.traj_2Al)
     """
