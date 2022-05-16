@@ -126,13 +126,18 @@ class ExtraFrameworkMaker(object):
                                 self.count_all_Al_pairs += 1
                                 done_indices.append(sorted_pair)
 
-    @staticmethod
-    def _get_direction_of_insertion(atoms, index1, index2, index3):
+                                
+    def _get_direction_of_insertion(atoms, index1, index2, index3, tag=None):
         v1 = atoms.get_distance(index1, index2, vector=True, mic=True)
         v2 = atoms.get_distance(index1, index3, vector=True, mic=True)
-        v = np.cross(v1, v2) / np.linalg.norm(np.cross(v1, v2))
+        if tag == 'H':
+            v = np.cross(v1, v2) / np.linalg.norm(np.cross(v1, v2))
+        if tag == 'TM':
+            v = (v1 + v2) / 2
+            v = v / np.linalg.norm(v)
         return v
 
+    
     def get_all_Z_TM(self, d_Z_TM, TM_type):
         """
         :param d_Z_TM: Z-TM distance with Z being the T sites on the zeolite framework and TM being extraframework atom
@@ -152,7 +157,7 @@ class ExtraFrameworkMaker(object):
             pairs = list(itertools.combinations(indices, 2))
             for i, pair in enumerate(pairs):
                 atoms = copy.copy(all_zeo_with_same_T[0])
-                v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1])
+                v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1], tag='TM')
                 atoms = atoms + Atoms(TM_type, positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
                 traj.append(atoms)
             dict_Z_TM[site_name] = traj
@@ -173,7 +178,7 @@ class ExtraFrameworkMaker(object):
         pairs = list(itertools.combinations(indices, 2))
         for i, pair in enumerate(pairs):
             atoms = copy.copy(original_atoms)
-            v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1])
+            v = self._get_direction_of_insertion(atoms, index_Al[0], pair[0], pair[1], tag='TM')
             atoms = atoms + Atoms(TM_type, positions=[atoms[index_Al[0]].position] + v * d_Z_TM)
             atoms.wrap()
             key_tag = 'O' + str(pair[0]) + '_O' + str(pair[1])
@@ -187,7 +192,7 @@ class ExtraFrameworkMaker(object):
         index_Al = [a.index for a in atoms if a.symbol == 'Al']
         indices_neigh, offset_neigh = nl.get_neighbors(index)
         i_neigh_T = [val for val in indices_neigh if val not in index_Al and atoms[val].symbol == 'Si'][0]
-        v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al)
+        v = self._get_direction_of_insertion(atoms, index, i_neigh_T, index_Al, tag='H')
         coord_O = atoms.get_positions()[index]
         new_atoms = atoms + Atoms('H', positions=[coord_O + 0.97 * v])
         return new_atoms
