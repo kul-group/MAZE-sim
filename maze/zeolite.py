@@ -64,7 +64,7 @@ class Zeolite(PerfectZeolite):
         new_self = self
         o_cap_pos = self.build_O_atoms_cap_dict()
         if o_cap_pos:
-            o_caps = self.build_cap_atoms(o_cap_pos)
+            o_caps = self.build_cap_atoms(o_cap_pos) # create Atoms object with just the new atoms
             new_self = self.add_atoms(o_caps, 'o_caps', cap_description)
 
         new_self.update_nl()  # might not be needed
@@ -194,7 +194,8 @@ class Zeolite(PerfectZeolite):
         cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
         for o_index in indices['O']:
-            if self.needs_cap(o_index, bonds_needed['O']):
+            if (len(self.neighbor_list.get_neighbors(o_index)[0]) < bonds_needed['O']
+                and len(self.neighbor_list.get_neighbors(o_index)[0]) > 0): # if O is not bonded to at least 2 atoms
                 pos = self.get_H_pos(o_index)
                 cap_atoms_dict['H'].append(np.array(pos))
 
@@ -213,13 +214,13 @@ class Zeolite(PerfectZeolite):
 
         cap_atoms_dict: Dict[str, List[np.array]] = defaultdict(list)
         indices, count = self.count_elements()
-        distict_positions = set()
+        new_positions = []
         for si_index in indices['Si']:
             if self.needs_cap(si_index, bonds_needed['Si']):
-                for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
-                    pos = self.get_oxygen_cap_pos(si_index)
-                    distict_positions.add(tuple(pos))
-        for pos in distict_positions:
+                # for i in range(bonds_needed['Si'] - len(self.neighbor_list.get_neighbors(si_index)[0])):
+                pos_list = self.get_oxygen_cap_pos(si_index)
+                new_positions += pos_list
+        for pos in new_positions:
             cap_atoms_dict['O'].append(np.array(pos))
 
         return dict(cap_atoms_dict)
@@ -260,14 +261,16 @@ class Zeolite(PerfectZeolite):
             site_pi = None
             print(f'atom_to_cap_self_i {atom_to_cap_self_i} does not map to parent MAZE-sim')
         else:
-            site_pi = self.find_missing_atom(atom_to_cap_pi, ['H', 'Si'])
+            site_pi = self.find_missing_atom(atom_to_cap_pi, ['H', 'Si']) # return the first neighboring atom?
 
         if site_pi is None:
             print(f'atom_to_cap_self_i {atom_to_cap_self_i} No matching atom in parent found using h_finder')
             return self.get_hydrogen_cap_pos_simple(atom_to_cap_self_i)
 
+        
         direction = self.parent_zeotype.get_distance(atom_to_cap_pi, site_pi, mic=True, vector=True)
         hydrogen_pos = self.get_positions()[atom_to_cap_self_i] + direction / np.linalg.norm(direction)
+
         return hydrogen_pos
 
     def find_missing_atom(self, oxygen_atom_to_cap_pi, atom_symbol_list) -> int:
@@ -523,22 +526,186 @@ class Zeolite(PerfectZeolite):
 
         # parend_index = self.index_mapper.get_index(self.name, self.parent_zeotype.name, self_index)
         if site_pi is None:
-            print("no matching parent oxygen found using old method")
+            print("no matching parent oxygen found using old method") # the old method uses the whole zeolite, the new method uses clusters
             self_index = atom_to_cap_self_i
             self.update_nl()
-            nl = self.neighbor_list.get_neighbors(self_index)[0]
-            if len(nl) != 0:
-                neighbor = nl[-1]  # first index in the list of neighbor indicies
-                direction = self.get_positions()[self_index] - self.get_positions()[
-                    neighbor]  # vector from neighbor to Si
-                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
-            else:
-                direction = np.array([0, 0, 1])
-                oxygen_pos = self.get_positions()[self_index] + 1.6 * direction / np.linalg.norm(direction)
+            # nl = self.neighbor_list.get_neighbors(self_index)[0]
+            # get number of neighboring O atoms; this prevents nearby Si atoms
+            # from claiming the place of an O atom due to bad positioning
+            o_nl = np.sum(self[self.neighbor_list.get_neighbors(self_index)[0]].symbols == 'O')
+            if o_nl == 3:
+                oxygen_pos = self.add_1_O(atom_to_cap_self_i)
+                oxygen_pos = [tuple(x) for x in [oxygen_pos]]
+            elif o_nl == 2:
+                oxygen_pos = self.add_2_O(atom_to_cap_self_i)
+                oxygen_pos = [tuple(x) for x in oxygen_pos]
+            elif o_nl == 1:
+                oxygen_pos = self.add_3_O(atom_to_cap_self_i)
+                oxygen_pos = [tuple(x) for x in oxygen_pos]
+            elif o_nl == 0:
+                # oxygen_pos = None # TODO: ADD CASE FOR WHEN SI IS FLOATING
+                oxygen_pos = self.add_4_O(atom_to_cap_self_i)
+                oxygen_pos = [tuple(x) for x in oxygen_pos]
 
             return oxygen_pos
         else:
             return self.parent_zeotype.get_positions()[site_pi]
+        
+    def add_4_O(self, atom_idx):
+        """
+        Add 4 oxygen atoms to a molecule that doesn't have any neighboring
+        atoms.
+
+        :param atom_idx: index of atom to cap
+        :return: the positions of 4 atoms that would form a tetrahedral around
+            the central atom defined by atom_idx
+        """
+
+        main_atom_pos = self.get_positions()[atom_idx]
+
+        # add a neighbor at the Si-O bond distance in the x-direction
+        neighbor1_pos = main_atom_pos + np.array([1.6, 0, 0])
+
+        dir1 = main_atom_pos - neighbor1_pos
+
+        norm_dir1 = dir1 / np.linalg.norm(dir1)
+
+        # choose random vector not parallel to dir1 to create a normal vector
+        w = np.array([1.0, 0.0, 0.0])
+        if np.allclose(np.abs(np.dot(w, norm_dir1)), 1.0, atol=1e-12):  # parallel
+            w = np.array([0.0, 1.0, 0.0])
+
+        plane_normal = np.cross(norm_dir1, w) / np.linalg.norm(np.cross(norm_dir1, w))
+
+        rotation_angle = np.deg2rad(180 - 109.47)
+
+        norm_dir2 = norm_dir1 * np.cos(rotation_angle) + plane_normal * np.sin(rotation_angle)
+
+        neighbor2_pos = main_atom_pos + 1.6 * norm_dir2
+
+        dir1 = main_atom_pos - neighbor1_pos
+        dir2 = main_atom_pos - neighbor2_pos
+
+        norm_dir1 = dir1 / np.linalg.norm(dir1)
+        norm_dir2 = dir2 / np.linalg.norm(dir2)
+
+        current_plane_normal = np.cross(norm_dir1, norm_dir2) / np.linalg.norm(np.cross(norm_dir1, norm_dir2))
+        bisector = (norm_dir1 + norm_dir2) / np.linalg.norm(norm_dir1 + norm_dir2)
+        rotation_angle = np.deg2rad(109.47 / 2)
+
+        norm_dir3 = bisector * np.cos(rotation_angle) + current_plane_normal * np.sin(rotation_angle)
+        norm_dir4 = bisector * np.cos(-rotation_angle) + current_plane_normal * np.sin(-rotation_angle)
+
+        neighbor3_pos = main_atom_pos + 1.6 * norm_dir3
+        neighbor4_pos = main_atom_pos + 1.6 * norm_dir4
+
+        return neighbor1_pos, neighbor2_pos, neighbor3_pos, neighbor4_pos
+
+        
+    def add_3_O(self, atom_idx):
+        """
+        Add 3 oxygen atoms to a molecule that only has 1 neighboring atom.
+
+        :param atom_idx: index of atom to cap
+        :return: the positions of 3 atoms that would form a tetrahedral around
+            the central atom defined by atom_idx
+        """
+        nl = self.neighbor_list.get_neighbors(atom_idx)[0]
+
+        main_atom_pos = self.get_positions()[atom_idx]
+        neighbor1_pos = self.get_positions()[nl[0]]
+
+        dir1 = main_atom_pos - neighbor1_pos
+
+        norm_dir1 = dir1 / np.linalg.norm(dir1)
+
+        # choose random vector not parallel to dir1 to create a normal vector
+        w = np.array([1.0, 0.0, 0.0])
+        if np.allclose(np.abs(np.dot(w, norm_dir1)), 1.0, atol=1e-12):  # parallel
+            w = np.array([0.0, 1.0, 0.0])
+
+        plane_normal = np.cross(norm_dir1, w) / np.linalg.norm(np.cross(norm_dir1, w))
+
+        rotation_angle = np.deg2rad(180 - 109.47)
+
+        norm_dir2 = norm_dir1 * np.cos(rotation_angle) + plane_normal * np.sin(rotation_angle)
+
+        neighbor2_pos = main_atom_pos + 1.6 * norm_dir2
+
+        dir1 = main_atom_pos - neighbor1_pos
+        dir2 = main_atom_pos - neighbor2_pos
+
+        norm_dir1 = dir1 / np.linalg.norm(dir1)
+        norm_dir2 = dir2 / np.linalg.norm(dir2)
+
+        current_plane_normal = np.cross(norm_dir1, norm_dir2) / np.linalg.norm(np.cross(norm_dir1, norm_dir2))
+        bisector = (norm_dir1 + norm_dir2) / np.linalg.norm(norm_dir1 + norm_dir2)
+        rotation_angle = np.deg2rad(109.47 / 2)
+
+        norm_dir3 = bisector * np.cos(rotation_angle) + current_plane_normal * np.sin(rotation_angle)
+        norm_dir4 = bisector * np.cos(-rotation_angle) + current_plane_normal * np.sin(-rotation_angle)
+
+        neighbor3_pos = main_atom_pos + 1.6 * norm_dir3
+        neighbor4_pos = main_atom_pos + 1.6 * norm_dir4
+
+        return neighbor2_pos, neighbor3_pos, neighbor4_pos
+
+    def add_2_O(self, atom_idx):
+        """
+        Add 2 oxygen atoms to a molecule that only has 1 neighboring atom.
+
+        :param atom_idx: index of atom to cap
+        :return: the positions of 2 atoms that would form a tetrahedral around
+            the central atom defined by atom_idx
+        """
+        nl = self.neighbor_list.get_neighbors(atom_idx)[0]
+
+        main_atom_pos = self.get_positions()[atom_idx]
+        neighbor1_pos = self.get_positions()[nl[0]]
+        neighbor2_pos = self.get_positions()[nl[1]]
+
+        dir1 = main_atom_pos - neighbor1_pos
+        dir2 = main_atom_pos - neighbor2_pos
+
+        norm_dir1 = dir1 / np.linalg.norm(dir1)
+        norm_dir2 = dir2 / np.linalg.norm(dir2)
+
+        current_plane_normal = np.cross(norm_dir1, norm_dir2)
+        bisector = (norm_dir1 + norm_dir2) / np.linalg.norm(norm_dir1 + norm_dir2)
+        rotation_angle = np.deg2rad(109.47 / 2)
+
+        norm_dir3 = bisector * np.cos(rotation_angle) + current_plane_normal * np.sin(rotation_angle)
+        norm_dir4 = bisector * np.cos(-rotation_angle) + current_plane_normal * np.sin(-rotation_angle)
+
+        neighbor3_pos = main_atom_pos + 1.6 * norm_dir3
+        neighbor4_pos = main_atom_pos + 1.6 * norm_dir4
+
+        return neighbor3_pos, neighbor4_pos
+
+    def add_1_O(self, atom_idx):
+        """
+        Add 1 oxygen atom to a molecule that only has 1 neighboring atom.
+
+        :param atom_idx: index of atom to cap
+        :return: the positions of 1 atom that would form a tetrahedral around
+            the central atom defined by atom_idx
+        """
+        nl = self.neighbor_list.get_neighbors(atom_idx)[0]
+
+        main_atom_pos = self.get_positions()[atom_idx]
+        neighbor_positions = self.get_positions()[nl]
+
+        directions = main_atom_pos - neighbor_positions
+
+        norm_dirs = np.array([x / np.linalg.norm(x) for x in directions])
+
+        bisector = (norm_dirs[0] + norm_dirs[1] + norm_dirs[2]) / np.linalg.norm(norm_dirs[0] + norm_dirs[1] + norm_dirs[2])
+
+        norm_dir4 = bisector
+
+        neighbor4_pos = main_atom_pos + 1.6 * norm_dir4
+
+        return neighbor4_pos
 
     def get_hydrogen_cap_pos_simple(self, index) -> np.array:
         """
@@ -547,10 +714,38 @@ class Zeolite(PerfectZeolite):
         :param index: index of hydrogen cap
         :return: the hydrogen position to add the cap too
         """
-        neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
-        direction = self.get_positions()[index] - self.get_positions()[neighbor]  # vector from neighbor to oxygen
-        hydrogen_pos = self.get_positions()[index] + direction / np.linalg.norm(direction)
-        return hydrogen_pos
+
+        def rotate_towards(v1, v2, angle_degrees):
+            # 2. Convert angle to radians
+            theta = np.radians(angle_degrees)
+
+            v1_norm = v1 / np.linalg.norm(v1)
+            v2_norm = v2 / np.linalg.norm(v2)
+
+            # Find the vector component of v2 that is orthogonal to v1
+            # Note: Since v1 is normalized, the projection is just (v1 . v2) * v1
+            v2_orth = v2_norm - np.dot(v1_norm, v2_norm) * v1_norm
+                
+            # 4. Normalize the orthogonal vector to get the "up" basis vector
+            u = v2_orth / np.linalg.norm(v2_orth)
+            
+            # 5. Calculate the new vector using 2D rotation in the spanning plane
+            v_new = v1_norm * np.cos(theta) + u * np.sin(theta)
+            
+            return v_new
+
+        if self.neighbor_list.get_neighbors(index)[0] is not None:
+            neighbor = self.neighbor_list.get_neighbors(index)[0][0]  # first index in the list of neighbor indicies
+            neighbor_o_vec = self.get_distances(neighbor, index, mic=True, vector=True)[0]  # vector from neighbor to oxygen
+
+            # rotate the original directon toward a random vector to create
+            # bent Si-O-H bond
+            neighbor_h_dir = rotate_towards(neighbor_o_vec, np.random.default_rng().random(3), 20)
+            neighbor_h_dir_norm = neighbor_h_dir / np.linalg.norm(neighbor_h_dir)
+            si_h_dist = 2.3
+            hydrogen_pos = self.get_positions()[neighbor] + si_h_dist * neighbor_h_dir_norm
+
+            return hydrogen_pos
 
     def get_cluster(self, start_index: int, cluster_indices=None, **kwargs) -> Tuple["Zeolite", "Zeolite"]:
         """
